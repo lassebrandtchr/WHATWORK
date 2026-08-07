@@ -348,6 +348,32 @@ describe('buildMovement — cue-override', () => {
 });
 
 describe('timerplan', () => {
+  it('viser hvert ramp-sæt som sit eget segment med pause imellem, i stedet for at gentage sæt 1', () => {
+    let w: Workout | null = null;
+    let strengthBlock: Block | undefined;
+    // strength/strength_cond kommer kun i formatpuljen ved strength >= 8 (eller focus
+    // 'heavy'); focus 'legs' indsnævrer hovedløftet til squat/hinge, så deadlift/back
+    // squat/front squat reelt bliver valgt i stedet for oly-løft som power clean.
+    for (let seed = 1; seed <= 300 && !strengthBlock; seed++) {
+      const candidate = build({ minutes: 30, men: 1, level: 5, focus: 'legs', strength: 8, seed });
+      const sb = candidate.blocks.find((b) => b.kind === 'strength' && b.scheme === 'ramp');
+      if (sb) { w = candidate; strengthBlock = sb; }
+    }
+    if (!w || !strengthBlock) {
+      throw new Error('fandt ingen ramp-workout i 300 forsøg — undersøg RAMP_ELIGIBLE_IDS/pulje-vægtningen');
+    }
+    const blockId = strengthBlock.id;
+
+    const plan = eng.buildTimerPlan(w);
+    const workSegs = plan.segments.filter((s) => s.blockId === blockId && s.kind === 'work');
+    expect(workSegs).toHaveLength(5);
+    const displays = workSegs.map((s) => s.movement?.display);
+    expect(new Set(displays).size).toBe(5);
+
+    const restSegs = plan.segments.filter((s) => s.blockId === blockId && s.kind === 'rest');
+    expect(restSegs).toHaveLength(4);
+  });
+
   it('bygges ud fra workoutens blokke og øvelser', () => {
     const w = build({ minutes: 30, men: 1, level: 3, seed: 71 });
     const plan = eng.buildTimerPlan(w);

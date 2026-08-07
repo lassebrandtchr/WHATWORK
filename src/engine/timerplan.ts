@@ -76,6 +76,38 @@ function strengthSegments(block: Block): TimerSegment[] {
   return segs;
 }
 
+function rampStrengthSegments(block: Block): TimerSegment[] {
+  const segs: TimerSegment[] = [];
+  // Ramp-sæt har altid både `sets === 1` og `restSec` sat af buildRampMovements — det
+  // adskiller dem fra en eventuel tilbehørs-bevægelse, som ingen af delene sætter.
+  const rampMoves = block.movements.filter((m) => m.sets === 1 && m.restSec !== undefined);
+  rampMoves.forEach((m, i) => {
+    segs.push({
+      id: nextId(), blockId: block.id, blockTitle: block.title, kind: 'work',
+      label: `Sæt ${i + 1} af ${rampMoves.length}`, seconds: null, countUp: true,
+      movement: m, round: i + 1, totalRounds: rampMoves.length,
+      hint: m.cue,
+    });
+    if (i < rampMoves.length - 1) {
+      segs.push({
+        id: nextId(), blockId: block.id, blockTitle: block.title, kind: 'rest',
+        label: `Pause efter sæt ${i + 1}`, seconds: m.restSec ?? 150, countUp: false,
+        hint: 'Hold pausen — også når du har lyst til at gå videre.',
+      });
+    }
+  });
+  block.movements
+    .filter((m) => !(m.sets === 1 && m.restSec !== undefined))
+    .forEach((m) => {
+      segs.push({
+        id: nextId(), blockId: block.id, blockTitle: block.title, kind: 'work',
+        label: 'Tilbehør', seconds: null, countUp: true, movement: m,
+        hint: m.cue,
+      });
+    });
+  return segs;
+}
+
 function conditioningSegments(block: Block, workout: Workout): TimerSegment[] {
   const segs: TimerSegment[] = [];
   const format = block.format;
@@ -180,6 +212,8 @@ export function buildTimerPlan(workout: Workout): TimerPlan {
   workout.blocks.forEach((block) => {
     if (block.kind === 'warmup' || block.kind === 'cooldown') {
       segments.push(...warmupSegments(block));
+    } else if (block.kind === 'strength' && block.scheme === 'ramp') {
+      segments.push(...rampStrengthSegments(block));
     } else if (block.kind === 'strength') {
       segments.push(...strengthSegments(block));
     } else {

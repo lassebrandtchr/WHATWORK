@@ -2,14 +2,20 @@ import { describe, expect, it } from 'vitest';
 import { buildStrength } from './blocks.js';
 import { normalizeRequest } from './request.js';
 import { BY_ID } from './data/exercises.js';
-import type { NormalizedRequest } from './types.js';
+import type { Exercise, NormalizedRequest } from './types.js';
 
 function req(level: number): NormalizedRequest {
   return normalizeRequest({ minutes: 30, men: 1, level, seed: 1 });
 }
 
-const backSquat = BY_ID.back_squat!;
-const cleanAndJerk = BY_ID.clean_and_jerk!;
+function byId(id: string): Exercise {
+  const ex = BY_ID[id];
+  if (!ex) throw new Error(`ukendt øvelse: ${id}`);
+  return ex;
+}
+
+const backSquat = byId('back_squat');
+const cleanAndJerk = byId('clean_and_jerk');
 
 describe('buildStrength — ramp til tung 5RM', () => {
   it('kan vælge ramp-skemaet ved niveau 5 for et kvalificerende løft', () => {
