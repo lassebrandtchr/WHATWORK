@@ -27,7 +27,9 @@ export function Transfer({
       <PageHeader
         kicker="Dine data"
         title="Import og eksport"
-        lede="Alt ligger lokalt på denne enhed. Her kan du tage det med — eller lægge det tilbage."
+        lede="WHATWORK har ingen konto og synkroniserer ikke — alt ligger kun i denne browser. Brug
+          denne side til at flytte dine data til en ny telefon eller browser, eller til at lave en
+          sikkerhedskopi, før du rydder browserdata eller afinstallerer appen."
       />
 
       <section aria-labelledby="ww-export" style={{ marginBottom: 34 }}>

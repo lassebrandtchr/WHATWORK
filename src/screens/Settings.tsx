@@ -126,7 +126,7 @@ export function Settings({
       <section aria-labelledby="ww-data">
         <h2 id="ww-data" className="ww-kicker" style={{ marginBottom: 12 }}>Data</h2>
         <div className="ww-stack" style={{ marginBottom: 14 }}>
-          <OptionRow name="Import og eksport" desc="Tag dine data med som JSON" onClick={() => onGo('transfer')} />
+          <OptionRow name="Import og eksport" desc="Til ny enhed eller sikkerhedskopi" onClick={() => onGo('transfer')} />
           <OptionRow name="Udstyr og skiver" desc="Rediger salens udstyr" onClick={() => onGo('equipment')} />
         </div>
         <button type="button" className="ww-btn ww-btn--lg ww-btn--danger" onClick={onWipe}>
