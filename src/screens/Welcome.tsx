@@ -1,4 +1,3 @@
-import { FlowGraphic } from '../components/FlowGraphic.js';
 import { Wordmark } from '../components/Wordmark.js';
 import { WwMark } from '../components/WwMark.js';
 
@@ -16,19 +15,16 @@ export function Welcome({ onStart }: { onStart: () => void }) {
         <Wordmark size={30} />
       </div>
 
-      <div style={{ padding: '32px 0 8px', display: 'flex', gap: 24, alignItems: 'center', flexWrap: 'wrap' }}>
-        <FlowGraphic width={336} />
-        <div style={{ flex: '1 1 240px', minWidth: 240 }}>
-          <h1 className="ww-display" style={{ marginBottom: 18 }}>
-            Bygget til
-            <br />
-            funktionel fitness.
-          </h1>
-          <p className="ww-lede" style={{ maxWidth: '34ch' }}>
-            Fortæl hvor lang tid I har, hvem der træner, og hvilket udstyr der står i salen.
-            Så bygger WHATWORK en workout med konkrete kilo, mål og pauser.
-          </p>
-        </div>
+      <div style={{ padding: '44px 0 8px' }}>
+        <h1 className="ww-display" style={{ marginBottom: 18 }}>
+          Bygget til
+          <br />
+          funktionel fitness.
+        </h1>
+        <p className="ww-lede" style={{ maxWidth: '34ch' }}>
+          Fortæl hvor lang tid I har, hvem der træner, og hvilket udstyr der står i salen.
+          Så bygger WHATWORK en workout med konkrete kilo, mål og pauser.
+        </p>
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
