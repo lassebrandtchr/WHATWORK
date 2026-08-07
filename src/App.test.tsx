@@ -115,6 +115,25 @@ describe('WHATWORK — kerneflow', () => {
     expect(within(total as HTMLElement).getByText('3')).toBeInTheDocument();
   });
 
+  it('bruger individuelle vægte i workout-anmodningen, når tilstanden er aktiv', async () => {
+    seedOnboardedProfile();
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.click(await screen.findByRole('button', { name: /Generér workout/ }));
+    await user.click(screen.getByRole('button', { name: 'Videre' })); // tid → deltagere
+    await user.click(screen.getByRole('button', { name: 'Kvinder: én mere' }));
+    await user.click(screen.getByRole('button', { name: 'Videre' })); // deltagere → kropsvægt
+
+    expect(screen.getByRole('heading', { name: 'Kropsvægt' })).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Individuel' }));
+
+    for (let i = 0; i < 12; i++) {
+      await user.click(screen.getByRole('button', { name: 'Mand 1: én færre' }));
+    }
+    expect(screen.getByText('78 kg')).toBeInTheDocument();
+  });
+
   it('genererer en workout og viser en rigtig formattitel', async () => {
     seedOnboardedProfile();
     vi.useFakeTimers();

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { freshGen } from './useWhatwork.js';
+import { freshGen, personWeight } from './useWhatwork.js';
 import type { UserProfile } from '../types.js';
 
 const profile: UserProfile = {
@@ -15,5 +15,18 @@ describe('freshGen — individuel kropsvægt', () => {
     expect(g.weightsM).toEqual([]);
     expect(g.weightsF).toEqual([]);
     expect(g.weightsX).toEqual([]);
+  });
+});
+
+describe('personWeight', () => {
+  it('falder tilbage til gruppens gennemsnit, når personen ikke er individuelt justeret', () => {
+    const g = { ...freshGen(profile), bwM: 90, weightsM: [] };
+    expect(personWeight(g, 'M', 0)).toBe(90);
+  });
+
+  it('bruger den individuelt satte vægt, når den findes', () => {
+    const g = { ...freshGen(profile), bwM: 90, weightsM: [78] };
+    expect(personWeight(g, 'M', 0)).toBe(78);
+    expect(personWeight(g, 'M', 1)).toBe(90);
   });
 });

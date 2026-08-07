@@ -69,6 +69,37 @@ export function freshGen(profile: UserProfile): GenDraft {
 
 export const participantsOf = (g: GenDraft): number => g.men + g.women + g.neutral;
 
+export type WeightGroupKey = 'M' | 'F' | 'X';
+
+/** Den vægt, deltager `index` i sin kønsgruppe reelt bruger — egen værdi, hvis den er
+ * individuelt justeret, ellers gruppens gennemsnit. */
+export function personWeight(g: GenDraft, key: WeightGroupKey, index: number): number {
+  const arr = key === 'M' ? g.weightsM : key === 'F' ? g.weightsF : g.weightsX;
+  const fallback = key === 'M' ? g.bwM : key === 'F' ? g.bwF : g.bwX;
+  return arr[index] ?? fallback;
+}
+
+/** Bygger den eksplicitte deltagerliste til motoren, når individuel-tilstand er aktiv.
+ * Samme rækkefølge og labelkonvention som `peopleFromMix` i `engine/request.ts`. */
+function individualPeople(g: GenDraft): eng.Person[] {
+  const people: eng.Person[] = [];
+  for (let i = 0; i < g.men; i++) {
+    people.push({ label: `Mand ${i + 1}`, profile: 'm', bodyweight: personWeight(g, 'M', i), level: g.level });
+  }
+  for (let i = 0; i < g.women; i++) {
+    people.push({ label: `Kvinde ${i + 1}`, profile: 'f', bodyweight: personWeight(g, 'F', i), level: g.level });
+  }
+  for (let i = 0; i < g.neutral; i++) {
+    people.push({
+      label: `Deltager ${g.men + g.women + i + 1}`,
+      profile: 'x',
+      bodyweight: personWeight(g, 'X', i),
+      level: g.level,
+    });
+  }
+  return people;
+}
+
 export const GEN_STEPS: GenStep[] = ['time', 'people', 'weight', 'level', 'direction', 'equip', 'summary'];
 
 export const DESKTOP_QUERY = '(min-width: 1024px)';
@@ -366,6 +397,9 @@ export function useWhatwork() {
       bodyweightM: draft.bwM,
       bodyweightF: draft.bwF,
       bodyweightX: draft.bwX,
+      ...(draft.individualWeights && participantsOf(draft) > 1
+        ? { people: individualPeople(draft) }
+        : {}),
       level: draft.level,
       condition: draft.condition,
       strength: draft.strength,
