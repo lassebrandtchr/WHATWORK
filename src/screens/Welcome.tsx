@@ -16,9 +16,9 @@ export function Welcome({ onStart }: { onStart: () => void }) {
         <Wordmark size={30} />
       </div>
 
-      <div style={{ padding: '44px 0 8px', display: 'flex', gap: 20, alignItems: 'flex-start', flexWrap: 'wrap' }}>
-        <FlowGraphic width={112} />
-        <div style={{ flex: '1 1 220px', minWidth: 220 }}>
+      <div style={{ padding: '32px 0 8px', display: 'flex', gap: 24, alignItems: 'center', flexWrap: 'wrap' }}>
+        <FlowGraphic width={336} />
+        <div style={{ flex: '1 1 240px', minWidth: 240 }}>
           <h1 className="ww-display" style={{ marginBottom: 18 }}>
             Bygget til
             <br />

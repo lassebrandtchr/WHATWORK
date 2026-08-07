@@ -22,8 +22,8 @@ export function About() {
 
       <section aria-labelledby="ww-what" style={{ marginBottom: 30 }}>
         <h2 id="ww-what" className="ww-h2" style={{ marginBottom: 12 }}>Hvad appen er</h2>
-        <div style={{ display: 'flex', gap: 20, alignItems: 'flex-start', flexWrap: 'wrap' }}>
-          <FlowGraphic width={124} />
+        <div style={{ display: 'flex', gap: 24, alignItems: 'center', flexWrap: 'wrap' }}>
+          <FlowGraphic width={372} />
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10, flex: '1 1 260px', minWidth: 260, maxWidth: '66ch' }}>
             <p style={{ margin: 0, fontSize: 15, lineHeight: 1.65, color: 'var(--ww-body)' }}>
               WHATWORK er en regelbaseret træningsgenerator. Den kører lokalt på din enhed og bygger
