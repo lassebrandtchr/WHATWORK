@@ -35,11 +35,19 @@ export function Complete({
           {completion.status === 'done' ? 'Færdig' : 'Afsluttet'}
         </Kicker>
         <h1 className="ww-display" style={{ marginBottom: 8 }}>{context.workout.title}</h1>
-        <p className="ww-lede" style={{ marginBottom: 30 }}>
+        <p className="ww-lede" style={{ marginBottom: completion.progressPct !== undefined && completion.status === 'stopped' ? 10 : 30 }}>
           {fmtTime(context.secs)} på uret
           {context.rounds ? ` · ${context.rounds} runder` : ''}
           {' · '}{context.workout.estimatedMinutes} min planlagt
         </p>
+
+        {completion.status === 'stopped' && completion.progressPct !== undefined ? (
+          <p style={{ margin: '0 0 30px', fontSize: 14, color: 'var(--ww-orange)', lineHeight: 1.55 }}>
+            Du nåede automatisk registreret {completion.progressPct}%
+            {completion.lastExercise ? ` — stoppede ved ${completion.lastExercise}` : ''}.
+            Du kan genoptage workouten senere fra Historik, hvis du er stoppet ved en fejl.
+          </p>
+        ) : null}
 
         <section aria-labelledby="ww-how" style={{ marginBottom: 26 }}>
           <h2 id="ww-how" style={{ fontSize: 15, fontWeight: 650, margin: '0 0 12px' }}>Hvordan gik det?</h2>

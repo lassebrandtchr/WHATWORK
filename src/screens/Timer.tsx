@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import type { TimerPlan, Workout } from '../engine/index.js';
-import { Dialog } from '../components/ui.js';
+import { Dialog, Glyph } from '../components/ui.js';
 import { fmtTime, groupByProfile } from '../lib/format.js';
 import type { TimerState, TimerView } from '../types.js';
 
@@ -47,21 +47,25 @@ export function Timer({
   return (
     <div className="ww-timer">
       {/* Topbjælke */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        <button
+          type="button"
+          className="ww-icon-btn"
+          aria-label="Afslut træningen"
+          onClick={onRequestExit}
+          style={{ borderColor: 'var(--ww-red)', color: 'var(--ww-red)', flex: 'none' }}
+        >
+          <Glyph name="close" />
+        </button>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0, flex: 1 }}>
           <span className="ww-kicker ww-kicker--accent" style={{ whiteSpace: 'nowrap' }}>{workout.title}</span>
           <span style={{ fontSize: 12.5, color: 'var(--ww-text-3)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
             {segment.blockTitle} · {KIND_LABEL[segment.kind] ?? segment.kind}
           </span>
         </div>
-        <div style={{ display: 'flex', gap: 6 }}>
-          <button type="button" className="ww-btn ww-btn--ghost" style={{ minHeight: 44 }} onClick={onRequestReset}>
-            Nulstil
-          </button>
-          <button type="button" className="ww-btn" style={{ minHeight: 44 }} onClick={onRequestExit}>
-            Afslut
-          </button>
-        </div>
+        <button type="button" className="ww-btn ww-btn--ghost" style={{ minHeight: 44, flex: 'none' }} onClick={onRequestReset}>
+          Nulstil
+        </button>
       </div>
 
       {/* Segmentskinne */}
@@ -192,7 +196,8 @@ export function Timer({
       {confirmDialog === 'exit' ? (
         <Dialog title="Afslut træningen?" onClose={onCancelDialog}>
           <p style={{ margin: '0 0 20px', color: 'var(--ww-text-2)', fontSize: 15, lineHeight: 1.55 }}>
-            Tiden stopper, og workouten gemmes som afbrudt i historikken.
+            Tiden stopper, og workouten gemmes som afbrudt i historikken — med hvor langt du
+            nåede. Er det ved en fejl, kan du genoptage den bagefter fra Historik.
           </p>
           <div style={{ display: 'flex', gap: 8 }}>
             <button type="button" className="ww-btn ww-btn--lg ww-btn--block" onClick={onCancelDialog}>

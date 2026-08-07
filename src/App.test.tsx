@@ -207,7 +207,7 @@ describe('WHATWORK — kerneflow', () => {
       fireEvent.click(screen.getByRole('button', { name: 'Næste' }));
 
       // Afslut kræver bekræftelse.
-      fireEvent.click(screen.getByRole('button', { name: 'Afslut' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Afslut træningen' }));
       expect(screen.getByRole('dialog')).toBeInTheDocument();
       expect(screen.getByText('Afslut træningen?')).toBeInTheDocument();
       fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Afslut' }));
@@ -216,10 +216,25 @@ describe('WHATWORK — kerneflow', () => {
 
       expect(screen.getByRole('heading', { name: 'Historik' })).toBeInTheDocument();
       expect(screen.getAllByText('Afbrudt').length).toBeGreaterThan(0);
+      // Systemet registrerer selv, hvor langt man nåede — ikke som en fuldført workout.
+      expect(screen.getByText(/Nåede \d+%/)).toBeInTheDocument();
 
       // Workouten kan åbnes igen fra historikken.
       fireEvent.click(screen.getAllByRole('button', { name: 'Åbn' })[0] as HTMLElement);
       expect(screen.getByText('Sådan afvikles den')).toBeInTheDocument();
+
+      // Den afbrudte session er stadig genoptagelig fra historikken, hvis man kom til
+      // at afslutte ved en fejl.
+      window.location.hash = '#/historik';
+      await act(async () => { await vi.advanceTimersByTimeAsync(0); });
+      fireEvent.click(screen.getByRole('button', { name: 'Genoptag' }));
+      expect(screen.getByRole('button', { name: 'Afslut træningen' })).toBeInTheDocument();
+
+      // Og kan slettes helt og aldeles igen, hvis man reelt er færdig med den.
+      window.location.hash = '#/historik';
+      await act(async () => { await vi.advanceTimersByTimeAsync(0); });
+      fireEvent.click(screen.getByRole('button', { name: 'Fjern' }));
+      expect(screen.queryByRole('button', { name: 'Genoptag' })).not.toBeInTheDocument();
     } finally {
       vi.useRealTimers();
     }

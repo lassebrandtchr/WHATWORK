@@ -247,6 +247,8 @@ export function App() {
             onRun={(entry) => { ww.openWorkout(entry.workout); ww.startTimer(); }}
             onRemove={ww.removeHistory}
             onGenerate={ww.resetGenerator}
+            resumableWorkoutId={ww.timer?.workoutId ?? null}
+            onResume={() => ww.go('timer')}
           />
         )}
 

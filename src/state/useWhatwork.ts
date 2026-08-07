@@ -544,7 +544,10 @@ export function useWhatwork() {
   /* ---------- resultat, historik og favoritter ---------- */
 
   const entryFor = useCallback(
-    (w: Workout, status: HistoryStatus, result = '', rpe: HistoryEntry['rpe'] = ''): HistoryEntry => ({
+    (
+      w: Workout, status: HistoryStatus, result = '', rpe: HistoryEntry['rpe'] = '',
+      progressPct?: number, lastExercise?: string,
+    ): HistoryEntry => ({
       id: `${w.id}_${Date.now()}`,
       title: w.title,
       format: w.formatName,
@@ -553,6 +556,8 @@ export function useWhatwork() {
       status,
       rpe,
       result,
+      ...(progressPct !== undefined ? { progressPct } : {}),
+      ...(lastExercise ? { lastExercise } : {}),
       patterns: w.blocks.flatMap((b) => b.movements.map((m) => eng.BY_ID[m.exerciseId]?.cat ?? 'ukendt')),
       signature: w.signature,
       workout: w,
@@ -589,21 +594,38 @@ export function useWhatwork() {
   }, [go]);
 
   const removeHistory = useCallback((id: string) => {
+    // Sletter man den post, der hører til en afbrudt, stadig-genoptagelig session, skal
+    // selve den levende timer også ryddes — ellers dukker "workout i gang" bare op igen.
+    const target = history.find((e) => e.id === id);
+    if (target && timer && target.workout.id === timer.workoutId) {
+      setTimer(null);
+      setWorkout(null);
+    }
     setHistory((h) => h.filter((e) => e.id !== id));
-  }, []);
+  }, [history, timer]);
 
   /* ---------- afslutning ---------- */
 
   const openCompletion = useCallback(
     (status: HistoryStatus) => {
       if (!workout) return;
+      const total = plan?.segments.length ?? 0;
+      const idx = view?.index ?? 0;
+      const progressPct = status === 'done'
+        ? 100
+        : total > 0 ? Math.max(0, Math.min(99, Math.round((idx / total) * 100))) : 0;
+      const lastExercise = status === 'done'
+        ? ''
+        : view?.segment.movement?.display ?? view?.segment.movements?.[0]?.display ?? view?.segment.label ?? '';
       setCompleteFor({ secs: view?.sessionElapsed ?? 0, rounds: timer?.rounds ?? 0, workout });
-      setCompletion({ status, rpe: 'ok', note: '' });
-      setTimer(null);
+      setCompletion({ status, rpe: 'ok', note: '', progressPct, lastExercise });
+      // En afbrudt session skal kunne genoptages, hvis man kom til at afslutte ved en
+      // fejl — kun en reelt fuldført session rydder timeren og gør den ugenkaldelig.
+      if (status === 'done') setTimer(null);
       setConfirmDialog(null);
       go('complete');
     },
-    [workout, view, timer, go],
+    [workout, view, plan, timer, go],
   );
 
   const saveCompletion = useCallback(() => {
@@ -611,9 +633,15 @@ export function useWhatwork() {
     const { workout: w, secs, rounds } = completeFor;
     const mins = Math.floor(secs / 60);
     const rest = secs % 60;
-    const result = completion.note
-      || (rounds ? `${rounds} runder` : `${mins}:${String(rest).padStart(2, '0')}`);
-    setHistory((h) => [entryFor(w, completion.status, result, completion.rpe), ...h]);
+    const timeText = rounds ? `${rounds} runder` : `${mins}:${String(rest).padStart(2, '0')}`;
+    const auto = completion.status === 'stopped' && completion.progressPct !== undefined
+      ? `Afbrudt ved ${completion.progressPct}%${completion.lastExercise ? ` — ${completion.lastExercise}` : ''} · ${timeText} på uret`
+      : timeText;
+    const result = completion.note || auto;
+    setHistory((h) => [
+      entryFor(w, completion.status, result, completion.rpe, completion.progressPct, completion.lastExercise),
+      ...h,
+    ]);
 
     // Kom workouten fra en programdag, skal dagen have status med — og resten af
     // programmet kan bruge den til at justere sig.

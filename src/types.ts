@@ -84,6 +84,10 @@ export interface HistoryEntry {
   status: HistoryStatus;
   rpe: Rpe | '';
   result: string;
+  /** Kun sat, når workouten blev afbrudt før tid — hvor langt du nåede. */
+  progressPct?: number;
+  /** Kun sat, når workouten blev afbrudt før tid — øvelsen du var i gang med. */
+  lastExercise?: string;
   /** Bevægelseskategorier, så motoren kan undgå gentagelser. */
   patterns: string[];
   signature: WorkoutSignature;
@@ -113,6 +117,10 @@ export interface Completion {
   status: HistoryStatus;
   rpe: Rpe;
   note: string;
+  /** Automatisk udregnet, når man afslutter før tid — hvor langt man nåede. */
+  progressPct?: number;
+  /** Automatisk udregnet, når man afslutter før tid — øvelsen man var i gang med. */
+  lastExercise?: string;
 }
 
 /** Hvilken programdag den viste workout kom fra, så status kan skrives tilbage. */

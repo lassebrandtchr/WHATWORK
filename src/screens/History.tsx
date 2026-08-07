@@ -41,6 +41,7 @@ const FILTERS: { id: HistoryStatus | 'all'; label: string }[] = [
 
 export function History({
   history, entries, filter, onFilter, onOpen, onRun, onRemove, onGenerate,
+  resumableWorkoutId, onResume,
 }: {
   history: HistoryEntry[];
   entries: HistoryEntry[];
@@ -50,6 +51,9 @@ export function History({
   onRun: (entry: HistoryEntry) => void;
   onRemove: (id: string) => void;
   onGenerate: () => void;
+  /** Workout-id'et på den ene, aktive timer man kan genoptage — eller null. */
+  resumableWorkoutId: string | null;
+  onResume: () => void;
 }) {
   const done = history.filter((h) => h.status === 'done');
   const [now] = useState(() => Date.now());
@@ -114,6 +118,7 @@ export function History({
               {entries.map((entry) => {
                 const status = STATUS[entry.status] ?? STATUS.saved;
                 const exercises = exerciseSummary(entry);
+                const resumable = entry.status === 'stopped' && resumableWorkoutId === entry.workout.id;
                 return (
                   <li key={entry.id} style={{ borderBottom: '1px solid var(--ww-line)', padding: '16px 0' }}>
                     <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
@@ -123,6 +128,11 @@ export function History({
                           {relDate(entry.date)} · {entry.minutes} min
                           {entry.result ? ` · ${entry.result}` : ''}
                         </div>
+                        {entry.progressPct !== undefined ? (
+                          <div style={{ fontSize: 13, color: 'var(--ww-orange)', marginTop: 4 }}>
+                            Nåede {entry.progressPct}%{entry.lastExercise ? ` — stoppede ved ${entry.lastExercise}` : ''}
+                          </div>
+                        ) : null}
                         {exercises ? (
                           <div style={{ fontSize: 13, color: 'var(--ww-text-3)', marginTop: 6, lineHeight: 1.5 }}>
                             {exercises}
@@ -132,6 +142,12 @@ export function History({
                       <span className={status.className}>{status.label}</span>
                     </div>
                     <div style={{ display: 'flex', gap: 8, marginTop: 12, flexWrap: 'wrap' }}>
+                      {resumable ? (
+                        <button type="button" className="ww-btn ww-btn--primary" onClick={onResume}>
+                          <Glyph name="bolt" size={16} />
+                          Genoptag
+                        </button>
+                      ) : null}
                       <button type="button" className="ww-btn" onClick={() => onOpen(entry)}>Åbn</button>
                       <button type="button" className="ww-btn" onClick={() => onRun(entry)}>
                         <Glyph name="bolt" size={16} />
