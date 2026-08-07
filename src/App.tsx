@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { BottomBar, DesktopHeader, Drawer, MobileNav } from './components/Navigation.js';
 import { Confetti } from './components/Confetti.js';
-import { EmptyState, Glyph } from './components/ui.js';
+import { EmptyState, Glyph, ThemeToggle } from './components/ui.js';
 import { Wordmark } from './components/Wordmark.js';
 import { WwMark } from './components/WwMark.js';
 import { freshGen, useWhatwork } from './state/useWhatwork.js';
@@ -41,7 +41,13 @@ export function App() {
   }
 
   if (ww.screen === 'welcome') {
-    return <Welcome onStart={ww.startOnboarding} />;
+    return (
+      <Welcome
+        onStart={ww.startOnboarding}
+        theme={ww.settings.theme}
+        onToggleTheme={() => ww.setTheme(ww.settings.theme === 'dark' ? 'light' : 'dark')}
+      />
+    );
   }
 
   if (ww.screen === 'onboard') {
@@ -111,6 +117,8 @@ export function App() {
           profileName={ww.profile.name || 'Gæst'}
           onGo={ww.go}
           onGenerate={ww.openGenerator}
+          theme={ww.settings.theme}
+          onToggleTheme={() => ww.setTheme(ww.settings.theme === 'dark' ? 'light' : 'dark')}
         />
       ) : (
         <div
@@ -133,9 +141,12 @@ export function App() {
             <WwMark size={28} />
             <Wordmark size={18} />
           </button>
-          <button type="button" className="ww-icon-btn" aria-label="Åbn menuen" aria-expanded={drawer} onClick={() => setDrawer(true)}>
-            <Glyph name="menu" />
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <ThemeToggle theme={ww.settings.theme} onToggle={() => ww.setTheme(ww.settings.theme === 'dark' ? 'light' : 'dark')} />
+            <button type="button" className="ww-icon-btn" aria-label="Åbn menuen" aria-expanded={drawer} onClick={() => setDrawer(true)}>
+              <Glyph name="menu" />
+            </button>
+          </div>
         </div>
       )}
 

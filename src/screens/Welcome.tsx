@@ -1,7 +1,14 @@
+import { ThemeToggle } from '../components/ui.js';
 import { Wordmark } from '../components/Wordmark.js';
 import { WwMark } from '../components/WwMark.js';
 
-export function Welcome({ onStart }: { onStart: () => void }) {
+export function Welcome({
+  onStart, theme, onToggleTheme,
+}: {
+  onStart: () => void;
+  theme: 'dark' | 'light';
+  onToggleTheme: () => void;
+}) {
   return (
     <div
       style={{
@@ -10,9 +17,12 @@ export function Welcome({ onStart }: { onStart: () => void }) {
         maxWidth: 560, margin: '0 auto', width: '100%',
       }}
     >
-      <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-        <WwMark size={44} />
-        <Wordmark size={30} />
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 14 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+          <WwMark size={44} />
+          <Wordmark size={30} />
+        </div>
+        <ThemeToggle theme={theme} onToggle={onToggleTheme} />
       </div>
 
       <div style={{ padding: '44px 0 8px' }}>

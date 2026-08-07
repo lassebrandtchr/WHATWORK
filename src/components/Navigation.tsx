@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { initialsOf } from '../lib/format.js';
-import { Glyph } from './ui.js';
+import { Glyph, ThemeToggle } from './ui.js';
 import { Wordmark } from './Wordmark.js';
 import { WwMark } from './WwMark.js';
 import type { Screen } from '../types.js';
@@ -55,12 +55,14 @@ export function MobileNav({ screen, onGo }: { screen: Screen; onGo: (s: Screen) 
 }
 
 export function DesktopHeader({
-  screen, profileName, onGo, onGenerate,
+  screen, profileName, onGo, onGenerate, theme, onToggleTheme,
 }: {
   screen: Screen;
   profileName: string;
   onGo: (s: Screen) => void;
   onGenerate: () => void;
+  theme: 'dark' | 'light';
+  onToggleTheme: () => void;
 }) {
   const links: { id: Screen; label: string; action: () => void }[] = [
     { id: 'home', label: 'Hjem', action: () => onGo('home') },
@@ -116,6 +118,7 @@ export function DesktopHeader({
             </button>
           ))}
         </nav>
+        <ThemeToggle theme={theme} onToggle={onToggleTheme} />
         <button
           type="button"
           onClick={() => onGo('profile')}

@@ -285,3 +285,17 @@ export function Glyph({ name, size = 20 }: { name: GlyphName; size?: number }) {
     </svg>
   );
 }
+
+/** Lille, hurtig skifter mellem Dark og Light Mode — vises i headeren på alle sider. */
+export function ThemeToggle({ theme, onToggle }: { theme: 'dark' | 'light'; onToggle: () => void }) {
+  return (
+    <button
+      type="button"
+      className="ww-icon-btn"
+      aria-label={theme === 'dark' ? 'Skift til Light Mode' : 'Skift til Dark Mode'}
+      onClick={onToggle}
+    >
+      <Glyph name={theme === 'dark' ? 'sun' : 'moon'} />
+    </button>
+  );
+}
