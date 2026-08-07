@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { buildStrength } from './blocks.js';
+import { buildConditioning, buildStrength } from './blocks.js';
 import { normalizeRequest } from './request.js';
+import { mulberry32 } from './rng.js';
 import { BY_ID } from './data/exercises.js';
 import type { Exercise, NormalizedRequest } from './types.js';
 
@@ -16,6 +17,8 @@ function byId(id: string): Exercise {
 
 const backSquat = byId('back_squat');
 const cleanAndJerk = byId('clean_and_jerk');
+const pushPress = byId('push_press');
+const burpee = byId('burpee');
 
 describe('buildStrength — ramp til tung 5RM', () => {
   it('kan vælge ramp-skemaet ved niveau 5 for et kvalificerende løft', () => {
@@ -70,5 +73,38 @@ describe('buildStrength — ramp til tung 5RM', () => {
     const rampTime = ramp.movements.reduce((s, m) => s + m.workSec, 0);
     expect(flat.title).toContain('5 × 5');
     expect(rampTime).toBe(flatTime);
+  });
+});
+
+describe('buildConditioning — realistisk tempo på tungt udstyr', () => {
+  // Reproducerer bug-scenariet: team rotation med høj kondition giver 45 sek. arbejde
+  // pr. station. Med det gamle, faste fill (0.9) og loft (hi × 1.5) blev det til 14
+  // Push Press på 45 sek. — over øvelsens eget rep-loft på 12.
+  const heavyReq = normalizeRequest({ minutes: 20, men: 1, level: 4, condition: 9, seed: 1 });
+
+  it('overskrider aldrig øvelsens eget rep-loft for tungt udstyr i team rotation', () => {
+    const block = buildConditioning(heavyReq, mulberry32(1), {
+      format: 'team_rotation', exercises: [pushPress], minutes: 12,
+    });
+    const reps = block?.movements[0]?.reps ?? 0;
+    expect(reps).toBeGreaterThan(0);
+    expect(reps).toBeLessThanOrEqual(12);
+  });
+
+  it('tilføjer en "bryd op i sæt"-cue, når reptallet er højt på tungt udstyr', () => {
+    const block = buildConditioning(heavyReq, mulberry32(1), {
+      format: 'team_rotation', exercises: [pushPress], minutes: 12,
+    });
+    const m = block?.movements[0];
+    expect(m?.reps).toBeGreaterThanOrEqual(7);
+    expect(m?.cue).toContain('bryd det gerne op');
+  });
+
+  it('ændrer ikke tempoet eller cuen for kropsvægtsøvelser', () => {
+    const block = buildConditioning(heavyReq, mulberry32(1), {
+      format: 'team_rotation', exercises: [burpee], minutes: 12,
+    });
+    const m = block?.movements[0];
+    expect(m?.cue).not.toContain('bryd det gerne op');
   });
 });

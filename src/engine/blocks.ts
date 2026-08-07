@@ -15,17 +15,35 @@ const LADDERS: number[][] = [
   [9, 15, 21],
 ];
 
+/** Tungt udstyr, hvor tempoet reelt falder under et interval — ikke kun kropsvægt/maskine. */
+const isHeavyImplement = (ex: Exercise): boolean => ex.eq.includes('barbell') || ex.eq.includes('sled');
+
 function resize(ex: Exercise, req: NormalizedRequest, rnd: Rng, reps: number): Movement {
-  return buildMovement(ex, req, rnd, { reps, intensity: 1 });
+  // Ved høje reptal på tungt udstyr er ét ubrudt sæt urealistisk — cuen opfordrer til at
+  // dele det op, i stedet for at motoren lader som om tempoet holder hele vejen.
+  const cue = isHeavyImplement(ex) && reps >= 7
+    ? `${ex.da} Tungt sæt — bryd det gerne op i 2 kortere sæt med et par sekunders pause, hvis det er nødvendigt.`
+    : undefined;
+  return buildMovement(ex, req, rnd, { reps, intensity: 1, ...(cue ? { cue } : {}) });
 }
 
-/** Antal gentagelser, der passer i et interval af den givne længde. */
+/**
+ * Antal gentagelser, der passer i et interval af den givne længde.
+ *
+ * `fill` antager i forvejen, at tempoet holder hele vejen — det er en rimelig antagelse
+ * for kropsvægt og maskiner, men ikke for et tungt løft, hvor grebet, teknikken og
+ * vejrtrækningen sætter et lavere reelt tempo, jo længere sættet varer. Tungt udstyr får
+ * derfor et lavere effektivt fill og må aldrig overskride øvelsens egen normale rep-loft.
+ */
 function repsForInterval(ex: Exercise, seconds: number, fill = 0.62): number {
-  const target = seconds * fill;
+  const heavy = isHeavyImplement(ex);
+  const effectiveFill = heavy ? fill * 0.7 : fill;
+  const target = seconds * effectiveFill;
   const step = ex.unit === 'cal' ? 1 : ex.unit === 'm' ? 25 : ex.unit === 'sec' ? 5 : 1;
   const raw = ex.unit === 'sec' ? target : target / ex.sec;
   const [lo, hi] = ex.rep ?? [1, 999];
-  return clamp(Math.max(step, roundTo(raw, step)), Math.min(lo, 3), hi * 1.5);
+  const ceiling = heavy ? hi : hi * 1.5;
+  return clamp(Math.max(step, roundTo(raw, step)), Math.min(lo, 3), ceiling);
 }
 
 export interface ConditioningOptions {
