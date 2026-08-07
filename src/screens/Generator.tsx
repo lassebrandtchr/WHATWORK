@@ -240,27 +240,63 @@ function PeopleStep({ gen, patch }: StepProps) {
 }
 
 function WeightStep({ gen, patch }: StepProps) {
-  const rows: { key: 'bwM' | 'bwF' | 'bwX'; label: string; count: number }[] = [
-    { key: 'bwM', label: 'Gennemsnit mænd', count: gen.men },
-    { key: 'bwF', label: 'Gennemsnit kvinder', count: gen.women },
-    { key: 'bwX', label: 'Gennemsnit ikke angivet', count: gen.neutral },
+  const rows: {
+    key: 'M' | 'F' | 'X';
+    genderLabel: string;
+    avgLabel: string;
+    bwField: 'bwM' | 'bwF' | 'bwX';
+    weightsField: 'weightsM' | 'weightsF' | 'weightsX';
+    count: number;
+  }[] = [
+    { key: 'M', genderLabel: 'Mand', avgLabel: 'Gennemsnit mænd', bwField: 'bwM', weightsField: 'weightsM', count: gen.men },
+    { key: 'F', genderLabel: 'Kvinde', avgLabel: 'Gennemsnit kvinder', bwField: 'bwF', weightsField: 'weightsF', count: gen.women },
+    { key: 'X', genderLabel: 'Ikke angivet', avgLabel: 'Gennemsnit ikke angivet', bwField: 'bwX', weightsField: 'weightsX', count: gen.neutral },
   ];
   const active = rows.filter((r) => r.count > 0);
   const solo = participantsOf(gen) === 1;
+  const showIndividual = !solo && gen.individualWeights;
+
+  const setPerson = (weightsField: 'weightsM' | 'weightsF' | 'weightsX', index: number, value: number): void => {
+    const next = gen[weightsField].slice();
+    next[index] = Math.max(35, Math.min(200, value));
+    patch({ [weightsField]: next });
+  };
 
   return (
     <div className="ww-stack">
-      {active.map((r) => (
+      {!solo && (
+        <div className="ww-wrap" style={{ marginBottom: 4 }}>
+          <Chip on={!gen.individualWeights} onClick={() => patch({ individualWeights: false })}>Gennemsnit</Chip>
+          <Chip on={gen.individualWeights} onClick={() => patch({ individualWeights: true })}>Individuel</Chip>
+        </div>
+      )}
+
+      {!showIndividual && active.map((r) => (
         <Counter
           key={r.key}
-          label={solo ? 'Din vægt' : r.label}
+          label={solo ? 'Din vægt' : r.avgLabel}
           hint={solo ? 'Bruges til skalering af kropsvægtsøvelser og vægte' : `${r.count} ${r.count === 1 ? 'deltager' : 'deltagere'}`}
-          value={`${gen[r.key]} kg`}
+          value={`${gen[r.bwField]} kg`}
           minWidth={72}
-          onDown={() => patch({ [r.key]: Math.max(35, gen[r.key] - 1) })}
-          onUp={() => patch({ [r.key]: Math.min(200, gen[r.key] + 1) })}
+          onDown={() => patch({ [r.bwField]: Math.max(35, gen[r.bwField] - 1) })}
+          onUp={() => patch({ [r.bwField]: Math.min(200, gen[r.bwField] + 1) })}
         />
       ))}
+
+      {showIndividual && active.flatMap((r) => Array.from({ length: r.count }, (_, i) => {
+        const value = gen[r.weightsField][i] ?? gen[r.bwField];
+        return (
+          <Counter
+            key={`${r.key}-${i}`}
+            label={`${r.genderLabel} ${i + 1}`}
+            value={`${value} kg`}
+            minWidth={72}
+            onDown={() => setPerson(r.weightsField, i, value - 1)}
+            onUp={() => setPerson(r.weightsField, i, value + 1)}
+          />
+        );
+      }))}
+
       <p style={{ marginTop: 8, fontSize: 13.5, color: 'var(--ww-text-3)', lineHeight: 1.6 }}>
         Kropsvægten bruges kun til at foreslå belastninger. Alle kilo er programmeringsforslag —
         tilpas dem efter teknik og dagsform.
