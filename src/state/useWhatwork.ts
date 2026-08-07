@@ -34,6 +34,10 @@ const DEFAULT_PROGRAM_DRAFT: ProgramDraft = { goal: 'allround', weeks: 4, days: 
 /** Referencevægt for de profiler, brugeren ikke selv har. */
 const PEER_BODYWEIGHT = { m: 88, f: 66, x: 77 } as const;
 
+/** Samlet varighed af loading-animationen. Motoren er faktisk færdig på millisekunder —
+ * det her er bevidst langsommere, så det ligner, at den tænker sig om. */
+const LOADING_MS = 7000;
+
 export const ONB_STEPS = 4;
 
 /** Et frisk generatorudkast med brugerens profil som udgangspunkt. */
@@ -473,19 +477,31 @@ export function useWhatwork() {
         const ph = eng.PHASES[phase];
         if (!ph) {
           void pending.then((result) => {
-            animation.current = window.setTimeout(() => settle(result), 80);
+            animation.current = window.setTimeout(() => settle(result), 200);
           });
           return;
         }
         setPhaseText(ph.text);
-        // Genereringen er lokal og tager få millisekunder. Fase-animationen viser, hvad
-        // der blev afgjort undervejs, men skal ikke få en færdig workout til at vente:
-        // hele sekvensen er under et halvt sekund.
+        // Genereringen er lokal og tager få millisekunder — uden animation ville skærmen
+        // blinke forbi på et øjeblik. Faserne strækkes derfor ud over ca. LOADING_MS,
+        // proportionalt med hver fases andel af fremdriftsbjælken, så det ligner, at
+        // motoren reelt bruger tid på at bygge netop denne workout.
+        const from = value;
+        const span = ph.to - from;
+        const phaseDurationMs = Math.max(400, Math.round((span / 100) * LOADING_MS));
+        const startedAt = Date.now();
         const tick = (): void => {
-          value = Math.min(ph.to, value + Math.max(2, Math.round((ph.to - value) / 2)));
+          const t = Math.min(1, (Date.now() - startedAt) / phaseDurationMs);
+          value = Math.round(from + span * t);
           setProgress(value);
-          if (value < ph.to) animation.current = window.setTimeout(tick, 16);
-          else { phase += 1; animation.current = window.setTimeout(step, 20); }
+          if (t < 1) {
+            animation.current = window.setTimeout(tick, 60);
+          } else {
+            value = ph.to;
+            setProgress(value);
+            phase += 1;
+            animation.current = window.setTimeout(step, 40);
+          }
         };
         tick();
       };
