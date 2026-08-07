@@ -10,3 +10,7 @@ dev-dist
 coverage
 *.tsbuildinfo
 .impeccable
+
+# Rå kildebilleder — for store og tunge til git. Kun de bearbejdede assets i
+# src/assets (fx flow-graphic.png) committes.
+src/assets/Billede til startskærm : om os skærm.png

@@ -40,7 +40,10 @@ function aiMixEndpoint(): PluginOption {
   };
 }
 
-export default defineConfig(({ mode }) => {
+/** GitHub Pages serverer projektet under /WHATWORK/, ikke fra domænets rod. */
+const PAGES_BASE = '/WHATWORK/';
+
+export default defineConfig(({ mode, command }) => {
   // Nøglerne læses ind i process.env på serversiden. `loadEnv` med tomt prefix henter
   // også variabler uden VITE_, men de eksponeres aldrig via `define`.
   const env = loadEnv(mode, process.cwd(), '');
@@ -49,6 +52,7 @@ export default defineConfig(({ mode }) => {
   if (env.OPENAI_MODEL) process.env.OPENAI_MODEL = env.OPENAI_MODEL;
 
   return {
+    base: command === 'build' ? PAGES_BASE : '/',
     plugins: [
       react(),
       aiMixEndpoint(),
@@ -56,14 +60,14 @@ export default defineConfig(({ mode }) => {
         registerType: 'prompt', // Aldrig auto-reload midt i en aktiv session.
         injectRegister: null,
         manifest: {
-          id: '/',
+          id: command === 'build' ? PAGES_BASE : '/',
           name: 'WHATWORK',
           short_name: 'WHATWORK',
           description: 'Bygget til funktionel fitness.',
           lang: 'da-DK',
           dir: 'ltr',
-          start_url: '/',
-          scope: '/',
+          start_url: command === 'build' ? PAGES_BASE : '/',
+          scope: command === 'build' ? PAGES_BASE : '/',
           display: 'standalone',
           orientation: 'portrait',
           background_color: '#101215',

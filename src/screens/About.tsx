@@ -1,4 +1,5 @@
 import * as eng from '../engine/index.js';
+import { FlowGraphic } from '../components/FlowGraphic.js';
 import { Note, PageHeader } from '../components/ui.js';
 
 export function About() {
@@ -21,16 +22,19 @@ export function About() {
 
       <section aria-labelledby="ww-what" style={{ marginBottom: 30 }}>
         <h2 id="ww-what" className="ww-h2" style={{ marginBottom: 12 }}>Hvad appen er</h2>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10, maxWidth: '66ch' }}>
-          <p style={{ margin: 0, fontSize: 15, lineHeight: 1.65, color: 'var(--ww-body)' }}>
-            WHATWORK er en regelbaseret træningsgenerator. Den kører lokalt på din enhed og bygger
-            en færdig workout ud fra tid, deltagere, niveau, retning og det udstyr, I faktisk har.
-          </p>
-          <p style={{ margin: 0, fontSize: 15, lineHeight: 1.65, color: 'var(--ww-body)' }}>
-            Der er ingen konto, ingen server og ingen cloud-synk. Kerneflowet virker uden netværk.
-            AI bruges kun som et valgfrit variationslag, og kun hvis du selv slår det til og
-            lægger en nøgle på serveren.
-          </p>
+        <div style={{ display: 'flex', gap: 20, alignItems: 'flex-start', flexWrap: 'wrap' }}>
+          <FlowGraphic width={124} />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10, flex: '1 1 260px', minWidth: 260, maxWidth: '66ch' }}>
+            <p style={{ margin: 0, fontSize: 15, lineHeight: 1.65, color: 'var(--ww-body)' }}>
+              WHATWORK er en regelbaseret træningsgenerator. Den kører lokalt på din enhed og bygger
+              en færdig workout ud fra tid, deltagere, niveau, retning og det udstyr, I faktisk har.
+            </p>
+            <p style={{ margin: 0, fontSize: 15, lineHeight: 1.65, color: 'var(--ww-body)' }}>
+              Der er ingen konto, ingen server og ingen cloud-synk. Kerneflowet virker uden netværk.
+              AI bruges kun som et valgfrit variationslag, og kun hvis du selv slår det til og
+              lægger en nøgle på serveren.
+            </p>
+          </div>
         </div>
       </section>
 
