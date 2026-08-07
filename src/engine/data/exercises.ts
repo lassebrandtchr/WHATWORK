@@ -1,0 +1,176 @@
+import type { Exercise } from '../types.js';
+
+/**
+ * Øvelseskataloget.
+ *
+ * `fat` er en fatigue-vektor 0–3 pr. akse, `sec` er sekunder pr. rep/meter/kalorie ved
+ * arbejdstempo, `load` er referencebelastningen i kg ved referencekropsvægt og niveau 4.
+ *
+ * `weight` styrer, hvor gerne generatoren vælger øvelsen til en hoveddel. Øvelser med
+ * `accessory: true` (Dead Bug, Glute Bridge, Step-up, Farmer Hold, Plank …) findes som
+ * skalering, rehabvenlig substitution og coach-alternativ, men bærer aldrig en hoveddel.
+ */
+const E = (o: Partial<Exercise> & Pick<Exercise, 'id' | 'name' | 'cat' | 'da'>): Exercise => ({
+  elig: 'default', tech: 1, lvl: 1, avoid: [], fat: {}, sec: 3, unit: 'reps',
+  eq: ['bodyweight'], sub: [], weight: 1, ...o,
+});
+
+export const EXERCISES: Exercise[] = [
+  /* ---------- Squat og underkrop ---------- */
+  E({ id: 'air_squat', name: 'Air Squat', cat: 'squat', da: 'Dyb squat med kropsvægt, hælene i gulvet.', fat: { legs: 2, engine: 1 }, sec: 2.2, rep: [12, 25], sub: ['goblet_squat'], weight: 1.1 }),
+  E({ id: 'goblet_squat', name: 'Goblet Squat', cat: 'squat', eq: ['kettlebell'], da: 'Hold vægten ved brystet, brystkassen høj.', fat: { legs: 2, core: 1 }, sec: 3, rep: [10, 20], load: { m: 24, f: 16 }, sub: ['air_squat'], weight: 1.2 }),
+  E({ id: 'back_squat', name: 'Back Squat', cat: 'squat', eq: ['barbell'], lvl: 2, tech: 3, avoid: ['knee', 'back'], da: 'Stangen på ryggen, kontrolleret ned, driv op gennem midtfoden.', fat: { legs: 3, cns: 2, core: 1 }, sec: 4, rep: [3, 10], load: { m: 100, f: 70 }, sub: ['front_squat', 'goblet_squat'], weight: 1.3 }),
+  E({ id: 'front_squat', name: 'Front Squat', cat: 'squat', eq: ['barbell'], lvl: 3, tech: 4, avoid: ['knee', 'wrist'], da: 'Stangen i front rack, albuerne højt hele vejen.', fat: { legs: 3, core: 2, cns: 2 }, sec: 4, rep: [3, 8], load: { m: 80, f: 55 }, sub: ['back_squat', 'goblet_squat'], weight: 1.2 }),
+  E({ id: 'overhead_squat', name: 'Overhead Squat', cat: 'squat', eq: ['barbell'], lvl: 4, tech: 5, elig: 'advanced', avoid: ['shoulder', 'knee'], da: 'Stangen låst over hovedet gennem hele squatten.', fat: { legs: 2, shoulder: 3, core: 2, cns: 2 }, sec: 5, rep: [3, 8], load: { m: 45, f: 30 }, sub: ['front_squat'], weight: 0.7 }),
+  E({ id: 'walking_lunge', name: 'Walking Lunge', cat: 'squat', da: 'Langt skridt, bagerste knæ let ned mod gulvet.', fat: { legs: 3, core: 1 }, sec: 2, rep: [20, 40], avoid: ['knee'], sub: ['reverse_lunge'], weight: 1.3 }),
+  E({ id: 'db_walking_lunge', name: 'Walking Lunge med håndvægte', cat: 'squat', eq: ['dumbbell'], lvl: 2, avoid: ['knee'], da: 'Håndvægte ved siden eller på skuldrene. Lodret overkrop.', fat: { legs: 3, grip: 2, core: 1 }, sec: 2.4, rep: [20, 40], load: { m: 2 * 22.5, f: 2 * 15 }, pair: true, sub: ['walking_lunge'], weight: 1.3 }),
+  E({ id: 'reverse_lunge', name: 'Reverse Lunge', cat: 'squat', da: 'Træd bagud i stedet for frem — mildere for knæet.', fat: { legs: 2 }, sec: 2, rep: [16, 30], sub: ['air_squat'], weight: 1 }),
+  E({ id: 'db_reverse_lunge', name: 'Reverse Lunge med håndvægte', cat: 'squat', eq: ['dumbbell'], lvl: 2, da: 'Træd bagud med en håndvægt i hver hånd, brystet højt.', fat: { legs: 3, grip: 2, core: 1 }, sec: 2.4, rep: [16, 30], load: { m: 2 * 20, f: 2 * 14 }, pair: true, sub: ['reverse_lunge', 'walking_lunge'], weight: 1.35 }),
+  E({ id: 'db_front_rack_lunge', name: 'Front Rack Lunge', cat: 'squat', eq: ['dumbbell'], lvl: 2, da: 'Håndvægte på skuldrene, overkroppen lodret.', fat: { legs: 3, core: 2, shoulder: 1 }, sec: 3, rep: [16, 24], load: { m: 2 * 22.5, f: 2 * 15 }, pair: true, avoid: ['knee'], sub: ['db_reverse_lunge'], weight: 1.1 }),
+  E({ id: 'box_jump_over', name: 'Box Jump Over', cat: 'squat', eq: ['box'], lvl: 2, avoid: ['knee'], da: 'Op og over boksen. Stå helt op i toppen.', fat: { legs: 3, engine: 3, cns: 1 }, sec: 3.4, rep: [10, 24], sub: ['box_jump', 'box_step_over'], weight: 1.35 }),
+  E({ id: 'box_jump', name: 'Box Jump', cat: 'squat', eq: ['box'], lvl: 2, avoid: ['knee'], da: 'Spring op, stå helt op, træd ned.', fat: { legs: 2, engine: 2, cns: 1 }, sec: 3, rep: [10, 20], sub: ['box_step_over'], weight: 1.15 }),
+  E({ id: 'box_step_over', name: 'Box Step-over', cat: 'squat', eq: ['box'], da: 'Træd op og over. Fuld strækning i toppen.', fat: { legs: 2, engine: 2 }, sec: 2.8, rep: [16, 30], sub: ['reverse_lunge'], weight: 0.9 }),
+  E({ id: 'box_step_up', name: 'Box Step-up', cat: 'squat', eq: ['box'], accessory: true, da: 'Fuld strækning i toppen, kontrolleret ned.', fat: { legs: 2, engine: 1 }, sec: 2.5, rep: [16, 30], sub: ['reverse_lunge'], weight: 0.4 }),
+  E({ id: 'bulgarian_split_squat', name: 'Bulgarian Split Squat', cat: 'squat', eq: ['box'], lvl: 2, avoid: ['knee'], accessory: true, da: 'Bagerste fod hævet, vægten på forreste ben.', fat: { legs: 3, core: 1 }, sec: 3, rep: [12, 20], sub: ['reverse_lunge'], weight: 0.5 }),
+  E({ id: 'pistol_squat', name: 'Pistol Squat', cat: 'squat', lvl: 4, tech: 5, elig: 'advanced', avoid: ['knee'], da: 'Ét ben hele vejen ned og op. Hælen bliver i gulvet.', fat: { legs: 3, core: 2, cns: 1 }, sec: 3.5, rep: [8, 16], sub: ['air_squat'], weight: 0.7 }),
+
+  /* ---------- Hinge ---------- */
+  E({ id: 'deadlift', name: 'Deadlift', cat: 'hinge', eq: ['barbell'], lvl: 2, tech: 3, avoid: ['back'], da: 'Flad ryg, stangen tæt på kroppen, hoften og skuldrene op samtidig.', fat: { hinge: 3, grip: 2, cns: 3, legs: 1 }, sec: 4, rep: [3, 10], load: { m: 120, f: 85 }, sub: ['rdl', 'kb_deadlift'], weight: 1.2 }),
+  E({ id: 'rdl', name: 'Romanian Deadlift', cat: 'hinge', eq: ['barbell'], lvl: 2, tech: 2, avoid: ['back'], da: 'Hoften bagud, let bøjede knæ, stræk i baglåret.', fat: { hinge: 3, grip: 1 }, sec: 4, rep: [6, 12], load: { m: 80, f: 55 }, sub: ['db_rdl'], weight: 0.9 }),
+  E({ id: 'db_rdl', name: 'Dumbbell RDL', cat: 'hinge', eq: ['dumbbell'], da: 'Samme hinge, men lettere at styre.', fat: { hinge: 2, grip: 1 }, sec: 3, rep: [10, 16], load: { m: 2 * 22.5, f: 2 * 15 }, pair: true, sub: ['kb_deadlift'], weight: 0.8 }),
+  E({ id: 'kb_deadlift', name: 'Kettlebell Deadlift', cat: 'hinge', eq: ['kettlebell'], accessory: true, da: 'Hinge med kettlebell mellem fødderne.', fat: { hinge: 2, grip: 1 }, sec: 2.5, rep: [12, 20], load: { m: 32, f: 24 }, sub: ['db_rdl'], weight: 0.4 }),
+  E({ id: 'kb_swing', name: 'Kettlebell Swing', cat: 'hinge', eq: ['kettlebell'], lvl: 2, tech: 2, avoid: ['back'], da: 'Hoftedrevet sving — ikke et løft med armene.', fat: { hinge: 3, engine: 2, grip: 2 }, sec: 1.6, rep: [20, 40], load: { m: 24, f: 16 }, sub: ['kb_deadlift'], weight: 1.4 }),
+  E({ id: 'kb_american_swing', name: 'American Kettlebell Swing', cat: 'hinge', eq: ['kettlebell'], lvl: 3, tech: 3, avoid: ['back', 'shoulder'], da: 'Hele vejen over hovedet. Hoften driver, armene styrer.', fat: { hinge: 3, shoulder: 2, engine: 3 }, sec: 2, rep: [15, 30], load: { m: 24, f: 16 }, sub: ['kb_swing'], weight: 1 }),
+  E({ id: 'sandbag_clean', name: 'Sandbag Clean', cat: 'hinge', eq: ['sandbag'], lvl: 2, avoid: ['back'], da: 'Sæk fra gulv til bryst. Hoften gør arbejdet.', fat: { hinge: 3, grip: 3, engine: 2 }, sec: 4, rep: [8, 16], load: { m: 50, f: 35 }, sub: ['kb_swing'], weight: 1.1 }),
+  E({ id: 'hip_thrust', name: 'Hip Thrust', cat: 'hinge', eq: ['barbell', 'box'], lvl: 2, accessory: true, da: 'Skulderblade på boksen, fuld hofteekstension i toppen.', fat: { hinge: 2, legs: 1 }, sec: 3, rep: [10, 15], load: { m: 80, f: 60 }, sub: ['glute_bridge'], weight: 0.4 }),
+  E({ id: 'glute_bridge', name: 'Glute Bridge', cat: 'hinge', accessory: true, da: 'Pres gennem hælene, klem balderne i toppen.', fat: { hinge: 1 }, sec: 2, rep: [15, 25], sub: [], weight: 0.25 }),
+  E({ id: 'good_morning', name: 'Good Morning', cat: 'hinge', eq: ['barbell'], lvl: 3, avoid: ['back'], accessory: true, da: 'Let stang, langsom hinge, ryggen låst.', fat: { hinge: 2, core: 1 }, sec: 4, rep: [8, 12], load: { m: 50, f: 35 }, sub: ['rdl'], weight: 0.35 }),
+
+  /* ---------- Pres ---------- */
+  E({ id: 'push_up', name: 'Push-up', cat: 'press', da: 'Krop i én linje, bryst til gulv.', fat: { press: 2, core: 1 }, sec: 2, rep: [10, 25], avoid: ['wrist'], sub: ['knee_push_up'], weight: 1 }),
+  E({ id: 'knee_push_up', name: 'Knee Push-up', cat: 'press', accessory: true, da: 'Samme pres fra knæene.', fat: { press: 1 }, sec: 2, rep: [10, 20], sub: [], weight: 0.3 }),
+  E({ id: 'hr_push_up', name: 'Hand-release Push-up', cat: 'press', lvl: 2, da: 'Hænderne slippes gulvet i bunden — ingen bounce.', fat: { press: 2, core: 1 }, sec: 2.5, rep: [10, 20], sub: ['push_up'], weight: 1 }),
+  E({ id: 'strict_press', name: 'Strict Press', cat: 'press', eq: ['barbell'], lvl: 2, tech: 2, avoid: ['shoulder'], da: 'Ingen ben — kun overkrop. Hovedet igennem i toppen.', fat: { press: 3, shoulder: 3, core: 1, cns: 2 }, sec: 3.5, rep: [3, 10], load: { m: 55, f: 35 }, sub: ['db_shoulder_press'], weight: 1.3 }),
+  E({ id: 'push_press', name: 'Push Press', cat: 'press', eq: ['barbell'], lvl: 2, tech: 3, avoid: ['shoulder'], da: 'Kort dip med benene, driv stangen igennem over hovedet.', fat: { press: 2, shoulder: 3, legs: 1, cns: 2 }, sec: 3, rep: [5, 12], load: { m: 65, f: 45 }, sub: ['strict_press', 'db_shoulder_press'], weight: 1.45 }),
+  E({ id: 'db_shoulder_press', name: 'Dumbbell Shoulder Press', cat: 'press', eq: ['dumbbell'], avoid: ['shoulder'], da: 'Pres over hovedet med håndvægte, ribben ned.', fat: { press: 2, shoulder: 2 }, sec: 3, rep: [8, 15], load: { m: 2 * 20, f: 2 * 12.5 }, pair: true, sub: ['push_up'], weight: 1 }),
+  E({ id: 'db_push_press', name: 'Dumbbell Push Press', cat: 'press', eq: ['dumbbell'], lvl: 2, avoid: ['shoulder'], da: 'Dip med benene, pres håndvægtene igennem.', fat: { press: 2, shoulder: 3, legs: 1, engine: 2 }, sec: 2.6, rep: [10, 20], load: { m: 2 * 22.5, f: 2 * 15 }, pair: true, sub: ['db_shoulder_press'], weight: 1.1 }),
+  E({ id: 'bench_press', name: 'Bench Press', cat: 'press', eq: ['barbell', 'box'], lvl: 2, tech: 2, avoid: ['shoulder'], da: 'Skulderbladene samlet, kontrolleret til brystet.', fat: { press: 3, shoulder: 2, cns: 2 }, sec: 4, rep: [3, 10], load: { m: 90, f: 50 }, sub: ['db_bench'], weight: 0.8 }),
+  E({ id: 'db_bench', name: 'Dumbbell Bench Press', cat: 'press', eq: ['dumbbell', 'box'], accessory: true, da: 'Håndvægte giver frit bevægelsesbane for skulderen.', fat: { press: 2, shoulder: 1 }, sec: 3, rep: [8, 15], load: { m: 2 * 27.5, f: 2 * 15 }, pair: true, sub: ['push_up'], weight: 0.5 }),
+  E({ id: 'dip', name: 'Dips', cat: 'press', eq: ['rings', 'box'], lvl: 3, tech: 3, avoid: ['shoulder'], da: 'Skuldrene under albuerne i bunden, fuld strækning i toppen.', fat: { press: 3, shoulder: 2 }, sec: 2.5, rep: [6, 15], sub: ['push_up'], weight: 0.8 }),
+  E({ id: 'hspu', name: 'Handstand Push-up', cat: 'press', lvl: 4, tech: 5, elig: 'advanced', avoid: ['shoulder', 'wrist'], da: 'Håndstand mod væg, hovedet til gulvet, pres op.', fat: { press: 3, shoulder: 3, cns: 2 }, sec: 4, rep: [5, 12], sub: ['db_shoulder_press'], weight: 0.8 }),
+
+  /* ---------- Træk ---------- */
+  E({ id: 'pull_up', name: 'Pull-ups', cat: 'pull', eq: ['pullupbar'], lvl: 3, tech: 3, avoid: ['shoulder'], da: 'Hagen over stangen, fuld strækning i bunden.', fat: { pull: 3, grip: 2, shoulder: 1 }, sec: 3, rep: [5, 14], sub: ['band_pull_up', 'ring_row'], weight: 1.4 }),
+  E({ id: 'band_pull_up', name: 'Band-assisted Pull-ups', cat: 'pull', eq: ['pullupbar', 'band'], lvl: 1, tech: 2, avoid: ['shoulder'], da: 'Elastik under foden eller knæet. Samme bane, mindre vægt.', fat: { pull: 2, grip: 2 }, sec: 2.8, rep: [8, 18], sub: ['ring_row'], weight: 1.1 }),
+  E({ id: 'chest_to_bar', name: 'Chest-to-Bar Pull-ups', cat: 'pull', eq: ['pullupbar'], lvl: 4, tech: 4, elig: 'advanced', avoid: ['shoulder'], da: 'Brystet rører stangen. Kip fra en spændt krop.', fat: { pull: 3, grip: 3, shoulder: 2 }, sec: 3, rep: [5, 12], sub: ['pull_up'], weight: 0.8 }),
+  E({ id: 'jumping_pull_up', name: 'Jumping Pull-up', cat: 'pull', eq: ['pullupbar', 'box'], accessory: true, da: 'Spring op, kontrolleret ned.', fat: { pull: 2, grip: 1, engine: 1 }, sec: 2, rep: [10, 20], sub: ['ring_row'], weight: 0.5 }),
+  E({ id: 'ring_row', name: 'Ring Row', cat: 'pull', eq: ['rings'], da: 'Krop lige, træk brystet til ringene. Sværhedsgrad = fodplacering.', fat: { pull: 2, core: 1 }, sec: 2.5, rep: [10, 20], sub: ['db_row'], weight: 0.8 }),
+  E({ id: 'db_row', name: 'Dumbbell Row', cat: 'pull', eq: ['dumbbell'], da: 'Én arm ad gangen, træk mod hoften.', fat: { pull: 2, grip: 1 }, sec: 2.5, rep: [10, 20], load: { m: 27.5, f: 17.5 }, sub: ['ring_row'], weight: 0.8 }),
+  E({ id: 'barbell_row', name: 'Barbell Row', cat: 'pull', eq: ['barbell'], lvl: 2, avoid: ['back'], da: 'Hinge frem, træk stangen til underste ribben.', fat: { pull: 3, hinge: 1, grip: 2 }, sec: 3, rep: [6, 12], load: { m: 70, f: 45 }, sub: ['db_row'], weight: 0.9 }),
+  E({ id: 'toes_to_bar', name: 'Toes-to-Bar', cat: 'pull', eq: ['pullupbar'], lvl: 3, tech: 4, elig: 'advanced', avoid: ['shoulder'], da: 'Tæerne til stangen, kontrolleret sving.', fat: { core: 3, grip: 3, shoulder: 1 }, sec: 2.5, rep: [8, 15], sub: ['hanging_knee_raise', 'sit_up'], weight: 1 }),
+  E({ id: 'hanging_knee_raise', name: 'Hanging Knee Raise', cat: 'pull', eq: ['pullupbar'], lvl: 2, accessory: true, da: 'Knæene op over hoftehøjde, uden at gynge.', fat: { core: 2, grip: 2 }, sec: 2.5, rep: [10, 18], sub: ['sit_up'], weight: 0.4 }),
+
+  /* ---------- Hele kroppen ---------- */
+  E({ id: 'thruster', name: 'Thrusters', cat: 'fullbody', eq: ['barbell'], lvl: 3, tech: 3, avoid: ['shoulder', 'knee'], da: 'Front squat direkte videre til pres over hovedet i én bevægelse.', fat: { legs: 3, shoulder: 3, engine: 3, press: 2 }, sec: 3, rep: [9, 21], load: { m: 43, f: 30 }, sub: ['db_thruster'], weight: 1.4 }),
+  E({ id: 'db_thruster', name: 'Dumbbell Thrusters', cat: 'fullbody', eq: ['dumbbell'], lvl: 2, avoid: ['shoulder'], da: 'Squat og pres med håndvægte samlet.', fat: { legs: 2, shoulder: 2, engine: 3 }, sec: 2.6, rep: [10, 20], load: { m: 2 * 20, f: 2 * 12.5 }, pair: true, sub: ['air_squat'], weight: 1.3 }),
+  E({ id: 'burpee', name: 'Burpees', cat: 'fullbody', da: 'Bryst til gulv, op og hop med hænderne over hovedet.', fat: { engine: 3, press: 1, legs: 1 }, sec: 4, rep: [8, 20], sub: ['step_back_burpee'], weight: 1.3 }),
+  E({ id: 'step_back_burpee', name: 'Step-back Burpee', cat: 'fullbody', accessory: true, da: 'Samme bevægelse, men trin i stedet for hop.', fat: { engine: 2 }, sec: 4.5, rep: [8, 16], sub: [], weight: 0.5 }),
+  E({ id: 'burpee_box_jump_over', name: 'Burpee Box Jump-over', cat: 'fullbody', eq: ['box'], lvl: 3, avoid: ['knee'], da: 'Burpee og over boksen — enhver måde tæller.', fat: { engine: 3, legs: 2 }, sec: 5, rep: [8, 16], sub: ['burpee'], weight: 1.2 }),
+  E({ id: 'burpee_pull_up', name: 'Burpee Pull-up', cat: 'fullbody', eq: ['pullupbar'], lvl: 3, avoid: ['shoulder'], da: 'Burpee under stangen, spring direkte op i pull-up.', fat: { engine: 3, pull: 3, grip: 2 }, sec: 5.5, rep: [6, 14], sub: ['burpee'], weight: 1 }),
+  E({ id: 'wall_ball', name: 'Wall Balls', cat: 'fullbody', eq: ['wallball'], lvl: 2, avoid: ['shoulder'], da: 'Squat til fuld dybde, kast til målet, tag imod i squat.', fat: { legs: 3, shoulder: 2, engine: 3 }, sec: 2.2, rep: [15, 30], load: { m: 9, f: 6 }, sub: ['db_thruster'], weight: 1.4 }),
+  E({ id: 'devil_press', name: 'Devil Press', cat: 'fullbody', eq: ['dumbbell'], lvl: 3, avoid: ['shoulder', 'back'], da: 'Burpee med håndvægte og sving hele vejen op over hovedet.', fat: { engine: 3, shoulder: 3, hinge: 2 }, sec: 6, rep: [6, 16], load: { m: 2 * 22.5, f: 2 * 15 }, pair: true, sub: ['db_snatch'], weight: 1.3 }),
+  E({ id: 'db_snatch', name: 'Dumbbell Snatch', cat: 'fullbody', eq: ['dumbbell'], lvl: 2, tech: 3, avoid: ['shoulder', 'back'], da: 'Fra gulv til over hovedet i én bevægelse, skiftevis arm.', fat: { hinge: 2, shoulder: 2, engine: 3, grip: 2 }, sec: 2.2, rep: [10, 24], load: { m: 22.5, f: 15 }, sub: ['kb_swing'], weight: 1.2 }),
+  E({ id: 'sandbag_shoulder', name: 'Sandbag to Shoulder', cat: 'fullbody', eq: ['sandbag'], lvl: 3, avoid: ['back'], da: 'Sandbag fra gulv til skulder, skiftevis side.', fat: { hinge: 3, grip: 2, engine: 2 }, sec: 5, rep: [6, 14], load: { m: 60, f: 40 }, sub: ['db_snatch'], weight: 1.1 }),
+  E({ id: 'sandbag_carry', name: 'Sandbag Carry', cat: 'carry', eq: ['sandbag'], unit: 'm', lvl: 2, avoid: ['back'], da: 'Sækken i bear hug. Hold brystet oppe og gå.', fat: { grip: 3, core: 3, engine: 2 }, sec: 1.4, rep: [40, 120], load: { m: 60, f: 40 }, sub: ['farmer_carry'], weight: 1 }),
+
+  /* ---------- Olympiske løft ---------- */
+  E({ id: 'power_clean', name: 'Power Clean', cat: 'oly', eq: ['barbell'], lvl: 3, tech: 4, avoid: ['back', 'wrist'], da: 'Eksplosivt træk, tag imod i front rack over parallel.', fat: { hinge: 3, cns: 3, legs: 2, grip: 2 }, sec: 4, rep: [2, 8], load: { m: 70, f: 47.5 }, sub: ['hang_power_clean', 'db_snatch'], weight: 1.3 }),
+  E({ id: 'hang_power_clean', name: 'Hang Power Clean', cat: 'oly', eq: ['barbell'], lvl: 2, tech: 4, avoid: ['back'], da: 'Start fra hængende position over knæet.', fat: { hinge: 2, cns: 3, legs: 2 }, sec: 3.5, rep: [3, 10], load: { m: 60, f: 42.5 }, sub: ['db_snatch'], weight: 1.35 }),
+  E({ id: 'clean_and_jerk', name: 'Clean & Jerk', cat: 'oly', eq: ['barbell'], lvl: 3, tech: 5, avoid: ['shoulder', 'back'], da: 'Clean til skulder, jerk over hovedet. Ét løft ad gangen.', fat: { hinge: 3, shoulder: 3, cns: 3, legs: 2 }, sec: 7, rep: [1, 6], load: { m: 70, f: 47.5 }, sub: ['power_clean'], weight: 1.2 }),
+  E({ id: 'power_snatch', name: 'Power Snatch', cat: 'oly', eq: ['barbell'], lvl: 4, tech: 5, elig: 'advanced', avoid: ['shoulder', 'back', 'wrist'], da: 'Fra gulv til over hovedet i ét træk, modtag over parallel.', fat: { hinge: 3, shoulder: 3, cns: 3 }, sec: 5, rep: [2, 6], load: { m: 50, f: 35 }, sub: ['power_clean', 'db_snatch'], weight: 0.8 }),
+  E({ id: 'push_jerk', name: 'Push Jerk', cat: 'oly', eq: ['barbell'], lvl: 3, tech: 4, avoid: ['shoulder'], da: 'Dip, driv, og dyk under stangen med låste arme.', fat: { shoulder: 3, legs: 1, cns: 3 }, sec: 3.5, rep: [2, 8], load: { m: 70, f: 47.5 }, sub: ['push_press'], weight: 1 }),
+
+  /* ---------- Core ---------- */
+  E({ id: 'sit_up', name: 'Sit-up', cat: 'core', da: 'Fuld rejsning, hænderne rører gulvet over hovedet.', fat: { core: 2 }, sec: 2, rep: [15, 30], sub: ['dead_bug'], weight: 0.8 }),
+  E({ id: 'v_up', name: 'V-up', cat: 'core', lvl: 2, da: 'Hænder og fødder mødes over hoften. Lænden bliver i gulvet.', fat: { core: 3 }, sec: 2.2, rep: [12, 24], sub: ['sit_up'], weight: 0.7 }),
+  E({ id: 'hollow_hold', name: 'Hollow Hold', cat: 'core', unit: 'sec', lvl: 2, accessory: true, da: 'Lænden presset ned i gulvet hele vejen.', fat: { core: 3 }, sec: 1, rep: [20, 45], sub: ['plank'], weight: 0.4 }),
+  E({ id: 'plank', name: 'Plank', cat: 'core', unit: 'sec', accessory: true, da: 'Ribben ned, balder spændt, ingen svaj.', fat: { core: 2 }, sec: 1, rep: [30, 60], sub: ['dead_bug'], weight: 0.25 }),
+  E({ id: 'dead_bug', name: 'Dead Bug', cat: 'core', accessory: true, da: 'Modsat arm og ben, lænden i gulvet.', fat: { core: 1 }, sec: 2.5, rep: [12, 20], sub: [], weight: 0.2 }),
+  E({ id: 'side_plank', name: 'Side Plank', cat: 'core', unit: 'sec', accessory: true, da: 'Hoften højt, krop i én linje. Skift side.', fat: { core: 2 }, sec: 1, rep: [20, 40], sub: ['plank'], weight: 0.25 }),
+
+  /* ---------- Slæde og carries ---------- */
+  E({ id: 'sled_push', name: 'Sled Push', cat: 'carry', eq: ['sled'], unit: 'm', lvl: 2, da: 'Lav krop, lange arme, korte hurtige skridt.', fat: { legs: 3, engine: 3, core: 2 }, sec: 1.8, rep: [20, 60], load: { m: 110, f: 78 }, sub: ['farmer_carry'], weight: 1.35 }),
+  E({ id: 'sled_pull', name: 'Sled Pull', cat: 'carry', eq: ['sled'], unit: 'm', lvl: 2, avoid: ['back'], da: 'Lav position, træk hånd over hånd eller gå baglæns i selen.', fat: { legs: 3, pull: 3, grip: 3, engine: 3 }, sec: 2, rep: [20, 60], load: { m: 88, f: 66 }, sub: ['sled_push'], weight: 1.25 }),
+  E({ id: 'farmer_carry', name: 'Farmer Carry', cat: 'carry', eq: ['kettlebell'], unit: 'm', da: 'Tungt i hver hånd, skuldrene tilbage, gå roligt.', fat: { grip: 3, core: 2, engine: 1 }, sec: 0.9, rep: [40, 100], load: { m: 2 * 32, f: 2 * 24 }, pair: true, sub: ['front_rack_carry'], weight: 0.9 }),
+  E({ id: 'front_rack_carry', name: 'Front Rack Carry', cat: 'carry', eq: ['kettlebell'], unit: 'm', lvl: 2, accessory: true, da: 'Kettlebells i front rack, ribben ned.', fat: { core: 3, grip: 2, shoulder: 1 }, sec: 1.1, rep: [30, 80], load: { m: 2 * 24, f: 2 * 16 }, pair: true, sub: ['farmer_carry'], weight: 0.4 }),
+  E({ id: 'farmer_hold', name: 'Farmer Hold', cat: 'carry', eq: ['kettlebell'], unit: 'sec', accessory: true, da: 'Stå stille og hold. Skuldrene ned og tilbage.', fat: { grip: 3, core: 2 }, sec: 1, rep: [20, 60], load: { m: 2 * 32, f: 2 * 24 }, pair: true, sub: ['farmer_carry'], weight: 0.2 }),
+
+  /* ---------- Cardio ---------- */
+  E({ id: 'row', name: 'RowERG', cat: 'cardio', eq: ['rower'], machine: true, unit: 'cal', da: 'Ben, krop, arme — og omvendt tilbage.', fat: { engine: 3, pull: 1, legs: 1 }, sec: 4.2, rep: [10, 30], sub: ['bike', 'ski'], weight: 1.3 }),
+  E({ id: 'ski', name: 'SkiERG', cat: 'cardio', eq: ['skierg'], machine: true, unit: 'cal', da: 'Træk fra overkroppen med hoften i.', fat: { engine: 3, pull: 2, core: 1 }, sec: 4.5, rep: [10, 25], sub: ['row', 'bike'], weight: 1.2 }),
+  E({ id: 'bike', name: 'BikeERG', cat: 'cardio', eq: ['bikeerg'], machine: true, unit: 'cal', da: 'Jævn kadence, hold pace hele vejen.', fat: { engine: 3, legs: 2 }, sec: 3.6, rep: [12, 35], sub: ['row'], weight: 1.2 }),
+  E({ id: 'assault', name: 'Assault Bike', cat: 'cardio', eq: ['assaultbike'], machine: true, unit: 'cal', da: 'Arme og ben sammen. Går hurtigt hårdt.', fat: { engine: 3, legs: 2, press: 1 }, sec: 4, rep: [10, 25], sub: ['bike', 'row'], weight: 1.3 }),
+  E({ id: 'air_run', name: 'Air Runner', cat: 'cardio', eq: ['airrunner'], machine: true, unit: 'm', da: 'Løb på kurvet bånd — pace styres af dig.', fat: { engine: 3, legs: 2 }, sec: 0.22, rep: [200, 800], sub: ['run_dist'], weight: 0.9 }),
+  E({ id: 'run_dist', name: 'Løb', cat: 'cardio', eq: ['run'], unit: 'm', da: 'Løb ude. Hold jævnt tempo.', fat: { engine: 3, legs: 2 }, sec: 0.24, rep: [200, 800], sub: ['air_run'], weight: 0.9 }),
+  E({ id: 'double_under', name: 'Double Under', cat: 'cardio', eq: ['jumprope'], lvl: 3, tech: 4, avoid: ['knee'], da: 'To ture pr. hop. Håndled, ikke arme.', fat: { engine: 3, grip: 1, legs: 1 }, sec: 0.9, rep: [30, 80], sub: ['single_under'], weight: 0.9 }),
+  E({ id: 'single_under', name: 'Single Under', cat: 'cardio', eq: ['jumprope'], accessory: true, da: 'Ét sving pr. hop, lette fødder.', fat: { engine: 2, legs: 1 }, sec: 0.55, rep: [50, 120], sub: [], weight: 0.35 }),
+  E({ id: 'shuttle_run', name: 'Shuttle Run', cat: 'cardio', unit: 'm', da: '10 m frem og tilbage. Rør linjen.', fat: { engine: 3, legs: 2 }, sec: 0.3, rep: [100, 400], sub: ['burpee'], weight: 0.8 }),
+
+  /* ---------- Dynamisk opvarmning ---------- */
+  E({ id: 'wu_easy_row', name: 'Let RowERG', cat: 'warmup', eq: ['rower'], machine: true, unit: 'sec', da: 'Roligt tempo på romaskinen. Få pulsen op.', warmupCue: 'Byg tempoet op over intervallet — slut let forpustet.', primes: ['cardio', 'fullbody'], fat: { engine: 1 }, sec: 1, rep: [60, 120], weight: 1.2 }),
+  E({ id: 'wu_easy_ski', name: 'Let SkiERG', cat: 'warmup', eq: ['skierg'], machine: true, unit: 'sec', da: 'Rolige træk på SkiERG. Hoften med i bevægelsen.', warmupCue: 'Lange, rolige træk. Slut let forpustet.', primes: ['cardio', 'pull'], fat: { engine: 1 }, sec: 1, rep: [60, 120], weight: 1.2 }),
+  E({ id: 'wu_easy_bike', name: 'Let BikeERG', cat: 'warmup', eq: ['bikeerg'], machine: true, unit: 'sec', da: 'Jævn kadence på cyklen. Få benene i gang.', warmupCue: 'Hold kadencen jævn, og byg langsomt op.', primes: ['cardio'], fat: { engine: 1 }, sec: 1, rep: [60, 120], weight: 1.2 }),
+  E({ id: 'wu_easy_assault', name: 'Let Assault Bike', cat: 'warmup', eq: ['assaultbike'], machine: true, unit: 'sec', da: 'Roligt tempo med både arme og ben.', warmupCue: 'Start meget roligt — den bider hurtigt.', primes: ['cardio', 'fullbody'], fat: { engine: 1 }, sec: 1, rep: [60, 120], weight: 1.2 }),
+  E({ id: 'wu_easy_airrunner', name: 'Let Air Runner', cat: 'warmup', eq: ['airrunner'], machine: true, unit: 'sec', da: 'Rolig jog på båndet.', warmupCue: 'Lette fødder. Byg tempoet op undervejs.', primes: ['cardio'], fat: { engine: 1 }, sec: 1, rep: [60, 120], weight: 1.2 }),
+  E({ id: 'wu_fast_feet', name: 'Fast Feet', cat: 'warmup', unit: 'sec', da: 'Hurtige små skridt på stedet, lav tyngdepunkt.', warmupCue: 'Kort kontakt med gulvet. Arme med.', primes: ['cardio', 'squat'], fat: { engine: 1, legs: 1 }, sec: 1, rep: [20, 40], weight: 1 }),
+  E({ id: 'wu_inchworm_pushup', name: 'Inchworm + Push-up', cat: 'warmup', da: 'Gå ud i planke med hænderne, én push-up, gå tilbage.', warmupCue: 'Lige krop i planken. Rolige hænder.', primes: ['press', 'core', 'fullbody'], fat: { press: 1, core: 1 }, sec: 6, rep: [4, 8], weight: 1.1 }),
+  E({ id: 'wu_squat_reach', name: 'Squat + Reach', cat: 'warmup', da: 'Dyb squat, stræk armene over hovedet i bunden.', warmupCue: 'Brystet op i bunden. Hælene i gulvet.', primes: ['squat', 'press'], fat: { legs: 1 }, sec: 4, rep: [6, 12], weight: 1.1 }),
+  E({ id: 'wu_side_lunge_reach', name: 'Side Lunge + Reach', cat: 'warmup', da: 'Skridt til siden, hoften bagud, ræk ned mod foden.', warmupCue: 'Modsatte ben holdes strakt.', primes: ['squat', 'hinge'], fat: { legs: 1 }, sec: 3.5, rep: [6, 12], weight: 1 }),
+  E({ id: 'wu_goblet_march', name: 'Goblet March', cat: 'warmup', eq: ['kettlebell'], da: 'Kettlebell ved brystet, march med høje knæ.', warmupCue: 'Ribben ned, ingen svaj i lænden.', primes: ['squat', 'core', 'carry'], load: { m: 16, f: 12 }, fat: { core: 1, legs: 1 }, sec: 2.5, rep: [10, 20], weight: 1.2 }),
+  E({ id: 'wu_bear_crawl', name: 'Bear Crawl', cat: 'warmup', unit: 'm', da: 'Knæ lige over gulvet, kryds arm og ben.', warmupCue: 'Hoften lavt og roligt — ingen vrid.', primes: ['core', 'press', 'fullbody'], fat: { core: 2, press: 1 }, sec: 1.6, rep: [10, 25], weight: 1 }),
+  E({ id: 'wu_db_complex', name: 'Let håndvægtscomplex', cat: 'warmup', eq: ['dumbbell'], da: 'Deadlift → row → clean → pres. Let vægt, én flydende serie.', warmupCue: 'Samme vægt hele vejen. Stop før det bliver tungt.', primes: ['hinge', 'pull', 'press', 'fullbody', 'oly'], load: { m: 2 * 10, f: 2 * 7.5 }, pair: true, fat: { press: 1, pull: 1, hinge: 1 }, sec: 4, rep: [4, 8], weight: 1.3 }),
+  E({ id: 'wu_empty_bar', name: 'Tom stang-complex', cat: 'warmup', eq: ['barbell'], da: 'Deadlift → hang pull → front squat → pres med tom stang.', warmupCue: 'Byg bevægelsen op, ikke vægten. 3–5 reps pr. del.', primes: ['oly', 'squat', 'hinge', 'press'], fat: { cns: 1 }, sec: 4.5, rep: [3, 6], weight: 1.35 }),
+  E({ id: 'wu_plate_gtoh', name: 'Plate Ground-to-Overhead', cat: 'warmup', eq: ['barbell'], da: 'Én vægtskive fra gulv til over hovedet.', warmupCue: 'Hoften driver. 5–10 kg er rigeligt.', primes: ['hinge', 'press', 'fullbody', 'oly'], fat: { hinge: 1, shoulder: 1 }, sec: 3.5, rep: [6, 12], weight: 1.1 }),
+  E({ id: 'wu_kb_flow', name: 'Let kettlebell-flow', cat: 'warmup', eq: ['kettlebell'], da: 'Halo, goblet squat og let sving i én serie.', warmupCue: 'Let bell. Fokus på hofte og skulder.', primes: ['hinge', 'squat', 'press'], load: { m: 12, f: 8 }, fat: { hinge: 1 }, sec: 3, rep: [5, 10], weight: 1.1 }),
+  E({ id: 'wu_scap_pull', name: 'Scapular Pull-up', cat: 'warmup', eq: ['pullupbar'], da: 'Kun skulderbladene arbejder — armene forbliver strakte.', warmupCue: 'Hæng aktivt. Træk brystet en anelse op.', primes: ['pull'], fat: { pull: 1 }, sec: 2.5, rep: [5, 10], weight: 1.1 }),
+  E({ id: 'wu_band_pull_apart', name: 'Band Pull-apart', cat: 'warmup', eq: ['band'], da: 'Strakte arme, træk elastikken fra hinanden foran brystet.', warmupCue: 'Skulderbladene mødes. Ingen skuldre op mod ørerne.', primes: ['pull', 'press'], fat: {}, sec: 2, rep: [10, 16], weight: 0.9 }),
+  E({ id: 'wu_glute_bridge_march', name: 'Glute Bridge March', cat: 'warmup', da: 'Hoften oppe, løft ét ben ad gangen uden at tabe hoften.', warmupCue: 'Balderne holder hoften — ikke lænden.', primes: ['hinge'], fat: { hinge: 1 }, sec: 3, rep: [8, 14], weight: 0.9 }),
+  E({ id: 'wu_box_step', name: 'Rolig Box Step-up', cat: 'warmup', eq: ['box'], da: 'Træd roligt op og ned, skiftevis ben.', warmupCue: 'Fuld strækning i toppen. Kontrolleret ned.', primes: ['squat', 'cardio'], fat: { legs: 1 }, sec: 2.5, rep: [10, 20], weight: 0.9 }),
+  E({ id: 'wu_wall_ball_light', name: 'Let Wall Ball', cat: 'warmup', eq: ['wallball'], da: 'Kast med let bold til lavere mål.', warmupCue: 'Timing mellem squat og kast — ikke fart.', primes: ['squat', 'press', 'fullbody'], load: { m: 6, f: 4 }, fat: { legs: 1 }, sec: 2.4, rep: [8, 15], weight: 1 }),
+  E({ id: 'wu_sled_light', name: 'Let slæde', cat: 'warmup', eq: ['sled'], unit: 'm', da: 'Tom eller næsten tom slæde, roligt tempo.', warmupCue: 'Kort skridt, lav position. Ikke et arbejdssæt.', primes: ['carry', 'cardio'], load: { m: 30, f: 20 }, fat: { legs: 1, engine: 1 }, sec: 1.6, rep: [15, 30], weight: 0.9 }),
+
+  /* ---------- Cooldown og mobilitet ---------- */
+  E({ id: 'mob_wgs', name: "World's Greatest Stretch", cat: 'mobility', accessory: true, da: 'Lunge, albue mod gulvet, rotation op.', fat: {}, sec: 5, rep: [5, 8], weight: 0.5 }),
+  E({ id: 'mob_hip_switch', name: '90/90 Hoftskift', cat: 'mobility', accessory: true, da: 'Skift mellem siderne uden at bruge hænderne.', fat: {}, sec: 3, rep: [8, 12], weight: 0.5 }),
+  E({ id: 'mob_couch', name: 'Couch Stretch', cat: 'mobility', unit: 'sec', accessory: true, da: 'Hoftebøjeren strækkes, balden spændt.', fat: {}, sec: 1, rep: [40, 60], weight: 0.5 }),
+  E({ id: 'mob_thoracic', name: 'Thoracic Rotation', cat: 'mobility', accessory: true, da: 'Rotation fra brystryggen, hoften i ro.', fat: {}, sec: 3, rep: [8, 12], weight: 0.5 }),
+  E({ id: 'mob_ankle', name: 'Ankel Dorsiflexion', cat: 'mobility', accessory: true, da: 'Knæet over tåen, hælen i gulvet.', fat: {}, sec: 2.5, rep: [8, 12], weight: 0.5 }),
+  E({ id: 'mob_band_pass', name: 'Band Pass-through', cat: 'mobility', eq: ['band'], accessory: true, da: 'Brede hænder, langsomt over hovedet og tilbage.', fat: {}, sec: 3, rep: [8, 12], weight: 0.5 }),
+  E({ id: 'mob_pigeon', name: 'Pigeon Stretch', cat: 'mobility', unit: 'sec', accessory: true, da: 'Forreste ben bøjet, hoften ned. Rolig vejrtrækning.', fat: {}, sec: 1, rep: [40, 60], weight: 0.5 }),
+  E({ id: 'mob_walk', name: 'Rolig gang', cat: 'mobility', unit: 'sec', accessory: true, da: 'Gå roligt rundt og lad pulsen falde.', fat: {}, sec: 1, rep: [60, 120], weight: 0.5 }),
+  E({ id: 'mob_breathe', name: 'Vejrtrækning på ryggen', cat: 'mobility', unit: 'sec', accessory: true, da: 'Ben på en boks eller væggen. Ind gennem næsen, langsomt ud.', fat: {}, sec: 1, rep: [45, 90], weight: 0.5 }),
+];
+
+export const BY_ID: Record<string, Exercise | undefined> =
+  Object.fromEntries(EXERCISES.map((e) => [e.id, e]));
+
+/**
+ * Programmeringsmæssige minimumsforslag i kg for en trænet (ikke-begynder) profil.
+ * De er forslag til programmering — ikke præstationskrav og ikke en vurdering af
+ * personen. Begyndere (niveau 1) får lavere forslag og er undtaget fra gulvet.
+ */
+export const MIN_LOADS: Record<string, { m: number; f: number; x: number }> = {
+  hang_power_clean: { m: 50, f: 30, x: 40 },
+  power_clean: { m: 50, f: 30, x: 40 },
+  clean_and_jerk: { m: 50, f: 30, x: 40 },
+  push_press: { m: 30, f: 20, x: 25 },
+  strict_press: { m: 30, f: 20, x: 25 },
+  /* Pr. håndvægt. */
+  db_reverse_lunge: { m: 15, f: 10, x: 12.5 },
+  sled_push: { m: 100, f: 70, x: 80 },
+  sled_pull: { m: 80, f: 60, x: 70 },
+  wall_ball: { m: 9, f: 6, x: 6 },
+};
+
+/** Kategorier, der kan bære en hoveddel. */
+export const MAIN_CATS = ['squat', 'hinge', 'press', 'pull', 'fullbody', 'oly', 'cardio', 'carry', 'core'] as const;
