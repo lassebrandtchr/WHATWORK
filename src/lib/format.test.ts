@@ -1,5 +1,26 @@
 import { describe, expect, it } from 'vitest';
-import { fmtTime, initialsOf, plural, relDate } from './format.js';
+import { fmtTime, groupByProfile, initialsOf, plural, relDate } from './format.js';
+
+describe('groupByProfile', () => {
+  it('grupperer mænd, kvinder og ikke angivet i hver deres sektion', () => {
+    const items = [
+      { profile: 'm' as const, label: 'Mand 1' },
+      { profile: 'm' as const, label: 'Mand 2' },
+      { profile: 'f' as const, label: 'Kvinde 1' },
+      { profile: 'x' as const, label: 'Deltager 3' },
+    ];
+    const groups = groupByProfile(items);
+    expect(groups.map((g) => g.label)).toEqual(['Mænd', 'Kvinder', 'Ikke angivet']);
+    expect(groups[0]?.items.map((i) => i.label)).toEqual(['Mand 1', 'Mand 2']);
+    expect(groups[1]?.items).toHaveLength(1);
+  });
+
+  it('giver én gruppe ved solo', () => {
+    const groups = groupByProfile([{ profile: 'm' as const, label: 'Dig' }]);
+    expect(groups).toHaveLength(1);
+    expect(groups[0]?.label).toBe('Mænd');
+  });
+});
 
 describe('fmtTime', () => {
   it('formaterer under et minut', () => {

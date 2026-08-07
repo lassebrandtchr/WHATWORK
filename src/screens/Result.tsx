@@ -1,6 +1,7 @@
 import * as eng from '../engine/index.js';
 import type { Block, Movement, Workout } from '../engine/index.js';
 import { Glyph, Kicker, Meter, Note } from '../components/ui.js';
+import { groupByProfile } from '../lib/format.js';
 
 /** Blokkens overskrift afhænger af, om der også er en styrkedel. */
 function blockLabel(block: Block, hasStrength: boolean): string {
@@ -242,25 +243,37 @@ function BlockSection({
 function MovementRow({ movement, participants }: { movement: Movement; participants: number }) {
   const solo = participants === 1;
   const showTargets = movement.targets.some((t) => t.load) || movement.individualTargets;
+  const groups = groupByProfile(movement.targets);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '14px 0', borderTop: '1px solid var(--ww-line)' }}>
       <span style={{ fontSize: 18, fontWeight: 650, letterSpacing: '-0.01em' }}>{movement.display}</span>
 
       {showTargets ? (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
-          {movement.targets.map((t) => (
-            <div
-              key={t.label}
-              style={{ display: 'flex', gap: 10, alignItems: 'baseline', flexWrap: 'wrap', fontSize: 14 }}
-            >
-              <span style={{ color: 'var(--ww-text-3)', minWidth: solo ? 0 : '9ch' }}>
-                {solo ? '' : `${t.label}:`}
-              </span>
-              <span style={{ color: 'var(--ww-orange)', fontWeight: 600 }}>
-                {movement.individualTargets ? `${t.amountText}${t.load ? ' · ' : ''}` : ''}
-                {t.load?.text ?? ''}
-              </span>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {groups.map((g) => (
+            <div key={g.label}>
+              {!solo && groups.length > 1 ? (
+                <div style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.04em', color: 'var(--ww-text-3)', marginBottom: 4 }}>
+                  {g.label}
+                </div>
+              ) : null}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+                {g.items.map((t) => (
+                  <div
+                    key={t.label}
+                    style={{ display: 'flex', gap: 10, alignItems: 'baseline', flexWrap: 'wrap', fontSize: 14 }}
+                  >
+                    <span style={{ color: 'var(--ww-text-3)', minWidth: solo ? 0 : '9ch' }}>
+                      {solo ? '' : `${t.label}:`}
+                    </span>
+                    <span style={{ color: 'var(--ww-orange)', fontWeight: 600 }}>
+                      {movement.individualTargets ? `${t.amountText}${t.load ? ' · ' : ''}` : ''}
+                      {t.load?.text ?? ''}
+                    </span>
+                  </div>
+                ))}
+              </div>
             </div>
           ))}
         </div>

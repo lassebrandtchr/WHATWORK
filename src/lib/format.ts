@@ -1,3 +1,30 @@
+const PROFILE_GROUP_LABEL: Record<'m' | 'f' | 'x', string> = {
+  m: 'Mænd', f: 'Kvinder', x: 'Ikke angivet',
+};
+
+/**
+ * Grupperer per-person-mål efter køn ("Mand 1"/"Mand 2" → "Mænd" osv.), så en workout
+ * med flere deltagere kan vises som adskilte sektioner i stedet for én lang klump tekst.
+ * Rækkefølgen følger, hvornår hver gruppe først optræder i input-listen.
+ */
+export function groupByProfile<T extends { profile: 'm' | 'f' | 'x' }>(
+  items: T[],
+): { label: string; items: T[] }[] {
+  const groups: { label: string; items: T[] }[] = [];
+  const indexOf = new Map<string, number>();
+  for (const item of items) {
+    const label = PROFILE_GROUP_LABEL[item.profile];
+    let i = indexOf.get(label);
+    if (i === undefined) {
+      i = groups.length;
+      indexOf.set(label, i);
+      groups.push({ label, items: [] });
+    }
+    groups[i]?.items.push(item);
+  }
+  return groups;
+}
+
 /** Sekunder som m:ss. Negative værdier vises med fortegn (tid over cap). */
 export function fmtTime(totalSeconds: number): string {
   const neg = totalSeconds < 0;

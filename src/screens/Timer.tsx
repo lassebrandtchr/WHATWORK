@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import type { TimerPlan, Workout } from '../engine/index.js';
 import { Dialog } from '../components/ui.js';
-import { fmtTime } from '../lib/format.js';
+import { fmtTime, groupByProfile } from '../lib/format.js';
 import type { TimerState, TimerView } from '../types.js';
 
 const KIND_LABEL: Record<string, string> = {
@@ -111,19 +111,38 @@ export function Timer({
         ) : null}
 
         {movements.length ? (
-          <div style={{ maxWidth: '34ch', display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {movements.map((m, i) => (
-              <div key={`${m.exerciseId}-${i}`}>
-                <div className="ww-h2">{m.display}</div>
-                {m.targets.some((t) => t.load) || m.individualTargets ? (
-                  <div style={{ fontSize: 13.5, color: 'var(--ww-orange)', marginTop: 3 }}>
-                    {m.targets.map((t) => (
-                      `${workout.participants > 1 ? `${t.label}: ` : ''}${m.individualTargets ? t.amountText : ''}${t.load ? `${m.individualTargets ? ' · ' : ''}${t.load.text}` : ''}`
-                    )).filter(Boolean).join('   ·   ')}
-                  </div>
-                ) : null}
-              </div>
-            ))}
+          <div style={{ maxWidth: '34ch', display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {movements.map((m, i) => {
+              const showTargets = m.targets.some((t) => t.load) || m.individualTargets;
+              const groups = groupByProfile(m.targets);
+              return (
+                <div key={`${m.exerciseId}-${i}`}>
+                  <div className="ww-h2">{m.display}</div>
+                  {showTargets ? (
+                    <div style={{ marginTop: 4, display: 'flex', flexDirection: 'column', gap: 7 }}>
+                      {groups.map((g) => (
+                        <div key={g.label}>
+                          {groups.length > 1 ? (
+                            <div style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.04em', color: 'var(--ww-text-3)', marginBottom: 2 }}>
+                              {g.label}
+                            </div>
+                          ) : null}
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                            {g.items.map((t) => (
+                              <div key={t.label} style={{ fontSize: 13.5, color: 'var(--ww-orange)' }}>
+                                {workout.participants > 1 ? `${t.label}: ` : ''}
+                                {m.individualTargets ? t.amountText : ''}
+                                {t.load ? `${m.individualTargets ? ' · ' : ''}${t.load.text}` : ''}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : null}
+                </div>
+              );
+            })}
           </div>
         ) : null}
 
