@@ -207,6 +207,9 @@ export interface Block {
   partner?: PartnerProtocol;
   /** Kun på opvarmning: "35 sekunders arbejde · 5 sekunders skift". */
   timing?: string;
+  /** Kun på styrkedele: sat til 'ramp', når blokken er en stigende ramp mod en tung 5RM
+   * i stedet for det almindelige flade sætskema. */
+  scheme?: 'ramp';
 }
 
 export interface Person {

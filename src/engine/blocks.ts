@@ -174,6 +174,41 @@ export function buildConditioning(
 const SCHEMES_BEGINNER = [{ s: 4, r: 6, pct: 0.7 }, { s: 3, r: 8, pct: 0.65 }, { s: 5, r: 5, pct: 0.68 }];
 const SCHEMES_TRAINED = [{ s: 5, r: 5, pct: 0.78 }, { s: 5, r: 3, pct: 0.85 }, { s: 4, r: 6, pct: 0.75 }, { s: 3, r: 8, pct: 0.7 }];
 
+/** Hovedløft, det giver mening at ramp'e mod en tung 5RM. Teknisk krævende olympiske løft
+ * og tilbehørs-/håndvægtsvarianter er bevidst udeladt — se design-specen. */
+const RAMP_ELIGIBLE_IDS = new Set([
+  'back_squat', 'front_squat', 'deadlift', 'bench_press', 'strict_press', 'push_press',
+]);
+
+/** Stigende andel af arbejdsvægten, 5 reps pr. sæt — sidste sæt er den tunge 5RM. */
+const RAMP_STEPS = [0.4, 0.55, 0.7, 0.85, 1];
+
+const RAMP_CUE = 'En 5RM er den tungeste vægt, du kan løfte i god stil 5 gange i træk — '
+  + 'ikke mere. Kilo herunder er ét eksempel på en fornuftig stigning; land der, hvor '
+  + 'sidste sæt føles tungt, men teknisk rent.';
+
+const RAMP_SCHEME = Symbol('ramp-til-5rm');
+type FlatScheme = { s: number; r: number; pct: number };
+type SchemeChoice = FlatScheme | typeof RAMP_SCHEME;
+
+function buildRampMovements(main: Exercise, req: NormalizedRequest, rnd: Rng): Movement[] {
+  return RAMP_STEPS.map((pct, i) => {
+    const isTop = i === RAMP_STEPS.length - 1;
+    const display = isTop
+      ? `Eksempel · tung 5RM (sæt ${i + 1}/${RAMP_STEPS.length}) · 5 × ${main.name}`
+      : `Eksempel · sæt ${i + 1}/${RAMP_STEPS.length} · 5 × ${main.name}`;
+    const movement = buildMovement(main, req, rnd, {
+      reps: 5,
+      sets: 1,
+      pct,
+      restSec: 150,
+      display,
+      ...(i === 0 ? { cue: RAMP_CUE } : {}),
+    });
+    return { ...movement, workSec: 5 * main.sec + 150 };
+  });
+}
+
 /** Styrkedelen: ét hovedløft med rigtige pauser, eventuelt med en tilbehørsøvelse. */
 export function buildStrength(
   req: NormalizedRequest,
@@ -183,10 +218,35 @@ export function buildStrength(
   accessory: Exercise | null,
 ): Block {
   const min = Math.max(6, Math.round(minutes));
-  const schemes = req.level <= 2 ? SCHEMES_BEGINNER : SCHEMES_TRAINED;
-  const sc = pick(rnd, schemes) ?? (schemes[0] as { s: number; r: number; pct: number });
-  const restSec = sc.r <= 5 ? 150 : 120;
+  const flatSchemes = req.level <= 2 ? SCHEMES_BEGINNER : SCHEMES_TRAINED;
+  const rampEligible = req.level >= 3 && RAMP_ELIGIBLE_IDS.has(main.id);
+  // Ramp-skemaet vægtes tungere ved højere niveau: flere kopier i den samme pulje.
+  const rampCopies = rampEligible ? Math.max(1, req.level - 2) : 0;
+  const pool: SchemeChoice[] = [...flatSchemes, ...(Array(rampCopies).fill(RAMP_SCHEME) as SchemeChoice[])];
+  const sc = pick(rnd, pool) ?? (flatSchemes[0] as FlatScheme);
 
+  if (sc === RAMP_SCHEME) {
+    const movements = buildRampMovements(main, req, rnd);
+    if (accessory && min >= 14) {
+      movements.push(buildMovement(accessory, req, rnd, { intensity: 0.8 }));
+    }
+    const partner = planPartner(movements, req, 'strength');
+    return {
+      id: 'strength',
+      kind: 'strength',
+      title: 'Styrke · ramp til tung 5RM',
+      format: 'strength',
+      minutes: min,
+      prescription: '5 sæt, stigende vægt · eksempel på en ramp mod en tung 5RM · pause øges undervejs',
+      movements,
+      rounds: RAMP_STEPS.length,
+      restSec: 150,
+      partner,
+      scheme: 'ramp',
+    };
+  }
+
+  const restSec = sc.r <= 5 ? 150 : 120;
   const lift = buildMovement(main, req, rnd, {
     reps: sc.r, sets: sc.s, pct: sc.pct, restSec,
     display: `${sc.s} × ${sc.r} ${main.name}`,
