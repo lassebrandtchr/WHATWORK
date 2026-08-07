@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import { initialsOf } from '../lib/format.js';
 import { Glyph } from './ui.js';
 import { Wordmark } from './Wordmark.js';
+import { WwMark } from './WwMark.js';
 import type { Screen } from '../types.js';
 
 interface NavItem {
@@ -81,8 +82,12 @@ export function DesktopHeader({
           type="button"
           onClick={() => onGo('home')}
           aria-label="WHATWORK — gå til Hjem"
-          style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', lineHeight: 0 }}
+          style={{
+            background: 'none', border: 'none', padding: 0, cursor: 'pointer',
+            lineHeight: 0, display: 'flex', alignItems: 'center', gap: 10,
+          }}
         >
+          <WwMark size={30} />
           <Wordmark size={19} />
         </button>
         <nav style={{ display: 'flex', gap: 2, flex: 1 }} aria-label="Hovedmenu">

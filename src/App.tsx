@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { BottomBar, DesktopHeader, Drawer, MobileNav } from './components/Navigation.js';
 import { EmptyState, Glyph } from './components/ui.js';
 import { Wordmark } from './components/Wordmark.js';
+import { WwMark } from './components/WwMark.js';
 import { freshGen, useWhatwork } from './state/useWhatwork.js';
 import { About } from './screens/About.js';
 import { Complete } from './screens/Complete.js';
@@ -124,10 +125,11 @@ export function App() {
             aria-label="WHATWORK — gå til Hjem"
             style={{
               background: 'none', border: 'none', padding: '8px 0', cursor: 'pointer',
-              minHeight: 44, display: 'flex', alignItems: 'center',
+              minHeight: 44, display: 'flex', alignItems: 'center', gap: 10,
             }}
             onClick={() => ww.go('home')}
           >
+            <WwMark size={28} />
             <Wordmark size={18} />
           </button>
           <button type="button" className="ww-icon-btn" aria-label="Åbn menuen" aria-expanded={drawer} onClick={() => setDrawer(true)}>
