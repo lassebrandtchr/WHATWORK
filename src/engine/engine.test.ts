@@ -339,6 +339,14 @@ describe('intern kandidat-scoring (bruges kun til at vælge den bedste af op til
   });
 });
 
+describe('buildMovement — cue-override', () => {
+  it('bruger den normale teknik-cue, når intet er angivet', () => {
+    const w = build({ minutes: 20, men: 1, level: 3, seed: 1 });
+    const m = w.blocks.flatMap((b) => b.movements)[0];
+    expect(m?.cue).toBeTruthy();
+  });
+});
+
 describe('timerplan', () => {
   it('bygges ud fra workoutens blokke og øvelser', () => {
     const w = build({ minutes: 30, men: 1, level: 3, seed: 71 });

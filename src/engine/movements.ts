@@ -80,6 +80,8 @@ export interface MovementOptions {
   restSec?: number;
   /** Overskriv den viste tekst, fx "5 × 5 Back Squat". */
   display?: string;
+  /** Overskriv den normale teknik-cue (`ex.da`) — fx til at forklare en ramp's første sæt. */
+  cue?: string;
   /** Det samlede arbejde deles mellem deltagerne i stedet for at gælde per person. */
   shared?: boolean;
 }
@@ -108,7 +110,7 @@ export function buildMovement(
     unit: ex.unit,
     reps,
     display: opts.display ?? `${unitLabel(ex.unit, reps)} ${ex.name}`,
-    cue: ex.warmupCue ? `${ex.da} ${ex.warmupCue}` : ex.da,
+    cue: opts.cue ?? (ex.warmupCue ? `${ex.da} ${ex.warmupCue}` : ex.da),
     workSec,
     transitionSec,
     targets,
