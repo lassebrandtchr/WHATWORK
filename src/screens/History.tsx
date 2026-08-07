@@ -3,7 +3,7 @@ import { EmptyState, Glyph, PageHeader } from '../components/ui.js';
 import { fmtDuration, relDate } from '../lib/format.js';
 import type { HistoryEntry, HistoryStatus } from '../types.js';
 
-/** Kort, konkret liste over hoveddelens øvelser — ikke opvarmning/cooldown. */
+/** Kort, konkret liste over hoveddelens øvelser — ikke opvarmningen. */
 function exerciseSummary(entry: HistoryEntry): string {
   const names = entry.workout.blocks
     .filter((b) => b.kind === 'conditioning' || b.kind === 'strength')

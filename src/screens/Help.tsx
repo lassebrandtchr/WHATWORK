@@ -30,10 +30,10 @@ const SECTIONS: { title: string; body: string[] }[] = [
     title: 'Opvarmningen',
     body: [
       'Opvarmningen bygges efter hoveddelen er valgt, så den spejler de bevægelsesmønstre, du '
-      + 'faktisk skal lave. Den varer 5–10 minutter, ligger inden for den tid du har valgt, og '
-      + 'skifter fra gang til gang.',
+      + 'faktisk skal lave. Den varer altid 10–12 minutter, dækker hele kroppen, og skifter fra '
+      + 'gang til gang.',
       'Den skal give sved på panden og bringe pulsen op mod RPE 5–6 — ikke bruge det, hoveddelen '
-      + 'har brug for. Cooldown er en separat, roligere del.',
+      + 'har brug for.',
     ],
   },
   {

@@ -250,26 +250,21 @@ describe('opvarmning', () => {
     expect(warm?.timing).toMatch(/sekunders arbejde · \d+ sekunders skift/);
   });
 
-  it('varierer mellem workouts og bruger ikke Thoracic Rotation som fast valg', () => {
+  it('varierer opvarmningens øvelser mellem workouts', () => {
     const sets = new Set<string>();
     for (let i = 0; i < 12; i++) {
       const w = build({ minutes: 45, men: 1, level: 3, seed: 700 + i });
       const warm = w.blocks.find((b) => b.kind === 'warmup');
       const ids = (warm?.movements ?? []).map((m) => m.exerciseId);
-      expect(ids).not.toContain('mob_thoracic');
-      expect(ids).not.toContain('mob_hip_switch');
       sets.add(ids.join(','));
     }
     expect(sets.size).toBeGreaterThan(4);
   });
 
-  it('holder cooldown adskilt og roligere end opvarmningen', () => {
+  it('bygger aldrig en cooldown-blok — appen har kun opvarmning og hoveddel', () => {
     const w = build({ minutes: 45, men: 1, level: 3, seed: 34 });
-    const cool = w.blocks.find((b) => b.kind === 'cooldown');
-    expect(cool).toBeDefined();
-    (cool?.movements ?? []).forEach((m) => {
-      expect(eng.BY_ID[m.exerciseId]?.cat).toBe('mobility');
-    });
+    const allowed: string[] = ['warmup', 'strength', 'conditioning'];
+    expect(w.blocks.every((b) => allowed.includes(b.kind))).toBe(true);
   });
 });
 

@@ -20,7 +20,7 @@ export { DNA_AXES, computeDNA, scoreMatch, signatureOf, validate } from './valid
 export { MAX_CANDIDATES, budget, chooseExercises, generateWorkout, mainPool } from './smartmix.js';
 export { buildTimerPlan } from './timerplan.js';
 export { PROGRAM_GOALS, generateProgram } from './program.js';
-export { WARMUP_MAX_MINUTES, WARMUP_MIN_MINUTES, buildWarmup, buildCooldown, patternsOfBlocks } from './warmup.js';
+export { WARMUP_MAX_MINUTES, WARMUP_MIN_MINUTES, buildWarmup, patternsOfBlocks } from './warmup.js';
 
 /** Faserne, generatorskærmen viser mens Smart Mix arbejder. */
 export const PHASES: { to: number; text: string }[] = [

@@ -207,7 +207,7 @@ export function scoreMatch(
   const drift = Math.abs(estimatedMinutes - req.minutes) / Math.max(1, req.minutes);
   const time = clamp(Math.round(100 - drift * 220), 0, 100);
   const timeNote = drift <= 0.06
-    ? `${estimatedMinutes} minutter mod dine ${req.minutes} — opvarmning, cooldown og skiftetid er regnet med.`
+    ? `${estimatedMinutes} minutter mod dine ${req.minutes} — opvarmning og skiftetid er regnet med.`
     : `${estimatedMinutes} minutter mod dine ${req.minutes}. Afvigelsen trækker ned.`;
 
   /* Retning og fokus */

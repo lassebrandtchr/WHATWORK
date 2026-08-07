@@ -140,17 +140,6 @@ export const EXERCISES: Exercise[] = [
   E({ id: 'wu_box_step', name: 'Rolig Box Step-up', cat: 'warmup', eq: ['box'], da: 'Træd roligt op og ned, skiftevis ben.', warmupCue: 'Fuld strækning i toppen. Kontrolleret ned.', primes: ['squat', 'cardio'], fat: { legs: 1 }, sec: 2.5, rep: [10, 20], weight: 0.9 }),
   E({ id: 'wu_wall_ball_light', name: 'Let Wall Ball', cat: 'warmup', eq: ['wallball'], da: 'Kast med let bold til lavere mål.', warmupCue: 'Timing mellem squat og kast — ikke fart.', primes: ['squat', 'press', 'fullbody'], load: { m: 6, f: 4 }, fat: { legs: 1 }, sec: 2.4, rep: [8, 15], weight: 1 }),
   E({ id: 'wu_sled_light', name: 'Let slæde', cat: 'warmup', eq: ['sled'], unit: 'm', da: 'Tom eller næsten tom slæde, roligt tempo.', warmupCue: 'Kort skridt, lav position. Ikke et arbejdssæt.', primes: ['carry', 'cardio'], load: { m: 30, f: 20 }, fat: { legs: 1, engine: 1 }, sec: 1.6, rep: [15, 30], weight: 0.9 }),
-
-  /* ---------- Cooldown og mobilitet ---------- */
-  E({ id: 'mob_wgs', name: "World's Greatest Stretch", cat: 'mobility', accessory: true, da: 'Lunge, albue mod gulvet, rotation op.', fat: {}, sec: 5, rep: [5, 8], weight: 0.5 }),
-  E({ id: 'mob_hip_switch', name: '90/90 Hoftskift', cat: 'mobility', accessory: true, da: 'Skift mellem siderne uden at bruge hænderne.', fat: {}, sec: 3, rep: [8, 12], weight: 0.5 }),
-  E({ id: 'mob_couch', name: 'Couch Stretch', cat: 'mobility', unit: 'sec', accessory: true, da: 'Hoftebøjeren strækkes, balden spændt.', fat: {}, sec: 1, rep: [40, 60], weight: 0.5 }),
-  E({ id: 'mob_thoracic', name: 'Thoracic Rotation', cat: 'mobility', accessory: true, da: 'Rotation fra brystryggen, hoften i ro.', fat: {}, sec: 3, rep: [8, 12], weight: 0.5 }),
-  E({ id: 'mob_ankle', name: 'Ankel Dorsiflexion', cat: 'mobility', accessory: true, da: 'Knæet over tåen, hælen i gulvet.', fat: {}, sec: 2.5, rep: [8, 12], weight: 0.5 }),
-  E({ id: 'mob_band_pass', name: 'Band Pass-through', cat: 'mobility', eq: ['band'], accessory: true, da: 'Brede hænder, langsomt over hovedet og tilbage.', fat: {}, sec: 3, rep: [8, 12], weight: 0.5 }),
-  E({ id: 'mob_pigeon', name: 'Pigeon Stretch', cat: 'mobility', unit: 'sec', accessory: true, da: 'Forreste ben bøjet, hoften ned. Rolig vejrtrækning.', fat: {}, sec: 1, rep: [40, 60], weight: 0.5 }),
-  E({ id: 'mob_walk', name: 'Rolig gang', cat: 'mobility', unit: 'sec', accessory: true, da: 'Gå roligt rundt og lad pulsen falde.', fat: {}, sec: 1, rep: [60, 120], weight: 0.5 }),
-  E({ id: 'mob_breathe', name: 'Vejrtrækning på ryggen', cat: 'mobility', unit: 'sec', accessory: true, da: 'Ben på en boks eller væggen. Ind gennem næsen, langsomt ud.', fat: {}, sec: 1, rep: [45, 90], weight: 0.5 }),
 ];
 
 export const BY_ID: Record<string, Exercise | undefined> =

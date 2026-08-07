@@ -2,7 +2,7 @@ import { EQUIPMENT_BY_ID } from './data/equipment.js';
 import { BY_ID, EXERCISES } from './data/exercises.js';
 import { FORMATS } from './data/formats.js';
 import { buildConditioning, buildStrength } from './blocks.js';
-import { buildCooldown, buildWarmup } from './warmup.js';
+import { buildWarmup } from './warmup.js';
 import { computeDNA, scoreMatch, signatureOf, validate } from './validate.js';
 import { normalizeRequest } from './request.js';
 import { clamp, mulberry32, pickWeighted, shuffle } from './rng.js';
@@ -22,18 +22,16 @@ export const MAX_CANDIDATES = 64;
 
 /* ---------- Tidsbudget ---------- */
 
-export interface Budget { warm: number; main: number; cool: number; transitions: number }
+export interface Budget { warm: number; main: number; transitions: number }
 
 export function budget(req: NormalizedRequest): Budget {
   const t = req.minutes;
   // Opvarmningen holdes altid i et fast 10-12 minutters spænd, uanset sessionens
   // samlede længde — den skal nå at varme hele kroppen op ordentligt hver gang.
   const warm = req.warmup ? 10 + (t % 3) : 0;
-  const coolRaw = req.cooldown ? clamp(Math.round(t * 0.08), 2, 6) : 0;
-  const cool = req.cooldown ? Math.min(coolRaw, Math.max(2, Math.floor(t * 0.15))) : 0;
   // Skiftetid mellem blokke og stationer er en del af budgettet, ikke noget der lægges oveni.
   const transitions = clamp(Math.round(t * 0.05), 1, 4);
-  return { warm, cool, transitions, main: Math.max(5, t - warm - cool - transitions) };
+  return { warm, transitions, main: Math.max(5, t - warm - transitions) };
 }
 
 /* ---------- Formatvalg ---------- */
@@ -84,7 +82,7 @@ function eligible(ex: Exercise, req: NormalizedRequest): boolean {
   if (ex.elig === 'coach-only' || ex.elig === 'disabled') return false;
   if (ex.elig === 'advanced' && (req.level < 4 || req.surprise)) return false;
   if (ex.avoid.some((a) => req.care.includes(a))) return false;
-  if (ex.cat === 'warmup' || ex.cat === 'mobility') return false;
+  if (ex.cat === 'warmup') return false;
   return true;
 }
 
@@ -276,7 +274,6 @@ function buildCandidate(
   const ordered: Block[] = [];
   if (req.warmup && b.warm > 0) ordered.push(buildWarmup(req, rnd, b.warm, main));
   ordered.push(...main);
-  if (req.cooldown && b.cool > 0) ordered.push(buildCooldown(req, rnd, b.cool));
 
   const estimatedMinutes = ordered.reduce((s, bl) => s + bl.minutes, 0) + b.transitions;
   const issues = validate(ordered, req, estimatedMinutes);
@@ -294,8 +291,7 @@ function explain(w: Omit<Workout, 'explanation'>, req: NormalizedRequest): strin
 
   parts.push(
     `${req.minutes} minutter i alt: ${w.timeSplit.warmup} minutters opvarmning, `
-    + `${w.timeSplit.main} minutters hoveddel, ${w.timeSplit.cooldown} minutters cooldown `
-    + `og ${w.timeSplit.transitions} minutter til skift.`,
+    + `${w.timeSplit.main} minutters hoveddel og ${w.timeSplit.transitions} minutter til skift.`,
   );
   if (info) parts.push(`${info.name}: ${info.da}`);
   if (st) parts.push(`Der er en selvstændig styrkedel, fordi du satte styrke til ${req.strength} ud af 10.`);
@@ -434,7 +430,7 @@ export function generateWorkout(raw: WorkoutRequest, opts: GenerateOptions = {})
     request: req,
     blocks: best.c.blocks,
     estimatedMinutes: best.c.estimatedMinutes,
-    timeSplit: { warmup: b.warm, main: b.main, cooldown: b.cool, transitions: b.transitions },
+    timeSplit: { warmup: b.warm, main: b.main, transitions: b.transitions },
     dna: best.dna,
     issues: best.c.issues,
     score: best.match.total,

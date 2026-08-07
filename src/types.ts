@@ -69,7 +69,6 @@ export interface GenDraft {
   counts: Record<string, number>;
   plates: number[];
   warmup: boolean;
-  cooldown: boolean;
 }
 
 export type HistoryStatus = 'saved' | 'done' | 'partial' | 'stopped';

@@ -17,7 +17,7 @@ const PICKABLE = [
 ];
 
 const STEP_COPY: Record<GenStep, [string, string]> = {
-  time: ['Hvor lang tid har I?', 'Tiden dækker hele sessionen — opvarmning, hoveddel, cooldown og skiftetid.'],
+  time: ['Hvor lang tid har I?', 'Tiden dækker hele sessionen — opvarmning, hoveddel og skiftetid.'],
   people: ['Hvem træner?', 'Fordelingen bestemmer deltagerantallet og de vægte, hver enkelt får foreslået.'],
   weight: ['Kropsvægt', 'Valgfrit. Gennemsnit pr. profil er nok — det styrer skaleringen af belastning.'],
   level: ['Niveau og retning', 'Skru på conditioning og styrke, hvis dagen kalder på noget bestemt.'],
@@ -183,11 +183,10 @@ function TimeStep({ gen, patch }: StepProps) {
       </div>
       <div className="ww-wrap" style={{ marginTop: 22 }}>
         <Chip on={gen.warmup} onClick={() => patch({ warmup: !gen.warmup })}>Opvarmning</Chip>
-        <Chip on={gen.cooldown} onClick={() => patch({ cooldown: !gen.cooldown })}>Cooldown</Chip>
       </div>
       <p style={{ marginTop: 18, fontSize: 13.5, color: 'var(--ww-text-3)', lineHeight: 1.6 }}>
-        Opvarmningen bygges ud fra selve workouten og fylder 5–10 minutter inden for den tid,
-        du vælger her. Den lægges ikke oveni.
+        Opvarmningen bygges ud fra selve workouten og fylder altid 10–12 minutter inden for den
+        tid, du vælger her. Den lægges ikke oveni.
       </p>
     </>
   );

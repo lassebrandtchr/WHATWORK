@@ -67,7 +67,6 @@ export function freshGen(profile: UserProfile): GenDraft {
     counts: { ...profile.counts },
     plates: (profile.plates ?? eng.DEFAULT_PLATES).slice(),
     warmup: true,
-    cooldown: true,
   };
 }
 
@@ -414,7 +413,6 @@ export function useWhatwork() {
       included: draft.included,
       excluded: draft.excluded,
       warmup: draft.warmup,
-      cooldown: draft.cooldown,
       equipment: draft.equipment,
       counts: draft.counts,
       plates: draft.plates,

@@ -91,7 +91,6 @@ export function normalizeRequest(raw: WorkoutRequest): NormalizedRequest {
     included: raw.included ?? [],
     excluded: raw.excluded ?? [],
     warmup: raw.warmup !== false,
-    cooldown: raw.cooldown !== false,
     inventory,
     equipment,
     plates: (raw.plates?.length ? raw.plates : DEFAULT_PLATES).slice().sort((a, b) => b - a),

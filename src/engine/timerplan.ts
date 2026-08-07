@@ -210,7 +210,7 @@ export function buildTimerPlan(workout: Workout): TimerPlan {
   }];
 
   workout.blocks.forEach((block) => {
-    if (block.kind === 'warmup' || block.kind === 'cooldown') {
+    if (block.kind === 'warmup') {
       segments.push(...warmupSegments(block));
     } else if (block.kind === 'strength' && block.scheme === 'ramp') {
       segments.push(...rampStrengthSegments(block));

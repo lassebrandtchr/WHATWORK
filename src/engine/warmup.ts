@@ -11,7 +11,6 @@ export const WARMUP_MIN_MINUTES = 10;
 export const WARMUP_MAX_MINUTES = 12;
 
 const WARMUP_POOL = EXERCISES.filter((e) => e.cat === 'warmup');
-const COOLDOWN_POOL = EXERCISES.filter((e) => e.cat === 'mobility');
 
 /** Pulsgivere — opvarmningen starter altid med én af dem, og de skiftes ud. */
 const PULSE_RAISERS = ['wu_easy_', 'wu_box_step', 'wu_sled_light', 'wu_bear_crawl'];
@@ -47,7 +46,7 @@ type Region = 'lower' | 'upper' | 'trunk';
 const REGION_OF: Record<MovementPattern, Region> = {
   squat: 'lower', hinge: 'lower', cardio: 'lower', carry: 'trunk',
   press: 'upper', pull: 'upper', oly: 'upper',
-  fullbody: 'trunk', core: 'trunk', warmup: 'trunk', mobility: 'trunk',
+  fullbody: 'trunk', core: 'trunk', warmup: 'trunk',
 };
 
 function regionsOf(ex: Exercise): Region[] {
@@ -168,29 +167,5 @@ export function buildWarmup(
     workSec,
     restSec: transitionSec,
     timing,
-  };
-}
-
-/** Cooldown holdes bevidst adskilt fra opvarmningen og er roligere. */
-export function buildCooldown(req: NormalizedRequest, rnd: Rng, minutes: number): Block {
-  const min = clamp(Math.round(minutes), 2, 8);
-  const pool = COOLDOWN_POOL.filter((e) => usable(e, req));
-  const chosen = shuffle(rnd, pool).slice(0, 3);
-  const perItem = Math.max(30, Math.floor((min * 60) / Math.max(1, chosen.length)));
-
-  const movements = chosen.map((ex) => {
-    const reps = ex.unit === 'sec' ? Math.min(perItem, 60) : Math.max(5, Math.round(perItem / ex.sec / 2));
-    const m = buildMovement(ex, req, rnd, { reps, intensity: 0.5 });
-    return { ...m, workSec: perItem, transitionSec: 5 };
-  });
-
-  return {
-    id: 'cooldown',
-    kind: 'cooldown',
-    title: `Cooldown · ${min} min`,
-    format: null,
-    minutes: min,
-    prescription: `Rolig vejrtrækning, ingen hast · ca. ${perItem} sekunder pr. øvelse`,
-    movements,
   };
 }

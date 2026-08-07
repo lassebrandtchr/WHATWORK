@@ -24,7 +24,7 @@ export type FormatId =
   | 'strength' | 'strength_cond'
   | 'you_go_i_go' | 'partner_shared' | 'team_rotation';
 
-export type BlockKind = 'warmup' | 'strength' | 'conditioning' | 'cooldown';
+export type BlockKind = 'warmup' | 'strength' | 'conditioning';
 export type Unit = 'reps' | 'cal' | 'm' | 'sec';
 
 export type DnaAxisId =
@@ -35,7 +35,7 @@ export type FatigueKey = DnaAxisId | 'shoulder';
 
 export type MovementPattern =
   | 'squat' | 'hinge' | 'press' | 'pull' | 'fullbody' | 'oly'
-  | 'core' | 'carry' | 'cardio' | 'warmup' | 'mobility';
+  | 'core' | 'carry' | 'cardio' | 'warmup';
 
 export interface EquipmentItem {
   id: string;
@@ -245,7 +245,6 @@ export interface NormalizedRequest {
   included: string[];
   excluded: string[];
   warmup: boolean;
-  cooldown: boolean;
   inventory: Record<string, number>;
   equipment: string[];
   /** Skivestørrelser brugeren faktisk har, tungeste først. */
@@ -321,7 +320,7 @@ export interface Workout {
   request: NormalizedRequest;
   blocks: Block[];
   estimatedMinutes: number;
-  timeSplit: { warmup: number; main: number; cooldown: number; transitions: number };
+  timeSplit: { warmup: number; main: number; transitions: number };
   dna: Record<DnaAxisId, number>;
   issues: Issue[];
   /** WW Match. */
@@ -354,7 +353,6 @@ export interface WorkoutRequest {
   included?: string[];
   excluded?: string[];
   warmup?: boolean;
-  cooldown?: boolean;
   equipment?: string[];
   counts?: Record<string, number>;
   plates?: number[];

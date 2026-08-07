@@ -9,7 +9,6 @@ function blockLabel(block: Block, hasStrength: boolean): string {
     case 'warmup': return 'Opvarmning';
     case 'strength': return 'Del 1 — Styrke';
     case 'conditioning': return hasStrength ? 'Del 2 — Conditioning' : 'Hoveddel';
-    case 'cooldown': return 'Cooldown';
     default: return '';
   }
 }
