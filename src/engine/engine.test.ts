@@ -397,7 +397,7 @@ describe('timerplan', () => {
   });
 
   it('markerer hvem der arbejder i en You go, I go', () => {
-    const w = build({ minutes: 35, men: 1, women: 1, level: 3, seed: 8 });
+    const w = build({ minutes: 35, men: 1, women: 1, level: 3, seed: 39 });
     const plan = eng.buildTimerPlan(w);
     const work = plan.segments.filter((s) => s.worker);
     expect(work.length).toBeGreaterThan(0);

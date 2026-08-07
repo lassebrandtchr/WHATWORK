@@ -123,6 +123,49 @@ function movementCount(minutes: number, format: FormatId, rnd: Rng): number {
   return rnd() < 0.45 ? 4 : 3;
 }
 
+/**
+ * Dæmper vægtningen, så øvelser med lav `weight` også reelt dukker op over mange
+ * genereringer, i stedet for at de tungest vægtede altid dominerer poolen.
+ */
+const spreadWeight = (e: Exercise): number => Math.sqrt(e.weight ?? 1);
+
+/** Overkrop og underkrop — de mønstre, en bred session bør ramme begge sider af. */
+const CORE_PATTERNS: MovementPattern[] = ['press', 'pull', 'squat', 'hinge'];
+
+/**
+ * Sikrer, at en bred session (uden et snævrende fokus som "legs"/"upper"/"heavy")
+ * rammer både over- og underkrop, i stedet for at overlade det til bucket-rækkefølgens
+ * tilfældighed. Bytter kun en øvelse ud, hvis dens mønster allerede er repræsenteret
+ * mindst to gange — så en session mister aldrig sin eneste engine- eller grind-øvelse
+ * for at presse et fjerde mønster ind.
+ */
+export function ensureFullBodyCoverage(
+  out: Exercise[], pool: Exercise[], req: NormalizedRequest, rnd: Rng,
+): Exercise[] {
+  if (out.length < 3 || ['legs', 'upper', 'heavy'].includes(req.focus)) return out;
+
+  const result = out.slice();
+  for (const pattern of CORE_PATTERNS) {
+    if (result.some((e) => e.cat === pattern)) continue;
+    const usedIds = new Set(result.map((e) => e.id));
+    const candidates = pool.filter((e) => e.cat === pattern && !usedIds.has(e.id));
+    const replacement = pickWeighted(rnd, candidates, spreadWeight);
+    if (!replacement) continue;
+
+    const catCounts = new Map<MovementPattern, number>();
+    result.forEach((e) => catCounts.set(e.cat, (catCounts.get(e.cat) ?? 0) + 1));
+    let swapIndex = -1;
+    let swapCount = 1;
+    result.forEach((e, i) => {
+      const c = catCounts.get(e.cat) ?? 1;
+      if (c > swapCount) { swapCount = c; swapIndex = i; }
+    });
+    if (swapIndex === -1) continue;
+    result[swapIndex] = replacement;
+  }
+  return result;
+}
+
 /** Vælger hoveddelens øvelser med bevægelsesspredning og vægtet tilfældighed. */
 export function chooseExercises(
   req: NormalizedRequest,
@@ -153,19 +196,22 @@ export function chooseExercises(
     if (out.length >= count) break;
     const cats = BUCKETS[bucket] ?? [];
     const options = pool.filter((e) => cats.includes(e.cat) && !usedIds.has(e.id) && !usedCats.has(e.cat));
-    const chosen = pickWeighted(rnd, options, (e) => e.weight ?? 1);
+    const chosen = pickWeighted(rnd, options, spreadWeight);
     if (chosen) { out.push(chosen); usedIds.add(chosen.id); usedCats.add(chosen.cat); }
   }
 
+  // Fylder resten op — men foretrækker stadig et mønster, der endnu ikke er brugt.
+  // Kun hvis poolen reelt er tømt for nye mønstre, gentages et allerede brugt et.
   let guard = 0;
   while (out.length < count && guard++ < 30) {
-    const options = pool.filter((e) => !usedIds.has(e.id));
-    const chosen = pickWeighted(rnd, options, (e) => e.weight ?? 1);
+    const fresh = pool.filter((e) => !usedIds.has(e.id) && !usedCats.has(e.cat));
+    const stale = pool.filter((e) => !usedIds.has(e.id));
+    const chosen = pickWeighted(rnd, fresh.length ? fresh : stale, spreadWeight);
     if (!chosen) break;
-    out.push(chosen); usedIds.add(chosen.id);
+    out.push(chosen); usedIds.add(chosen.id); usedCats.add(chosen.cat);
   }
 
-  return shuffle(rnd, out);
+  return shuffle(rnd, ensureFullBodyCoverage(out, pool, req, rnd));
 }
 
 function strengthLift(req: NormalizedRequest, rnd: Rng): Exercise | null {
