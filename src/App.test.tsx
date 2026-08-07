@@ -75,11 +75,14 @@ describe('WHATWORK — kerneflow', () => {
     for (let i = 0; i < 5; i++) await user.click(screen.getByRole('button', { name: 'Videre' }));
 
     expect(screen.getByRole('heading', { name: 'Hvad har I at arbejde med?' })).toBeInTheDocument();
+    // Alt undtagen sjippetov er slået til som standard.
     for (const name of ['Håndvægte', 'Kettlebells', 'Vægtstang', 'RowERG', 'SkiERG', 'BikeERG',
-      'Assault Bike', 'Slæde', 'Box', 'Pull-up bar', 'Wall ball', 'Sandbag']) {
-      const tile = screen.getByRole('button', { name: new RegExp(`^${name} `) });
+      'Assault Bike', 'Slæde', 'Box', 'Pull-up bar', 'Wall ball', 'Sandbag', 'Ringe',
+      'Elastikker', 'Air Runner', 'Løb udenfor']) {
+      const tile = screen.getByRole('button', { name: new RegExp(`^${name}( |$)`) });
       expect(tile).toHaveAttribute('aria-pressed', 'true');
     }
+    expect(screen.getByRole('button', { name: /^Sjippetov/ })).toHaveAttribute('aria-pressed', 'false');
   });
 
   it('bevarer udstyrsvalget, når brugeren går frem og tilbage', async () => {
