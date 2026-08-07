@@ -1,5 +1,5 @@
 import * as eng from '../engine/index.js';
-import type { CareId } from '../engine/index.js';
+import type { CareId, FocusId } from '../engine/index.js';
 import { EquipmentIcon } from '../components/EquipmentIcon.js';
 import { Chip, Counter, Glyph, Kicker, Note, OptionRow, StepHeader } from '../components/ui.js';
 import { participantsOf } from '../state/useWhatwork.js';
@@ -305,6 +305,19 @@ function WeightStep({ gen, patch }: StepProps) {
   );
 }
 
+/** Startpunkt for Conditioning/Styrke-skalaerne, når et fokus vælges. Brugeren kan
+ * altid flytte skalaerne bagefter — det er kun et fornuftigt udgangspunkt, ikke en lås. */
+const FOCUS_PRESETS: Record<FocusId, { condition: number; strength: number }> = {
+  allround: { condition: 6, strength: 5 },
+  pulse: { condition: 9, strength: 3 },
+  heavy: { condition: 3, strength: 9 },
+  legs: { condition: 5, strength: 7 },
+  upper: { condition: 5, strength: 7 },
+  engine: { condition: 9, strength: 2 },
+  fast: { condition: 8, strength: 5 },
+  long: { condition: 6, strength: 3 },
+};
+
 function LevelStep({ gen, patch }: StepProps) {
   return (
     <>
@@ -326,7 +339,12 @@ function LevelStep({ gen, patch }: StepProps) {
           <h2 style={{ fontSize: 15, fontWeight: 650, margin: '0 0 10px' }}>Fokus</h2>
           <div className="ww-wrap">
             {eng.FOCUS_TAGS.map((f) => (
-              <Chip key={f.id} on={gen.focus === f.id} onClick={() => patch({ focus: f.id })} label={`${f.name}: ${f.desc}`}>
+              <Chip
+                key={f.id}
+                on={gen.focus === f.id}
+                onClick={() => patch({ focus: f.id, ...FOCUS_PRESETS[f.id] })}
+                label={`${f.name}: ${f.desc}`}
+              >
                 {f.name}
               </Chip>
             ))}

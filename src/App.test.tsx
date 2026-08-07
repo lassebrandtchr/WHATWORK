@@ -135,6 +135,23 @@ describe('WHATWORK — kerneflow', () => {
     expect(screen.getByText('78 kg')).toBeInTheDocument();
   });
 
+  it('flytter Conditioning- og Styrke-skalaerne, når et fokus vælges', async () => {
+    seedOnboardedProfile();
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.click(await screen.findByRole('button', { name: /Generér workout/ }));
+    for (let i = 0; i < 3; i++) await user.click(screen.getByRole('button', { name: 'Videre' }));
+
+    expect(screen.getByRole('heading', { name: 'Niveau og retning' })).toBeInTheDocument();
+    expect(screen.getByText('6 / 10')).toBeInTheDocument(); // Conditioning-standard
+    expect(screen.getByText('5 / 10')).toBeInTheDocument(); // Styrke-standard
+
+    await user.click(screen.getByRole('button', { name: /^Puls:/ }));
+    expect(screen.getByText('9 / 10')).toBeInTheDocument(); // Conditioning følger Puls-fokus
+    expect(screen.getByText('3 / 10')).toBeInTheDocument(); // Styrke følger Puls-fokus
+  });
+
   it('genererer en workout og viser en rigtig formattitel', async () => {
     seedOnboardedProfile();
     vi.useFakeTimers();
