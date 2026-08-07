@@ -16,7 +16,7 @@ export { fmtKg, planPlates, scaleLoad, scaleLoadPct, REF_BW, LEVEL_MULT } from '
 export { unitLabel, unitName } from './movements.js';
 export { normalizeRequest, peopleFromMix } from './request.js';
 export { findBottlenecks, planPartner } from './partner.js';
-export { DNA_AXES, MATCH_DISCLAIMER, computeDNA, scoreMatch, signatureOf, validate } from './validate.js';
+export { DNA_AXES, computeDNA, scoreMatch, signatureOf, validate } from './validate.js';
 export { MAX_CANDIDATES, budget, chooseExercises, generateWorkout, mainPool } from './smartmix.js';
 export { buildTimerPlan } from './timerplan.js';
 export { PROGRAM_GOALS, generateProgram } from './program.js';

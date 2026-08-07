@@ -271,7 +271,3 @@ export function scoreMatch(
 
   return { total, parts, up, down };
 }
-
-export const MATCH_DISCLAIMER =
-  'WW Match er WHATWORKs interne kvalitetskontrol af, hvor godt workouten matcher dine valg. '
-  + 'Det er ikke en helbreds- eller præstationsscore.';

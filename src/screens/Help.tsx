@@ -51,17 +51,6 @@ const SECTIONS: { title: string; body: string[] }[] = [
     ],
   },
   {
-    title: 'WW Match',
-    body: [
-      eng.MATCH_DISCLAIMER,
-      'Scoren er sammensat af fem delscorer: sikkerhed, tid, retning, afvikling og variation. '
-      + 'Hver delscore har sin egen forklaring på workoutsiden, så du kan se, hvad der trækker op '
-      + 'og ned.',
-      'WW Match er ikke videnskabeligt valideret. Det er et internt, forklarligt signal om, hvor '
-      + 'godt forslaget passer til det, du bad om.',
-    ],
-  },
-  {
     title: 'Data og offline',
     body: [
       'Alt ligger lokalt på enheden. Der er ingen konto, ingen server og ingen cloud-synk. '

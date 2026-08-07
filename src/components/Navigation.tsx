@@ -25,7 +25,7 @@ export const SECONDARY: { id: Screen; label: string; hint: string }[] = [
   { id: 'equipment', label: 'Udstyr', hint: 'Redskaber, antal og skiver' },
   { id: 'settings', label: 'Indstillinger', hint: 'Tema, AI Mix, lyd og haptik' },
   { id: 'transfer', label: 'Import og eksport', hint: 'Tag dine data med dig' },
-  { id: 'help', label: 'Hjælp', hint: 'Formater, WW Match og timeren' },
+  { id: 'help', label: 'Hjælp', hint: 'Formater og timeren' },
   { id: 'about', label: 'Om WHATWORK', hint: 'Hvad appen er — og ikke er' },
 ];
 

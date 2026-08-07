@@ -128,7 +128,8 @@ describe('WHATWORK — kerneflow', () => {
     expect(screen.getByRole('heading', { name: 'Kropsvægt' })).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Individuel' }));
 
-    for (let i = 0; i < 12; i++) {
+    // Profilens kropsvægt (82 kg) er Mand 1's gennemsnit-fallback ved start.
+    for (let i = 0; i < 4; i++) {
       await user.click(screen.getByRole('button', { name: 'Mand 1: én færre' }));
     }
     expect(screen.getByText('78 kg')).toBeInTheDocument();
@@ -147,7 +148,7 @@ describe('WHATWORK — kerneflow', () => {
 
       expect(screen.getByRole('button', { name: 'Gør den lettere' })).toBeInTheDocument();
       expect(screen.getByText('Workout-DNA')).toBeInTheDocument();
-      expect(screen.getByText('WW Match')).toBeInTheDocument();
+      expect(screen.queryByText('WW Match')).not.toBeInTheDocument();
       expect(screen.getByText('Sådan afvikles den')).toBeInTheDocument();
       expect(screen.getByRole('button', { name: 'Start workout' })).toBeInTheDocument();
 
@@ -252,7 +253,7 @@ describe('WHATWORK — ruter og indstillinger', () => {
     window.location.hash = '#/hjaelp';
     render(<App />);
     expect(await screen.findByRole('heading', { name: 'Hjælp' })).toBeInTheDocument();
-    expect(screen.getByText('WW Match')).toBeInTheDocument();
+    expect(screen.getByText('Data og offline')).toBeInTheDocument();
     window.location.hash = '';
   });
 

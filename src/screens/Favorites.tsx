@@ -35,7 +35,7 @@ export function Favorites({
               </div>
               <div className="ww-h2" style={{ marginBottom: 4 }}>{entry.title}</div>
               <div style={{ fontSize: 13, color: 'var(--ww-text-2)', marginBottom: 14 }}>
-                Gemt {relDate(entry.date)} · WW Match {entry.workout.score}
+                Gemt {relDate(entry.date)}
               </div>
               <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                 <button type="button" className="ww-btn" style={{ minHeight: 44 }} onClick={() => onOpen(entry)}>Åbn</button>

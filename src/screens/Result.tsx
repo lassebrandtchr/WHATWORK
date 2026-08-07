@@ -13,9 +13,6 @@ function blockLabel(block: Block, hasStrength: boolean): string {
   }
 }
 
-const MATCH_TONE = (score: number): 'good' | 'warn' | '' =>
-  (score >= 85 ? 'good' : score >= 70 ? 'warn' : '');
-
 export function ResultError({ message, onAdjust }: { message: string; onAdjust: () => void }) {
   return (
     <div className="ww-card" style={{ padding: 24, borderColor: 'var(--ww-red)' }}>
@@ -62,9 +59,6 @@ export function Result({
             {workout.participants === 1 ? 'Solo' : `${workout.participants} deltagere`}
           </span>
           {partner.mode === 'solo' ? null : <span className="ww-badge">{partner.title}</span>}
-          <span className={`ww-badge ww-badge--${MATCH_TONE(workout.score) || 'accent'}`}>
-            WW Match {workout.score}/100
-          </span>
         </div>
         {info ? <p className="ww-lede" style={{ maxWidth: '60ch' }}>{info.da}</p> : null}
       </header>
@@ -131,9 +125,6 @@ export function Result({
           </div>
         </section>
       ) : null}
-
-      {/* WW Match */}
-      <MatchPanel workout={workout} />
 
       {/* Hvorfor denne workout */}
       <section aria-labelledby="ww-why" style={{ marginBottom: 22 }}>
@@ -214,48 +205,6 @@ function ProtocolRow({ k, v }: { k: string; v: string }) {
       <dt style={{ fontSize: 13, color: 'var(--ww-text-3)', whiteSpace: 'nowrap' }}>{k}</dt>
       <dd style={{ margin: 0, fontSize: 14.5, textAlign: 'right', flex: '1 1 60%', minWidth: '16ch' }}>{v}</dd>
     </div>
-  );
-}
-
-function MatchPanel({ workout }: { workout: Workout }) {
-  return (
-    <section aria-labelledby="ww-match" style={{ marginBottom: 22 }}>
-      <h2 id="ww-match" className="ww-kicker" style={{ marginBottom: 12 }}>WW Match</h2>
-      <div className="ww-card" style={{ padding: '18px 20px' }}>
-        <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginBottom: 6 }}>
-          <span className="ww-num" style={{ fontSize: 40, fontWeight: 700, letterSpacing: '-0.03em' }}>
-            {workout.score}
-          </span>
-          <span style={{ fontSize: 16, color: 'var(--ww-text-2)' }}>/ 100</span>
-        </div>
-        <p style={{ margin: '0 0 18px', fontSize: 13.5, color: 'var(--ww-text-3)', lineHeight: 1.6, maxWidth: '58ch' }}>
-          {eng.MATCH_DISCLAIMER}
-        </p>
-
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-          {workout.match.parts.map((part) => (
-            <div key={part.id}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 12, marginBottom: 6 }}>
-                <span style={{ fontSize: 14, fontWeight: 600 }}>{part.name}</span>
-                <span className="ww-num" style={{ fontSize: 13, color: 'var(--ww-text-2)' }}>{part.score}/100</span>
-              </div>
-              <Meter value={part.score} max={100} label={`${part.name}: ${part.score} af 100`} />
-              <p style={{ margin: '6px 0 0', fontSize: 13, color: 'var(--ww-text-3)', lineHeight: 1.55 }}>{part.note}</p>
-            </div>
-          ))}
-        </div>
-
-        {workout.match.down.length ? (
-          <div style={{ marginTop: 18 }}>
-            <Note label="Det trækker ned" tone="quiet">
-              <ul style={{ margin: 0, paddingLeft: 18, display: 'flex', flexDirection: 'column', gap: 4 }}>
-                {workout.match.down.map((line) => <li key={line}>{line}</li>)}
-              </ul>
-            </Note>
-          </div>
-        ) : null}
-      </div>
-    </section>
   );
 }
 

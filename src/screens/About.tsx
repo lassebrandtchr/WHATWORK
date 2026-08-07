@@ -41,7 +41,7 @@ export function About() {
             'Den diagnosticerer og behandler ikke skader. Skånehensyn er et filter i programmeringen, ikke en medicinsk vurdering.',
             'Den kender ikke din krop. Kropsvægt og niveau er parametre til skalering — ikke en måling af dig.',
             'Den garanterer ingen resultater.',
-            'WW Match og workout-DNA er interne, forklarlige signaler. De er ikke videnskabeligt validerede scores.',
+            'Workout-DNA er et internt, forklarligt signal. Det er ikke en videnskabeligt valideret score.',
             'Den er ikke real-time i baggrunden på alle platforme. Lyd, haptik, Wake Lock og baggrundsadfærd afhænger af browser og styresystem.',
             'Der er hverken konto eller cloud-synk implementeret. Alt ligger lokalt.',
             'Den er ikke fuldt produktionsklar uden validering på rigtige enheder og af en træningsfaglig person.',

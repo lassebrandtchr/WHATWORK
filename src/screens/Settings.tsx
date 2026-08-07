@@ -86,7 +86,7 @@ export function Settings({
           AI Mix er et valgfrit variationslag. Den må kun foreslå format, hvilke øvelser der må
           indgå og en kort begrundelse. Den lokale regelmotor bestemmer stadig selv den endelige
           øvelsesliste, alle kilo og skiver, deltagernes mål, tidsbudgettet, udstyrslogistikken,
-          sikkerhedsvalideringen og WW Match. Der sendes hverken navn eller kropsvægt.
+          sikkerhedsvalideringen. Der sendes hverken navn eller kropsvægt.
           {' '}Er der ingen nøgle på serveren, eller er du offline, bygger Smart Mix workouten
           lokalt uden reduceret funktionalitet. Se opsætningen i README og <code>.env.example</code>.
         </Note>

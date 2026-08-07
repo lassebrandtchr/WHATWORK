@@ -326,7 +326,7 @@ describe('udstyr og validering', () => {
   });
 });
 
-describe('WW Match', () => {
+describe('intern kandidat-scoring (bruges kun til at vælge den bedste af op til 64 kandidater — vises aldrig i appen)', () => {
   it('har fem delscorer med hver sin forklaring', () => {
     const w = build({ minutes: 30, men: 1, level: 3, seed: 61 });
     expect(w.match.parts.map((p) => p.id)).toEqual(['safety', 'time', 'focus', 'execution', 'variation']);
@@ -336,11 +336,6 @@ describe('WW Match', () => {
       expect(p.note.length).toBeGreaterThan(5);
     });
     expect(w.score).toBe(w.match.total);
-  });
-
-  it('beskriver sig selv som en intern kvalitetskontrol, ikke en helbredsscore', () => {
-    expect(eng.MATCH_DISCLAIMER).toContain('interne kvalitetskontrol');
-    expect(eng.MATCH_DISCLAIMER).toContain('ikke en helbreds- eller præstationsscore');
   });
 });
 

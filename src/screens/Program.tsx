@@ -173,7 +173,7 @@ function ProgramPlan({
                   </div>
                   <div style={{ fontSize: 13, color: 'var(--ww-text-2)', marginBottom: 12 }}>
                     {day.workout
-                      ? `${day.workout.estimatedMinutes} min · WW Match ${day.workout.score}`
+                      ? `${day.workout.estimatedMinutes} min`
                       : day.error}
                   </div>
                   <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
