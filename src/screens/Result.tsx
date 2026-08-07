@@ -16,7 +16,7 @@ function blockLabel(block: Block, hasStrength: boolean): string {
 export function ResultError({ message, onAdjust }: { message: string; onAdjust: () => void }) {
   return (
     <div className="ww-card" style={{ padding: 24, borderColor: 'var(--ww-red)' }}>
-      <Kicker style={{ color: 'var(--ww-red-soft)', marginBottom: 10 }}>Kan ikke bygges forsvarligt</Kicker>
+      <Kicker style={{ color: 'var(--ww-red-soft)', marginBottom: 10 }}>Kunne ikke bygges</Kicker>
       <p style={{ margin: '0 0 20px', fontSize: 17, lineHeight: 1.5 }}>{message}</p>
       <button type="button" className="ww-btn ww-btn--lg" onClick={onAdjust}>Tilpas valgene</button>
     </div>

@@ -183,6 +183,8 @@ export function useWhatwork() {
   const [genError, setGenError] = useState<string | null>(null);
   const [aiNotice, setAiNotice] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
+  /** Sandt kun lige efter en ny workout er bygget — ikke når en gammel åbnes igen. */
+  const [celebrate, setCelebrate] = useState(false);
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [favorites, setFavorites] = useState<HistoryEntry[]>([]);
   const [program, setProgram] = useState<Program | null>(null);
@@ -436,6 +438,7 @@ export function useWhatwork() {
 
       if (animation.current !== null) window.clearTimeout(animation.current);
       setSaved(false);
+      setCelebrate(false);
       setProgress(0);
       setAiNotice(null);
       setPhaseText(eng.PHASES[0]?.text ?? '');
@@ -452,6 +455,7 @@ export function useWhatwork() {
           setWorkout(result.workout);
           setGenError(null);
           setFromProgram(null);
+          setCelebrate(true);
         } else {
           setWorkout(null);
           setGenError(result.error);
@@ -782,6 +786,7 @@ export function useWhatwork() {
     participants: participantsOf(gen),
     progress, phaseText,
     workout, genError, aiNotice, saved,
+    celebrate, setCelebrate,
     runGenerate, surpriseMe, regenerate, nudge,
     saveWorkout, openWorkout, isFavorite, toggleFavorite,
     history, filteredHistory, historyFilter, setHistoryFilter, removeHistory, favorites,

@@ -26,7 +26,7 @@ export { WARMUP_MAX_MINUTES, WARMUP_MIN_MINUTES, buildWarmup, buildCooldown, pat
 export const PHASES: { to: number; text: string }[] = [
   { to: 12, text: 'Læser dine valg, dine deltagere og dit udstyr.' },
   { to: 32, text: 'Bygger op til 64 variationer.' },
-  { to: 55, text: 'Sorterer dem fra, der ikke kan afvikles forsvarligt.' },
+  { to: 55, text: 'Finder dem, der rammer bedst.' },
   { to: 74, text: 'Regner kilo, skiver og mål ud til hver deltager.' },
   { to: 90, text: 'Tjekker tid, logistik og variation mod dine seneste workouts.' },
   { to: 100, text: 'Vælger den bedste. Så er der serveret.' },

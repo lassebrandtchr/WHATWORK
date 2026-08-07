@@ -11,8 +11,8 @@ export function Loading({ progress, phaseText }: { progress: number; phaseText: 
         justifyContent: 'center', padding: 32, textAlign: 'center',
       }}
     >
-      <span style={{ color: 'var(--ww-orange)', marginBottom: 36 }} className="ww-pulse">
-        <Glyph name="bolt" size={92} />
+      <span style={{ color: 'var(--ww-orange)', marginBottom: 36, display: 'inline-flex' }} className="ww-spin">
+        <Glyph name="gear" size={88} />
       </span>
       <div className="ww-num" style={{ fontSize: 'clamp(52px,15vw,80px)', fontWeight: 700, letterSpacing: '-0.05em', lineHeight: 1 }}>
         {progress} %

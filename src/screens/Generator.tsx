@@ -389,7 +389,7 @@ function DirectionStep({ gen, patch, toggle }: StepProps & { toggle: ToggleFn })
       <section style={{ marginBottom: 28 }}>
         <h2 style={{ fontSize: 15, fontWeight: 650, margin: '0 0 6px' }}>Ønskede øvelser</h2>
         <p style={{ margin: '0 0 12px', color: 'var(--ww-text-3)', fontSize: 13.5 }}>
-          Vælg det, I gerne vil have med. Generatoren tager dem med, hvis de kan afvikles forsvarligt.
+          Vælg det, I gerne vil have med. Generatoren tager dem med, hvis de passer ind i resten af valgene.
         </p>
         <div className="ww-wrap">
           {pickable.map((e) => (

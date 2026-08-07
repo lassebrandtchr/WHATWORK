@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { BottomBar, DesktopHeader, Drawer, MobileNav } from './components/Navigation.js';
+import { Confetti } from './components/Confetti.js';
 import { EmptyState, Glyph } from './components/ui.js';
 import { Wordmark } from './components/Wordmark.js';
 import { WwMark } from './components/WwMark.js';
@@ -177,18 +178,21 @@ export function App() {
 
         {ww.screen === 'result' && (
           ww.workout ? (
-            <Result
-              workout={ww.workout}
-              saved={ww.saved}
-              isFavorite={ww.isFavorite(ww.workout)}
-              aiNotice={ww.aiNotice}
-              onBack={() => ww.go(ww.fromProgram ? 'program' : 'home')}
-              onEasier={() => ww.nudge('easier')}
-              onHarder={() => ww.nudge('harder')}
-              onRegenerate={ww.regenerate}
-              onSave={ww.saveWorkout}
-              onFavorite={() => ww.toggleFavorite(ww.workout)}
-            />
+            <>
+              <Confetti active={ww.celebrate} onDone={() => ww.setCelebrate(false)} />
+              <Result
+                workout={ww.workout}
+                saved={ww.saved}
+                isFavorite={ww.isFavorite(ww.workout)}
+                aiNotice={ww.aiNotice}
+                onBack={() => ww.go(ww.fromProgram ? 'program' : 'home')}
+                onEasier={() => ww.nudge('easier')}
+                onHarder={() => ww.nudge('harder')}
+                onRegenerate={ww.regenerate}
+                onSave={ww.saveWorkout}
+                onFavorite={() => ww.toggleFavorite(ww.workout)}
+              />
+            </>
           ) : (
             <div style={{ paddingTop: 'calc(env(safe-area-inset-top) + 16px)', maxWidth: 840 }}>
               <button type="button" className="ww-btn ww-btn--ghost" style={{ marginBottom: 16 }} onClick={() => ww.go('home')}>

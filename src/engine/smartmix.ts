@@ -311,9 +311,9 @@ function explain(w: Omit<Workout, 'explanation'>, req: NormalizedRequest): strin
 
 function humanError(issues: Issue[], req: NormalizedRequest): string {
   const e = issues.find((i) => i.sev === 'error');
-  if (!e) return 'Der kunne ikke bygges en forsvarlig workout med de valg.';
+  if (!e) return 'Der kunne ikke bygges en workout med de valg.';
   if (e.code === 'TIME_OVER') {
-    return `Med ${req.minutes} minutter og de valgte øvelser kan arbejdet ikke nås forsvarligt. `
+    return `Med ${req.minutes} minutter og de valgte øvelser kan arbejdet ikke nås inden for tiden. `
       + 'Prøv mere tid, eller vælg færre låste øvelser.';
   }
   if (e.code === 'EQUIPMENT' || e.code === 'CONCURRENCY') {
@@ -407,7 +407,7 @@ export function generateWorkout(raw: WorkoutRequest, opts: GenerateOptions = {})
     note: best.source === 'ai'
       ? `AI Mix foreslog format og bevægelseskombination. WHATWORK valgte den bedste af ${candidates.length} `
         + `sikre variationer ud af ${limit} og bestemte selv vægte, mål, tid og logistik.`
-      : `Smart Mix byggede ${limit} variationer lokalt, kasserede dem der ikke kunne afvikles forsvarligt, `
+      : `Smart Mix byggede ${limit} variationer lokalt, kasserede dem der ikke bestod kontrollen, `
         + `og valgte den bedste af de ${candidates.length}, der bestod.`,
     ...(best.source === 'ai' && ai?.rationale ? { rationale: ai.rationale } : {}),
   };

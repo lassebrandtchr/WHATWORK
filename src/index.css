@@ -169,8 +169,22 @@ a {
   50% { opacity: 1; }
 }
 
+@keyframes ww-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes ww-confetti-fall {
+  0% { transform: translateY(-10vh) rotate(0deg); opacity: 0; }
+  15% { opacity: 1; }
+  75% { opacity: 1; }
+  100% { transform: translateY(115vh) rotate(var(--ww-confetti-r, 360deg)); opacity: 0; }
+}
+
 .ww-rise { animation: ww-rise 0.38s var(--ww-ease); }
 .ww-pulse { animation: ww-pulse 2.1s ease-in-out infinite; }
+.ww-spin { animation: ww-spin 2.4s linear infinite; }
+.ww-confetti-piece { animation-name: ww-confetti-fall; animation-timing-function: ease-in; animation-fill-mode: forwards; }
 
 @media (prefers-reduced-motion: reduce) {
   *,
