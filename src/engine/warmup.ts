@@ -6,15 +6,15 @@ import type {
   Block, Exercise, Movement, MovementPattern, NormalizedRequest,
 } from './types.js';
 
-/** Opvarmningen må aldrig fylde mere end det her, uanset hvor lang sessionen er. */
-export const WARMUP_MIN_MINUTES = 5;
-export const WARMUP_MAX_MINUTES = 10;
+/** Opvarmningen holdes altid i dette spænd, uanset hvor lang resten af sessionen er. */
+export const WARMUP_MIN_MINUTES = 10;
+export const WARMUP_MAX_MINUTES = 12;
 
 const WARMUP_POOL = EXERCISES.filter((e) => e.cat === 'warmup');
 const COOLDOWN_POOL = EXERCISES.filter((e) => e.cat === 'mobility');
 
 /** Pulsgivere — opvarmningen starter altid med én af dem, og de skiftes ud. */
-const PULSE_RAISERS = ['wu_easy_', 'wu_fast_feet', 'wu_box_step', 'wu_sled_light', 'wu_bear_crawl'];
+const PULSE_RAISERS = ['wu_easy_', 'wu_box_step', 'wu_sled_light', 'wu_bear_crawl'];
 
 /**
  * Complexes med redskab dækker de samme mønstre. Der kommer højst én med, ellers

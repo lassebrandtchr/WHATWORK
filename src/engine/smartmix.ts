@@ -26,8 +26,9 @@ export interface Budget { warm: number; main: number; cool: number; transitions:
 
 export function budget(req: NormalizedRequest): Budget {
   const t = req.minutes;
-  const warmRaw = req.warmup ? clamp(Math.round(t * 0.16), 4, 10) : 0;
-  const warm = req.warmup ? Math.min(warmRaw, Math.max(3, Math.floor(t * 0.3))) : 0;
+  // Opvarmningen holdes altid i et fast 10-12 minutters spænd, uanset sessionens
+  // samlede længde — den skal nå at varme hele kroppen op ordentligt hver gang.
+  const warm = req.warmup ? 10 + (t % 3) : 0;
   const coolRaw = req.cooldown ? clamp(Math.round(t * 0.08), 2, 6) : 0;
   const cool = req.cooldown ? Math.min(coolRaw, Math.max(2, Math.floor(t * 0.15))) : 0;
   // Skiftetid mellem blokke og stationer er en del af budgettet, ikke noget der lægges oveni.

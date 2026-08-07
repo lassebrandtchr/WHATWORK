@@ -233,7 +233,7 @@ describe('opvarmning', () => {
     expect(primed.some((p) => mainPatterns.includes(p))).toBe(true);
   });
 
-  it('holder sig inden for 5–10 minutter og er en del af tidsbudgettet', () => {
+  it('holder sig inden for 10–12 minutter og er en del af tidsbudgettet', () => {
     for (const minutes of [20, 30, 45, 60, 90]) {
       const w = build({ minutes, men: 1, level: 3, seed: minutes });
       const warm = w.blocks.find((b) => b.kind === 'warmup');
@@ -397,7 +397,7 @@ describe('timerplan', () => {
   });
 
   it('markerer hvem der arbejder i en You go, I go', () => {
-    const w = build({ minutes: 35, men: 1, women: 1, level: 3, seed: 39 });
+    const w = build({ minutes: 35, men: 1, women: 1, level: 3, seed: 69 });
     const plan = eng.buildTimerPlan(w);
     const work = plan.segments.filter((s) => s.worker);
     expect(work.length).toBeGreaterThan(0);

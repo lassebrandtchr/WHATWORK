@@ -63,7 +63,7 @@ describe('timeren følger den genererede workout', () => {
   });
 
   it('tæller op på åbne segmenter', () => {
-    const w = workoutFor(39, { men: 1, women: 1, minutes: 35 });
+    const w = workoutFor(69, { men: 1, women: 1, minutes: 35 });
     const plan = eng.buildTimerPlan(w);
     const openIndex = plan.segments.findIndex((s) => s.seconds === null && s.kind === 'work');
     expect(openIndex).toBeGreaterThan(-1);
@@ -73,7 +73,7 @@ describe('timeren følger den genererede workout', () => {
   });
 
   it('viser hvem der arbejder ved partnerworkout', () => {
-    const w = workoutFor(39, { men: 1, women: 1, minutes: 35 });
+    const w = workoutFor(69, { men: 1, women: 1, minutes: 35 });
     const plan = eng.buildTimerPlan(w);
     const idx = plan.segments.findIndex((s) => s.worker);
     expect(idx).toBeGreaterThan(-1);

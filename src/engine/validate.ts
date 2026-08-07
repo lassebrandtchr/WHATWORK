@@ -1,6 +1,7 @@
 import { BY_ID } from './data/exercises.js';
 import { findBottlenecks } from './partner.js';
 import { clamp } from './rng.js';
+import { WARMUP_MAX_MINUTES } from './warmup.js';
 import type {
   Block, DnaAxisId, DnaAxis, FocusId, Issue, MatchPart, MatchScore,
   NormalizedRequest, Workout, WorkoutSignature,
@@ -86,8 +87,11 @@ export function validate(
   }
 
   const warm = blocks.find((b) => b.kind === 'warmup');
-  if (warm && warm.minutes > 10) {
-    issues.push({ code: 'WARMUP_LONG', sev: 'error', msg: 'Opvarmningen fylder mere end 10 minutter.' });
+  if (warm && warm.minutes > WARMUP_MAX_MINUTES) {
+    issues.push({
+      code: 'WARMUP_LONG', sev: 'error',
+      msg: `Opvarmningen fylder mere end ${WARMUP_MAX_MINUTES} minutter.`,
+    });
   }
 
   blocks.forEach((b) => b.movements.forEach((m) => {
