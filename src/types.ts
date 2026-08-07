@@ -46,10 +46,18 @@ export interface GenDraft {
   men: number;
   women: number;
   neutral: number;
-  /** Gennemsnitlig kropsvægt pr. profil. */
+  /** Gennemsnitlig kropsvægt pr. profil — bruges i gennemsnit-tilstand og som fallback
+   * for enhver deltager, der endnu ikke har fået sin egen vægt i individuel-tilstand. */
   bwM: number;
   bwF: number;
   bwX: number;
+  /** Tændt: hver deltager har sin egen kropsvægt i stedet for gruppens gennemsnit. */
+  individualWeights: boolean;
+  /** Pr. person, indeks-justeret til "Mand 1, Mand 2, …" osv. Kan være kortere end
+   * `men`/`women`/`neutral` — manglende indeks falder tilbage til bw-feltet. */
+  weightsM: number[];
+  weightsF: number[];
+  weightsX: number[];
   level: LevelId;
   condition: number;
   strength: number;
