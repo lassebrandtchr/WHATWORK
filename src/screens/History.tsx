@@ -3,6 +3,27 @@ import { EmptyState, Glyph, PageHeader } from '../components/ui.js';
 import { fmtDuration, relDate } from '../lib/format.js';
 import type { HistoryEntry, HistoryStatus } from '../types.js';
 
+/** Kort, konkret liste over hoveddelens øvelser — ikke opvarmning/cooldown. */
+function exerciseSummary(entry: HistoryEntry): string {
+  const names = entry.workout.blocks
+    .filter((b) => b.kind === 'conditioning' || b.kind === 'strength')
+    .flatMap((b) => b.movements.map((m) => m.name));
+  const unique = [...new Set(names)];
+  if (!unique.length) return '';
+  const shown = unique.slice(0, 4);
+  const rest = unique.length - shown.length;
+  return `${shown.join(', ')}${rest > 0 ? ` +${rest} mere` : ''}`;
+}
+
+/** Formatet, brugeren har kørt flest gange — en lille, sjov statistik, ikke en KPI. */
+function favoriteFormat(history: HistoryEntry[]): string | null {
+  if (!history.length) return null;
+  const counts = new Map<string, number>();
+  history.forEach((h) => counts.set(h.format, (counts.get(h.format) ?? 0) + 1));
+  const [top] = [...counts.entries()].sort((a, b) => b[1] - a[1]);
+  return top ? top[0] : null;
+}
+
 const STATUS: Record<HistoryStatus, { label: string; className: string }> = {
   done: { label: 'Gennemført', className: 'ww-badge ww-badge--good' },
   stopped: { label: 'Afbrudt', className: 'ww-badge ww-badge--warn' },
@@ -34,10 +55,12 @@ export function History({
   const [now] = useState(() => Date.now());
   const thisWeek = history.filter((h) => now - new Date(h.date).getTime() < 7 * 86_400_000);
 
+  const favFormat = favoriteFormat(history);
   const stats = [
     { value: String(done.length), label: 'Gennemført' },
     { value: fmtDuration(history.reduce((a, b) => a + b.minutes, 0)), label: 'Samlet tid' },
     { value: String(thisWeek.length), label: 'Denne uge' },
+    ...(favFormat ? [{ value: favFormat, label: 'Yndlingsformat' }] : []),
   ];
 
   return (
@@ -59,7 +82,12 @@ export function History({
           <div style={{ display: 'flex', gap: 26, flexWrap: 'wrap', paddingBottom: 22, borderBottom: '1px solid var(--ww-line)', marginBottom: 18 }}>
             {stats.map((s) => (
               <div key={s.label} style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                <span className="ww-num" style={{ fontSize: 28, fontWeight: 700, letterSpacing: '-0.02em' }}>{s.value}</span>
+                <span
+                  className="ww-num"
+                  style={{ fontSize: s.value.length > 4 ? 18 : 28, fontWeight: 700, letterSpacing: '-0.02em' }}
+                >
+                  {s.value}
+                </span>
                 <span className="ww-kicker">{s.label}</span>
               </div>
             ))}
@@ -85,6 +113,7 @@ export function History({
             <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
               {entries.map((entry) => {
                 const status = STATUS[entry.status] ?? STATUS.saved;
+                const exercises = exerciseSummary(entry);
                 return (
                   <li key={entry.id} style={{ borderBottom: '1px solid var(--ww-line)', padding: '16px 0' }}>
                     <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
@@ -94,6 +123,11 @@ export function History({
                           {relDate(entry.date)} · {entry.minutes} min
                           {entry.result ? ` · ${entry.result}` : ''}
                         </div>
+                        {exercises ? (
+                          <div style={{ fontSize: 13, color: 'var(--ww-text-3)', marginTop: 6, lineHeight: 1.5 }}>
+                            {exercises}
+                          </div>
+                        ) : null}
                       </div>
                       <span className={status.className}>{status.label}</span>
                     </div>
