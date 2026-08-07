@@ -1,4 +1,5 @@
 import { Wordmark } from '../components/Wordmark.js';
+import { WwMark } from '../components/WwMark.js';
 
 export function Welcome({ onStart }: { onStart: () => void }) {
   return (
@@ -9,7 +10,10 @@ export function Welcome({ onStart }: { onStart: () => void }) {
         maxWidth: 560, margin: '0 auto', width: '100%',
       }}
     >
-      <Wordmark size={30} />
+      <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+        <WwMark size={44} />
+        <Wordmark size={30} />
+      </div>
 
       <div style={{ padding: '44px 0 8px' }}>
         <h1 className="ww-display" style={{ marginBottom: 18 }}>

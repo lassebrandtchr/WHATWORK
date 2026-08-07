@@ -1,6 +1,4 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="WHATWORK">
   <rect width="512" height="512" fill="#101215"/>
-  <g fill="none" stroke="#FF6A1F" stroke-width="26" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M290 62 132 286h94l-16 164 174-236h-98z"/>
-  </g>
+  <polyline points="128,176 208,338 256,238 304,338 384,176" fill="none" stroke="#FF6A1F" stroke-width="46" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>
