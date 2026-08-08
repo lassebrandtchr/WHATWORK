@@ -8,6 +8,12 @@ const KIND_LABEL: Record<string, string> = {
   prep: 'Gør klar', work: 'Arbejde', rest: 'Pause', transition: 'Skift', done: 'Færdig',
 };
 
+/** Grøn for opvarmning, rød for alt andet (styrke/conditioning) — samme princip som Result. */
+function accentFor(blockId: string, workout: Workout): string {
+  const block = workout.blocks.find((b) => b.id === blockId);
+  return block?.kind === 'warmup' ? 'var(--ww-green)' : 'var(--ww-red)';
+}
+
 export function Timer({
   timer, plan, view, workout, confirmDialog, keepAwake,
   onToggle, onNext, onPrev, onRound, onRequestExit, onRequestReset, onCancelDialog,
@@ -59,7 +65,7 @@ export function Timer({
         </button>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0, flex: 1 }}>
           <span className="ww-kicker ww-kicker--accent" style={{ whiteSpace: 'nowrap' }}>{workout.title}</span>
-          <span style={{ fontSize: 12.5, color: 'var(--ww-text-3)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+          <span style={{ fontSize: 12.5, color: accentFor(segment.blockId, workout), whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
             {segment.blockTitle} · {KIND_LABEL[segment.kind] ?? segment.kind}
           </span>
         </div>
@@ -71,7 +77,11 @@ export function Timer({
       {/* Segmentskinne */}
       <div className="ww-timer__rail" role="img" aria-label={`Segment ${view.index + 1} af ${view.total}`}>
         {plan.segments.map((s, i) => (
-          <span key={s.id} className={i < view.index ? 'is-done' : i === view.index ? 'is-now' : ''} />
+          <span
+            key={s.id}
+            className={i < view.index ? 'is-done' : i === view.index ? 'is-now' : ''}
+            style={i === view.index ? { background: accentFor(s.blockId, workout) } : undefined}
+          />
         ))}
       </div>
 
