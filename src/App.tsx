@@ -196,6 +196,7 @@ export function App() {
               <Confetti active={ww.celebrate} onDone={() => ww.setCelebrate(false)} />
               <Result
                 workout={ww.workout}
+                profile={ww.profile}
                 saved={ww.saved}
                 isFavorite={ww.isFavorite(ww.workout)}
                 aiNotice={ww.aiNotice}

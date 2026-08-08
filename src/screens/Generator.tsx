@@ -1,21 +1,24 @@
+import { useMemo, useState } from 'react';
 import * as eng from '../engine/index.js';
-import type { CareId, FocusId } from '../engine/index.js';
+import type { CareId, Exercise, FocusId, MuscleId, MuscleRegion } from '../engine/index.js';
 import { EquipmentIcon } from '../components/EquipmentIcon.js';
+import { Photo } from '../components/Photo.js';
 import { Chip, Counter, Glyph, Kicker, Note, OptionRow, StepHeader } from '../components/ui.js';
 import { participantsOf } from '../state/useWhatwork.js';
 import type { GenDraft, GenStep } from '../types.js';
 
 const TIME_OPTIONS = [10, 15, 20, 25, 30, 40, 45, 60, 75, 90];
 
-/** De øvelser, det giver mening at kunne ønske eller fravælge for én dag. */
-export const PICKABLE = [
-  'push_press', 'strict_press', 'pull_up', 'band_pull_up', 'clean_and_jerk',
-  'hang_power_clean', 'power_clean', 'kb_swing', 'devil_press', 'box_jump_over',
-  'sled_push', 'sled_pull', 'assault', 'wall_ball', 'row', 'ski', 'bike',
-  'sandbag_shoulder', 'walking_lunge', 'db_reverse_lunge', 'thruster', 'burpee',
-  'burpee_box_jump_over', 'double_under', 'toes_to_bar',
-  'bench_press', 'incline_bench_press', 'push_up', 'diamond_push_up', 'decline_push_up',
-];
+/**
+ * De øvelser, der kan ønskes eller fravælges for én dag: hele kataloget minus
+ * opvarmning og minus det, motoren aldrig programmerer.
+ *
+ * Listen var før håndplukket, og hver ny øvelse skulle huskes to steder. Nu
+ * udledes den, så en øvelse er valgbar i samme sekund den findes i kataloget.
+ */
+export const PICKABLE: string[] = eng.EXERCISES
+  .filter((e) => e.cat !== 'warmup' && e.elig !== 'disabled' && e.elig !== 'coach-only')
+  .map((e) => e.id);
 
 const STEP_COPY: Record<GenStep, [string, string]> = {
   time: ['Hvor lang tid har I?', 'Tiden dækker hele sessionen — opvarmning, hoveddel og skiftetid.'],
@@ -100,7 +103,17 @@ export function Generator({
           {current === 'level' && <LevelStep gen={gen} patch={patch} />}
           {current === 'direction' && <DirectionStep gen={gen} patch={patch} toggle={toggle} />}
           {current === 'equip' && <EquipStep gen={gen} patch={patch} toggle={toggle} />}
-          {current === 'summary' && <SummaryList rows={rows} />}
+          {current === 'summary' && (
+            <>
+              <Photo
+                name="gen-phone-duo"
+                caption="Sådan ser skærmen ud i det sekund, Smart Mix går i gang."
+                sizes="(min-width: 1024px) 660px, 100vw"
+                style={{ marginBottom: 22 }}
+              />
+              <SummaryList rows={rows} />
+            </>
+          )}
         </div>
 
         {isDesktop ? (
@@ -118,6 +131,12 @@ export function Generator({
               <Glyph name="bolt" size={20} />
               Generér workout
             </button>
+            <Photo
+              name="gen-phone-solo"
+              frame="portrait"
+              sizes="296px"
+              style={{ marginTop: 18 }}
+            />
           </aside>
         ) : null}
       </div>
@@ -235,6 +254,13 @@ function PeopleStep({ gen, patch }: StepProps) {
                 + 'så flere aldrig skal bruge den samme maskine samtidig.'}
         </Note>
       </div>
+
+      <Photo
+        name="gen-phone-par"
+        frame="portrait"
+        sizes="(min-width: 640px) 340px, 100vw"
+        style={{ marginTop: 22, maxWidth: 340 }}
+      />
     </>
   );
 }
@@ -381,51 +407,220 @@ function Scale({ label, value, onPick }: { label: string; value: number; onPick:
   );
 }
 
-function DirectionStep({ gen, patch, toggle }: StepProps & { toggle: ToggleFn }) {
-  const pickable = PICKABLE.map((id) => eng.BY_ID[id]).filter((e) => e !== undefined);
+/* ---------- Øvelsesvælger ---------- */
+
+/**
+ * Filterværdien i dropdownen: hele kataloget, én region eller én muskelgruppe.
+ * Regionerne får et præfiks, så de aldrig kan forveksles med et gruppe-id.
+ */
+type MuscleFilter = 'all' | MuscleId | `region:${MuscleRegion}`;
+
+/**
+ * Folder dansk ned til noget, en søgestreng kan sammenlignes på: æøå bliver til
+ * ae/oe/aa, accenter falder væk. Så finder "laar" også "lår", og "generer"
+ * finder "generér".
+ */
+function fold(s: string): string {
+  return s
+    .toLowerCase()
+    .replace(/æ/g, 'ae').replace(/ø/g, 'oe').replace(/å/g, 'aa')
+    .normalize('NFD').replace(/[̀-ͯ]/g, '');
+}
+
+const muscleNames = (e: Exercise): string[] =>
+  e.mus.map((m) => eng.MUSCLE_BY_ID[m]?.name ?? m);
+
+const equipmentNames = (e: Exercise): string[] => e.eq
+  .filter((id) => id !== 'bodyweight')
+  .map((id) => eng.EQUIPMENT_BY_ID[id]?.name ?? id);
+
+/** Alt, en søgning må ramme. Teknikcuen holdes udenfor — den giver kun støj. */
+const haystack = (e: Exercise): string =>
+  fold([e.name, e.id, ...muscleNames(e), ...equipmentNames(e)].join(' '));
+
+interface PickableExercise { ex: Exercise; search: string; meta: string }
+
+/** Kataloget bygges én gang — det ændrer sig ikke i appens levetid. */
+const CATALOG: PickableExercise[] = PICKABLE
+  .map((id) => eng.BY_ID[id])
+  .filter((e): e is Exercise => e !== undefined)
+  .map((ex) => ({
+    ex,
+    search: haystack(ex),
+    meta: [...muscleNames(ex), ...equipmentNames(ex)].join(' · '),
+  }))
+  .sort((a, b) => a.ex.name.localeCompare(b.ex.name, 'da'));
+
+function matchesFilter(ex: Exercise, filter: MuscleFilter): boolean {
+  if (filter === 'all') return true;
+  if (filter.startsWith('region:')) {
+    const region = filter.slice('region:'.length) as MuscleRegion;
+    return ex.mus.some((m) => eng.MUSCLE_BY_ID[m]?.region === region);
+  }
+  return ex.mus.includes(filter as MuscleId);
+}
+
+function ExercisePicker({ gen, patch, toggle }: StepProps & { toggle: ToggleFn }) {
+  const [query, setQuery] = useState('');
+  const [filter, setFilter] = useState<MuscleFilter>('all');
+
+  const needle = fold(query.trim());
+  const results = useMemo(
+    () => CATALOG.filter((c) => matchesFilter(c.ex, filter) && (!needle || c.search.includes(needle))),
+    [needle, filter],
+  );
+
+  const want = (id: string): void => patch({
+    included: toggle(gen.included, id),
+    excluded: gen.excluded.filter((x) => x !== id),
+  });
+  const skip = (id: string): void => patch({
+    excluded: toggle(gen.excluded, id),
+    included: gen.included.filter((x) => x !== id),
+  });
+
+  const chosen = (ids: string[]): Exercise[] =>
+    ids.map((id) => eng.BY_ID[id]).filter((e): e is Exercise => e !== undefined);
+
+  const filtered = filter !== 'all' || needle.length > 0;
 
   return (
     <>
-      <section style={{ marginBottom: 28 }}>
-        <h2 style={{ fontSize: 15, fontWeight: 650, margin: '0 0 6px' }}>Ønskede øvelser</h2>
-        <p style={{ margin: '0 0 12px', color: 'var(--ww-text-3)', fontSize: 13.5 }}>
-          Vælg det, I gerne vil have med. Generatoren tager dem med, hvis de passer ind i resten af valgene.
-        </p>
-        <div className="ww-wrap">
-          {pickable.map((e) => (
-            <Chip
-              key={`in-${e.id}`}
-              on={gen.included.includes(e.id)}
-              onClick={() => patch({
-                included: toggle(gen.included, e.id),
-                excluded: gen.excluded.filter((x) => x !== e.id),
-              })}
-            >
-              {e.name}
-            </Chip>
-          ))}
+      <div className="ww-picker__controls">
+        <div className="ww-picker__search">
+          <span className="ww-picker__search-icon" aria-hidden="true">
+            <Glyph name="search" size={18} />
+          </span>
+          <input
+            className="ww-input ww-picker__field"
+            type="search"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Søg efter en øvelse, fx curl eller squat"
+            aria-label="Søg efter en øvelse"
+          />
         </div>
-      </section>
+        <label className="ww-picker__filter">
+          <span className="ww-sr-only">Vis kun én muskelgruppe</span>
+          <select
+            className="ww-select"
+            value={filter}
+            onChange={(e) => setFilter(e.target.value as MuscleFilter)}
+          >
+            <option value="all">Alle muskelgrupper</option>
+            {eng.MUSCLE_REGIONS.map((r) => (
+              <optgroup key={r.id} label={r.name}>
+                <option value={`region:${r.id}`}>{r.allName}</option>
+                {eng.MUSCLES_IN_REGION(r.id).map((m) => (
+                  <option key={m.id} value={m.id}>{m.name}</option>
+                ))}
+              </optgroup>
+            ))}
+          </select>
+        </label>
+      </div>
 
-      <section style={{ marginBottom: 28 }}>
-        <h2 style={{ fontSize: 15, fontWeight: 650, margin: '0 0 6px' }}>Udelukkede øvelser</h2>
-        <p style={{ margin: '0 0 12px', color: 'var(--ww-text-3)', fontSize: 13.5 }}>
-          Tryk på det, I ikke vil se i dag.
-        </p>
-        <div className="ww-wrap">
-          {pickable.map((e) => (
-            <Chip
-              key={`ex-${e.id}`}
-              on={gen.excluded.includes(e.id)}
-              onClick={() => patch({
-                excluded: toggle(gen.excluded, e.id),
-                included: gen.included.filter((x) => x !== e.id),
-              })}
-            >
-              {e.name}
-            </Chip>
-          ))}
+      <p className="ww-picker__count" role="status">
+        {results.length === CATALOG.length
+          ? `${CATALOG.length} øvelser i kataloget`
+          : `${results.length} af ${CATALOG.length} øvelser`}
+      </p>
+
+      {results.length > 0 ? (
+        <ul className="ww-picker__list">
+          {results.map(({ ex, meta }) => {
+            const isIn = gen.included.includes(ex.id);
+            const isEx = gen.excluded.includes(ex.id);
+            return (
+              <li key={ex.id} className="ww-picker__row">
+                <span className="ww-picker__label">
+                  <span className="ww-picker__name">{ex.name}</span>
+                  <span className="ww-picker__meta">{meta || 'Kropsvægt'}</span>
+                </span>
+                <span className="ww-picker__actions">
+                  <button
+                    type="button"
+                    className="ww-pick-btn"
+                    aria-pressed={isIn}
+                    aria-label={`Ønsk ${ex.name}`}
+                    onClick={() => want(ex.id)}
+                  >
+                    Ønsket
+                  </button>
+                  <button
+                    type="button"
+                    className="ww-pick-btn ww-pick-btn--off"
+                    aria-pressed={isEx}
+                    aria-label={`Fravælg ${ex.name}`}
+                    onClick={() => skip(ex.id)}
+                  >
+                    Fravalgt
+                  </button>
+                </span>
+              </li>
+            );
+          })}
+        </ul>
+      ) : (
+        <div className="ww-card" style={{ padding: '22px 18px' }}>
+          <p style={{ margin: '0 0 14px', color: 'var(--ww-text-2)', fontSize: 15 }}>
+            Ingen øvelser matcher søgningen.
+          </p>
+          <button
+            type="button"
+            className="ww-btn"
+            onClick={() => { setQuery(''); setFilter('all'); }}
+          >
+            Ryd søgning og filter
+          </button>
         </div>
+      )}
+
+      {filtered && (gen.included.length > 0 || gen.excluded.length > 0) ? (
+        <p className="ww-picker__hint">
+          Valgene nedenfor gælder stadig, selvom de er filtreret væk fra listen.
+        </p>
+      ) : null}
+
+      {gen.included.length > 0 ? (
+        <section className="ww-picker__chosen">
+          <Kicker style={{ marginBottom: 10 }}>Ønsket ({gen.included.length})</Kicker>
+          <div className="ww-wrap">
+            {chosen(gen.included).map((e) => (
+              <Chip key={`in-${e.id}`} on onClick={() => want(e.id)} label={`Fjern ${e.name} fra ønskede`}>
+                {e.name}
+              </Chip>
+            ))}
+          </div>
+        </section>
+      ) : null}
+
+      {gen.excluded.length > 0 ? (
+        <section className="ww-picker__chosen">
+          <Kicker style={{ marginBottom: 10 }}>Fravalgt ({gen.excluded.length})</Kicker>
+          <div className="ww-wrap">
+            {chosen(gen.excluded).map((e) => (
+              <Chip key={`ex-${e.id}`} on onClick={() => skip(e.id)} label={`Fjern ${e.name} fra fravalgte`}>
+                {e.name}
+              </Chip>
+            ))}
+          </div>
+        </section>
+      ) : null}
+    </>
+  );
+}
+
+function DirectionStep({ gen, patch, toggle }: StepProps & { toggle: ToggleFn }) {
+  return (
+    <>
+      <section style={{ marginBottom: 30 }}>
+        <h2 style={{ fontSize: 15, fontWeight: 650, margin: '0 0 6px' }}>Ønskede og fravalgte øvelser</h2>
+        <p style={{ margin: '0 0 14px', color: 'var(--ww-text-3)', fontSize: 13.5 }}>
+          Søg, eller filtrér på muskelgruppe. Ønskede øvelser lægges ind, hvis de passer
+          til resten af valgene — fravalgte ses ikke i dag.
+        </p>
+        <ExercisePicker gen={gen} patch={patch} toggle={toggle} />
       </section>
 
       <section>

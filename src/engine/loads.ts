@@ -177,3 +177,37 @@ export function scaleLoadPct(
   const { perUnit, kind, floor } = rawPerUnit(ex, person);
   return prescribe(ex, kind, Math.max(perUnit, floor) * pct, 0, ctx);
 }
+
+/** Faste lister, ét trin op/ned skal bevæge sig til nabo-værdien i, i stedet for at
+ * lægge et fast antal kilo til og risikere at snappe tilbage til samme værdi. */
+function listFor(ex: Exercise, kind: LoadKind, ctx: LoadContext): number[] | null {
+  if (kind === 'ball') return WALLBALLS;
+  if (kind === 'bag') return ctx.sandbags?.length ? ctx.sandbags : DEFAULT_SANDBAGS;
+  if ((kind === 'pair' || kind === 'single') && ex.eq.includes('kettlebell')) return KETTLEBELLS;
+  return null;
+}
+
+/**
+ * Ét trin op eller ned fra `currentEachKg` — til "juster vægten"-knapperne i UI'et.
+ * Genbruger `prescribe` til selve formateringen, så teksten altid matcher det, motoren
+ * ville have skrevet ved generering.
+ */
+export function stepLoad(
+  ex: Exercise, kind: LoadKind, currentEachKg: number, direction: 1 | -1, ctx: LoadContext = {},
+): LoadPrescription {
+  const list = listFor(ex, kind, ctx);
+  let nextEach: number;
+  if (list) {
+    const sorted = [...list].sort((a, b) => a - b);
+    let idx = 0;
+    sorted.forEach((v, i) => {
+      if (Math.abs(v - currentEachKg) < Math.abs((sorted[idx] as number) - currentEachKg)) idx = i;
+    });
+    nextEach = sorted[clamp(idx + direction, 0, sorted.length - 1)] as number;
+  } else {
+    const step = kind === 'barbell' || kind === 'sled' ? 5 : 2.5;
+    const floor = kind === 'barbell' ? 0 : kind === 'sled' ? 20 : 1;
+    nextEach = Math.max(floor, roundTo(currentEachKg + direction * step, step));
+  }
+  return prescribe(ex, kind, nextEach, 0, ctx);
+}

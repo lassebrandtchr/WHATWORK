@@ -586,6 +586,151 @@ a {
 .ww-textarea:focus { outline: none; border-color: var(--ww-orange); }
 .ww-input::placeholder { color: var(--ww-text-3); }
 
+/* Systemets egen dropdown — den er både hurtigst og bedst kendt på telefon. Kun
+   pilen tegnes selv, så feltet matcher resten af formularen. */
+.ww-select {
+  width: 100%;
+  min-height: 52px;
+  padding: 14px 42px 14px 16px;
+  background: var(--ww-surface);
+  border: 1px solid var(--ww-line-2);
+  border-radius: var(--ww-r);
+  color: var(--ww-text);
+  font-size: 16px;
+  font-weight: 550;
+  cursor: pointer;
+  appearance: none;
+  background-image: linear-gradient(45deg, transparent 50%, currentColor 50%),
+    linear-gradient(135deg, currentColor 50%, transparent 50%);
+  background-position: right 20px center, right 14px center;
+  background-size: 6px 6px, 6px 6px;
+  background-repeat: no-repeat;
+}
+
+.ww-select:hover { border-color: var(--ww-line-3); }
+.ww-select:focus { outline: none; border-color: var(--ww-orange); }
+
+/* ---------- Øvelsesvælger ---------- */
+
+.ww-picker__controls {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: minmax(0, 1fr);
+  margin-bottom: 14px;
+}
+
+@media (min-width: 560px) {
+  .ww-picker__controls { grid-template-columns: minmax(0, 1fr) minmax(180px, 240px); }
+}
+
+.ww-picker__search { position: relative; display: flex; }
+
+.ww-picker__search-icon {
+  position: absolute;
+  left: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  color: var(--ww-text-3);
+  pointer-events: none;
+}
+
+.ww-picker__field { padding-left: 44px; }
+/* Safaris egen ryd-knap sidder oven i vores egen kant. */
+.ww-picker__field::-webkit-search-cancel-button { appearance: none; }
+
+.ww-picker__filter { display: block; }
+
+.ww-picker__count {
+  margin: 0 0 10px;
+  font-size: 13px;
+  color: var(--ww-text-3);
+}
+
+/* Kataloget er langt. Listen scroller i sig selv, så trinnets egne knapper
+   aldrig forsvinder langt nede under 80 rækker. */
+.ww-picker__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--ww-line);
+  border-radius: var(--ww-r);
+  background: var(--ww-surface);
+  max-height: min(56svh, 460px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.ww-picker__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 14px;
+  padding: 12px 14px;
+  border-top: 1px solid var(--ww-line);
+}
+
+.ww-picker__row:first-child { border-top: none; }
+
+.ww-picker__label {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+  flex: 1 1 190px;
+}
+
+.ww-picker__name { font-size: 15px; font-weight: 600; line-height: 1.3; }
+
+.ww-picker__meta {
+  font-size: 12.5px;
+  color: var(--ww-text-3);
+  line-height: 1.4;
+}
+
+.ww-picker__actions {
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.ww-pick-btn {
+  min-height: 40px;
+  padding: 0 14px;
+  border-radius: var(--ww-r-sm);
+  border: 1px solid var(--ww-line-2);
+  background: var(--ww-bg);
+  color: var(--ww-text-2);
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: border-color 0.14s, background 0.14s, color 0.14s;
+}
+
+.ww-pick-btn:hover { border-color: var(--ww-line-3); color: var(--ww-text); }
+
+/* Valgt tilstand bæres af baggrund, kant OG tekstfarve — aldrig farve alene. */
+.ww-pick-btn[aria-pressed='true'] {
+  background: var(--ww-orange-dim);
+  border-color: var(--ww-orange);
+  color: var(--ww-orange);
+}
+
+.ww-pick-btn--off[aria-pressed='true'] {
+  background: var(--ww-red-dim);
+  border-color: var(--ww-red-line);
+  color: var(--ww-red-soft);
+}
+
+.ww-picker__hint {
+  margin: 14px 0 0;
+  font-size: 13px;
+  color: var(--ww-text-3);
+}
+
+.ww-picker__chosen { margin-top: 18px; }
+
 /* ---------- Navigation ---------- */
 
 .ww-header {
@@ -942,6 +1087,25 @@ a {
 .ww-round-btn:hover { background: var(--ww-raised); }
 .ww-round-btn--add { border-color: var(--ww-orange-line); color: var(--ww-orange); }
 
+/* Lille +/- til at justere en enkelt øvelses vægt inline i teksten, i modsætning til
+   .ww-round-btn (fritstående kontrol, fx runde-tælleren i timeren) og .ww-step-btn
+   (større, kvadratisk stepper til tællere). */
+.ww-load-step-btn {
+  width: 26px;
+  height: 26px;
+  flex: none;
+  border: 1px solid var(--ww-line-2);
+  background: var(--ww-surface);
+  color: var(--ww-text);
+  border-radius: 999px;
+  font-size: 15px;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.14s, border-color 0.14s;
+}
+
+.ww-load-step-btn:hover { background: var(--ww-raised); border-color: var(--ww-orange-line); }
+
 /* ---------- Dialog og sheets ---------- */
 
 .ww-scrim {
@@ -1161,5 +1325,155 @@ a {
   .ww-timer__btn--main:not(.is-running):not(:disabled)::after {
     animation: none;
     opacity: 0;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Fotos
+
+   Rammen ejer højde-bredde-forholdet; billedet fylder den helt og beskæres
+   omkring sit fokuspunkt. Derfor holder det samme motiv fra telefon til tablet
+   til desktop, uden at der skal skæres et nyt udsnit pr. skærmstørrelse.
+--------------------------------------------------------------------------- */
+
+.ww-photo {
+  display: block;
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--ww-line);
+  border-radius: var(--ww-r-lg);
+  background: var(--ww-raised);
+}
+
+.ww-photo img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.ww-photo--band { aspect-ratio: 4 / 3; }
+.ww-photo--portrait { aspect-ratio: 4 / 5; }
+
+@media (min-width: 640px) {
+  .ww-photo--band { aspect-ratio: 3 / 2; }
+}
+
+@media (min-width: 1024px) {
+  .ww-photo--band { aspect-ratio: 2 / 1; }
+}
+
+.ww-figure { margin: 0; }
+
+.ww-figure figcaption {
+  margin-top: 10px;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--ww-text-3);
+}
+
+/* ---------------------------------------------------------------------------
+   Velkomstskærmens fuldskærmsfoto
+--------------------------------------------------------------------------- */
+
+.ww-hero {
+  position: relative;
+  isolation: isolate;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  /* Teksten står på et mørkt foto i begge temaer, så farverne låses her. */
+  --ww-text: #f6f7f8;
+  --ww-text-2: rgba(246, 247, 248, 0.8);
+  --ww-text-3: rgba(246, 247, 248, 0.66);
+  --ww-body: rgba(246, 247, 248, 0.86);
+  --ww-line: rgba(255, 255, 255, 0.18);
+  --ww-line-3: rgba(255, 255, 255, 0.3);
+  color: var(--ww-text);
+  background: #0b0d10;
+}
+
+.ww-hero-photo {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+}
+
+.ww-hero-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Læsbarhed frem for alt: teksten skal kunne stå oven på et vilkårligt udsnit. */
+.ww-hero-photo::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(11, 13, 16, 0.78) 0%,
+    rgba(11, 13, 16, 0.34) 30%,
+    rgba(11, 13, 16, 0.84) 74%,
+    #0b0d10 100%
+  );
+}
+
+@media (min-width: 1024px) {
+  /*
+   * På desktop står teksten i en smal, centreret spalte oven på et bredt motiv.
+   * Et ekstra lag lægger vægten bag netop den spalte, så resten af salen bliver
+   * ved med at være synlig.
+   */
+  .ww-hero-photo::after {
+    background:
+      radial-gradient(ellipse 46% 78% at 50% 52%, rgba(11, 13, 16, 0.82) 0%, rgba(11, 13, 16, 0) 100%),
+      linear-gradient(
+        180deg,
+        rgba(11, 13, 16, 0.7) 0%,
+        rgba(11, 13, 16, 0.28) 34%,
+        rgba(11, 13, 16, 0.78) 76%,
+        #0b0d10 100%
+      );
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Programopsætning
+
+   Formularen bærer siden; eksemplet på et færdigt program står ved siden af på
+   desktop og falder ned under formularen, når spalten ikke er der.
+--------------------------------------------------------------------------- */
+
+.ww-program-setup {
+  display: grid;
+  gap: 30px;
+  align-items: start;
+  grid-template-columns: minmax(0, 1fr);
+  max-width: 620px;
+}
+
+.ww-program-preview p {
+  margin: 12px 2px 0;
+  max-width: 34ch;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--ww-text-3);
+}
+
+@media (max-width: 1023px) {
+  /* Uden sidespalte må eksemplet ikke fylde hele bredden — det er en illustration. */
+  .ww-program-preview { max-width: 340px; }
+}
+
+@media (min-width: 1024px) {
+  .ww-program-setup {
+    grid-template-columns: minmax(0, 620px) 340px;
+    max-width: none;
+  }
+
+  .ww-program-preview {
+    position: sticky;
+    top: 88px;
   }
 }

@@ -1,3 +1,4 @@
+import { Photo } from '../components/Photo.js';
 import { EmptyState, Glyph, PageHeader } from '../components/ui.js';
 import { relDate } from '../lib/format.js';
 import type { HistoryEntry } from '../types.js';
@@ -20,11 +21,19 @@ export function Favorites({
       />
 
       {favorites.length === 0 ? (
-        <EmptyState
-          title="Ingen favoritter endnu"
-          body="Tryk «Gør til favorit» på en workout, så lander den her og kan køres igen med ét tryk."
-          action={<button type="button" className="ww-btn ww-btn--primary ww-btn--lg" onClick={onGenerate}>Generér workout</button>}
-        />
+        <>
+          <Photo
+            name="thruster"
+            frame="portrait"
+            sizes="(min-width: 640px) 340px, 100vw"
+            style={{ marginBottom: 22, maxWidth: 340 }}
+          />
+          <EmptyState
+            title="Ingen favoritter endnu"
+            body="Tryk «Gør til favorit» på en workout, så lander den her og kan køres igen med ét tryk."
+            action={<button type="button" className="ww-btn ww-btn--primary ww-btn--lg" onClick={onGenerate}>Generér workout</button>}
+          />
+        </>
       ) : (
         <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(260px,1fr))', gap: 8 }}>
           {favorites.map((entry) => (

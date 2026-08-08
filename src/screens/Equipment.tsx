@@ -1,5 +1,6 @@
 import * as eng from '../engine/index.js';
 import { EquipmentIcon } from '../components/EquipmentIcon.js';
+import { Photo } from '../components/Photo.js';
 import { Chip, Counter, Note, PageHeader } from '../components/ui.js';
 import type { UserProfile } from '../types.js';
 
@@ -38,6 +39,12 @@ export function Equipment({
         kicker="Salen"
         title="Udstyr"
         lede="Det, du sætter her, er udgangspunktet hver gang du åbner generatoren. Alt relevant er slået til — fravælg det, du ikke har."
+      />
+
+      <Photo
+        name="kb-swing"
+        sizes="(min-width: 1024px) 860px, 100vw"
+        style={{ marginBottom: 30 }}
       />
 
       <section aria-labelledby="ww-eq-types" style={{ marginBottom: 30 }}>

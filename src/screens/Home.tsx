@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Photo } from '../components/Photo.js';
 import { Glyph, Kicker } from '../components/ui.js';
 import { plural, relDate } from '../lib/format.js';
 import type { HistoryEntry } from '../types.js';
@@ -79,6 +80,13 @@ export function Home({
           </span>
         </span>
       </button>
+
+      <Photo
+        name="sled-push"
+        sizes="(min-width: 1024px) 760px, 100vw"
+        style={{ marginTop: 22 }}
+        eager
+      />
 
       <div style={{ marginTop: 26, borderTop: '1px solid var(--ww-line)' }}>
         <button type="button" className="ww-line-btn" onClick={onSurprise}>

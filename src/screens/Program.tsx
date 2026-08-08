@@ -1,5 +1,6 @@
 import * as eng from '../engine/index.js';
 import type { Program as ProgramData, ProgramDay, Workout } from '../engine/index.js';
+import { Photo } from '../components/Photo.js';
 import { Chip, Counter, Note, OptionRow, PageHeader } from '../components/ui.js';
 import type { ProgramDraft, ProgramRef } from '../types.js';
 
@@ -59,60 +60,67 @@ function ProgramSetup({
   onBuild: () => void;
 }) {
   return (
-    <div style={{ maxWidth: 620 }}>
-      <h2 className="ww-kicker" style={{ marginBottom: 10 }}>Mål</h2>
-      <div className="ww-stack" style={{ marginBottom: 26 }}>
-        {eng.PROGRAM_GOALS.map((goal) => (
-          <OptionRow
-            key={goal.id}
-            name={goal.name}
-            desc={goal.desc}
-            on={draft.goal === goal.id}
-            onClick={() => onDraft({ goal: goal.id })}
+    <div className="ww-program-setup">
+      <div style={{ minWidth: 0 }}>
+        <h2 className="ww-kicker" style={{ marginBottom: 10 }}>Mål</h2>
+        <div className="ww-stack" style={{ marginBottom: 26 }}>
+          {eng.PROGRAM_GOALS.map((goal) => (
+            <OptionRow
+              key={goal.id}
+              name={goal.name}
+              desc={goal.desc}
+              on={draft.goal === goal.id}
+              onClick={() => onDraft({ goal: goal.id })}
+            />
+          ))}
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(220px,1fr))', gap: 22, marginBottom: 22 }}>
+          <div>
+            <h2 className="ww-kicker" style={{ marginBottom: 10 }}>Uger</h2>
+            <div className="ww-wrap" style={{ gap: 6 }}>
+              {WEEK_OPTIONS.map((n) => (
+                <Chip key={n} on={draft.weeks === n} onClick={() => onDraft({ weeks: n })} style={{ minWidth: 62 }}>{n}</Chip>
+              ))}
+            </div>
+          </div>
+          <div>
+            <h2 className="ww-kicker" style={{ marginBottom: 10 }}>Pas om ugen</h2>
+            <div className="ww-wrap" style={{ gap: 6 }}>
+              {DAY_OPTIONS.map((n) => (
+                <Chip key={n} on={draft.days === n} onClick={() => onDraft({ days: n })} style={{ minWidth: 62 }}>{n}</Chip>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div style={{ marginBottom: 22, maxWidth: 380 }}>
+          <Counter
+            label="Minutter pr. pas"
+            value={`${draft.minutes} min`}
+            minWidth={72}
+            onDown={() => onDraft({ minutes: Math.max(15, draft.minutes - 5) })}
+            onUp={() => onDraft({ minutes: Math.min(90, draft.minutes + 5) })}
           />
-        ))}
-      </div>
-
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(220px,1fr))', gap: 22, marginBottom: 22 }}>
-        <div>
-          <h2 className="ww-kicker" style={{ marginBottom: 10 }}>Uger</h2>
-          <div className="ww-wrap" style={{ gap: 6 }}>
-            {WEEK_OPTIONS.map((n) => (
-              <Chip key={n} on={draft.weeks === n} onClick={() => onDraft({ weeks: n })} style={{ minWidth: 62 }}>{n}</Chip>
-            ))}
-          </div>
         </div>
-        <div>
-          <h2 className="ww-kicker" style={{ marginBottom: 10 }}>Pas om ugen</h2>
-          <div className="ww-wrap" style={{ gap: 6 }}>
-            {DAY_OPTIONS.map((n) => (
-              <Chip key={n} on={draft.days === n} onClick={() => onDraft({ days: n })} style={{ minWidth: 62 }}>{n}</Chip>
-            ))}
-          </div>
+
+        <div style={{ marginBottom: 22 }}>
+          <Note label="Sådan bygges programmet" tone="quiet">
+            Volumen stiger let uge for uge. Er programmet på seks uger eller mere, lægges hver
+            fjerde uge som en roligere uge med lavere volumen. En gennemført dag skriver sin status
+            tilbage, så du kan se, hvor du er.
+          </Note>
         </div>
+
+        <button type="button" className="ww-btn ww-btn--primary ww-btn--lg" style={{ maxWidth: 340 }} onClick={onBuild}>
+          Byg programmet
+        </button>
       </div>
 
-      <div style={{ marginBottom: 22, maxWidth: 380 }}>
-        <Counter
-          label="Minutter pr. pas"
-          value={`${draft.minutes} min`}
-          minWidth={72}
-          onDown={() => onDraft({ minutes: Math.max(15, draft.minutes - 5) })}
-          onUp={() => onDraft({ minutes: Math.min(90, draft.minutes + 5) })}
-        />
-      </div>
-
-      <div style={{ marginBottom: 22 }}>
-        <Note label="Sådan bygges programmet" tone="quiet">
-          Volumen stiger let uge for uge. Er programmet på seks uger eller mere, lægges hver
-          fjerde uge som en roligere uge med lavere volumen. En gennemført dag skriver sin status
-          tilbage, så du kan se, hvor du er.
-        </Note>
-      </div>
-
-      <button type="button" className="ww-btn ww-btn--primary ww-btn--lg" style={{ maxWidth: 340 }} onClick={onBuild}>
-        Byg programmet
-      </button>
+      <aside className="ww-program-preview">
+        <Photo name="program-phone" frame="portrait" sizes="(min-width: 1024px) 340px, min(100vw - 40px, 340px)" />
+        <p>Sådan ser programmet ud, når det er bygget: uge for uge, pas for pas, klar til at åbne.</p>
+      </aside>
     </div>
   );
 }
@@ -147,6 +155,12 @@ function ProgramPlan({
         </div>
         <button type="button" className="ww-btn ww-btn--danger" onClick={onDrop}>Start forfra</button>
       </div>
+
+      <Photo
+        name="program-wide"
+        sizes="(min-width: 1024px) 940px, 100vw"
+        style={{ marginBottom: 28 }}
+      />
 
       {program.weeks.map((week, wi) => (
         <section key={week.index} style={{ marginBottom: 32 }}>

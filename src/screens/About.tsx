@@ -1,4 +1,5 @@
 import * as eng from '../engine/index.js';
+import { Photo } from '../components/Photo.js';
 import { Note, PageHeader } from '../components/ui.js';
 
 export function About() {
@@ -17,6 +18,12 @@ export function About() {
         kicker="Om appen"
         title="Om WHATWORK"
         lede="En dansk, local-first træningsapp til funktionel fitness, partnerworkouts og holdtræning."
+      />
+
+      <Photo
+        name="wall-ball"
+        sizes="(min-width: 1024px) 760px, 100vw"
+        style={{ marginBottom: 30 }}
       />
 
       <section aria-labelledby="ww-what" style={{ marginBottom: 30 }}>

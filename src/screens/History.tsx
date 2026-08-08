@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Photo } from '../components/Photo.js';
 import { EmptyState, Glyph, PageHeader } from '../components/ui.js';
 import { fmtDuration, relDate } from '../lib/format.js';
 import type { HistoryEntry, HistoryStatus } from '../types.js';
@@ -83,6 +84,13 @@ export function History({
         />
       ) : (
         <>
+          <Photo
+            name="box-jump-over"
+            frame="portrait"
+            sizes="(min-width: 640px) 340px, 100vw"
+            style={{ marginBottom: 24, maxWidth: 340 }}
+          />
+
           <div style={{ display: 'flex', gap: 26, flexWrap: 'wrap', paddingBottom: 22, borderBottom: '1px solid var(--ww-line)', marginBottom: 18 }}>
             {stats.map((s) => (
               <div key={s.label} style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>

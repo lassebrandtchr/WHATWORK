@@ -1,4 +1,5 @@
 import * as eng from '../engine/index.js';
+import { Photo } from '../components/Photo.js';
 import { EmptyState, Meter, PageHeader } from '../components/ui.js';
 import { fmtDuration, isoWeek } from '../lib/format.js';
 import type { HistoryEntry } from '../types.js';
@@ -35,6 +36,12 @@ export function Stats({ history, onGenerate }: { history: HistoryEntry[]; onGene
     return (
       <div style={{ paddingTop: 'calc(env(safe-area-inset-top) + 20px)', maxWidth: 860 }}>
         <PageHeader kicker="Overblik" title="Statistik" lede="Statistikken bygger på din lokale historik." />
+        <Photo
+          name="chalk-barbell"
+          frame="portrait"
+          sizes="(min-width: 640px) 340px, 100vw"
+          style={{ marginBottom: 22, maxWidth: 340 }}
+        />
         <EmptyState
           title="Ingen data endnu"
           body="Så snart du har gennemført din første workout, kan du følge volumen, fordeling og streak her."
@@ -105,6 +112,12 @@ export function Stats({ history, onGenerate }: { history: HistoryEntry[]; onGene
           </div>
         ))}
       </div>
+
+      <Photo
+        name="row-erg"
+        sizes="(min-width: 1024px) 860px, 100vw"
+        style={{ marginBottom: 26 }}
+      />
 
       <section aria-labelledby="ww-weeks" style={{ marginBottom: 26 }}>
         <h2 id="ww-weeks" className="ww-kicker" style={{ marginBottom: 12 }}>Otte uger tilbage</h2>

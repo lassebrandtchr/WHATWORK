@@ -1,4 +1,5 @@
 import * as eng from '../engine/index.js';
+import { Photo } from '../components/Photo.js';
 import { Note, PageHeader } from '../components/ui.js';
 
 const SECTIONS: { title: string; body: string[] }[] = [
@@ -69,6 +70,13 @@ export function Help() {
         kicker="Vejledning"
         title="Hjælp"
         lede="Hvordan WHATWORK vælger, regner og afvikler — og hvad de internationale formatnavne betyder."
+      />
+
+      <Photo
+        name="ski-erg"
+        frame="portrait"
+        sizes="(min-width: 640px) 340px, 100vw"
+        style={{ marginBottom: 30, maxWidth: 340 }}
       />
 
       <section aria-labelledby="ww-formats-help" style={{ marginBottom: 32 }}>

@@ -37,6 +37,20 @@ export type MovementPattern =
   | 'squat' | 'hinge' | 'press' | 'pull' | 'fullbody' | 'oly'
   | 'core' | 'carry' | 'cardio' | 'warmup';
 
+/**
+ * Muskelgrupper er en anden akse end `MovementPattern`. Mønsteret siger, hvordan
+ * kroppen bevæger sig (og styrer programmeringen); muskelgruppen siger, hvad der
+ * bliver træt — og det er den, brugeren leder efter, når hun søger "arme" eller "ben".
+ */
+export type MuscleId =
+  | 'legs' | 'glutes' | 'chest' | 'back' | 'shoulders' | 'arms'
+  | 'core' | 'cardio' | 'grip' | 'fullbody';
+
+/** Overkrop, underkrop eller hele kroppen — det øverste niveau i øvelsesvælgeren. */
+export type MuscleRegion = 'lower' | 'upper' | 'whole';
+
+export interface MuscleGroup { id: MuscleId; name: string; region: MuscleRegion }
+
 export interface EquipmentItem {
   id: string;
   name: string;
@@ -62,6 +76,12 @@ export interface Exercise {
   id: string;
   name: string;
   cat: MovementPattern;
+  /**
+   * Muskelgrupperne øvelsen belaster, vigtigste først. Bruges til at gruppere og
+   * filtrere øvelsesvælgeren — ikke til programmeringen. Opvarmningsøvelser står
+   * uden; alt andet skal have mindst én (håndhævet i exercises.test.ts).
+   */
+  mus: MuscleId[];
   /** Dansk teknikcue, vises under øvelsen. */
   da: string;
   unit: Unit;

@@ -10,9 +10,10 @@ export {
   BAR_SIZES, DEFAULT_BARS, SANDBAG_SIZES, DEFAULT_SANDBAGS, CARE_AREAS, FOCUS_TAGS, LEVELS,
 } from './data/equipment.js';
 export { EXERCISES, BY_ID, MIN_LOADS } from './data/exercises.js';
+export { MUSCLE_GROUPS, MUSCLE_REGIONS, MUSCLE_BY_ID, MUSCLES_IN_REGION } from './data/muscles.js';
 export { FORMATS, FORMAT_LIST, EVERY_SEC, isEmomFamily, formatName } from './data/formats.js';
 export { makeSeed, mulberry32 } from './rng.js';
-export { fmtKg, planPlates, scaleLoad, scaleLoadPct, REF_BW, LEVEL_MULT } from './loads.js';
+export { fmtKg, planPlates, scaleLoad, scaleLoadPct, stepLoad, REF_BW, LEVEL_MULT } from './loads.js';
 export { unitLabel, unitName } from './movements.js';
 export { normalizeRequest, peopleFromMix } from './request.js';
 export { findBottlenecks, planPartner } from './partner.js';

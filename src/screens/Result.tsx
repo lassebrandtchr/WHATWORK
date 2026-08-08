@@ -1,7 +1,10 @@
+import { useState } from 'react';
 import * as eng from '../engine/index.js';
-import type { Block, Movement, Workout } from '../engine/index.js';
+import type { Block, Exercise, LoadKind, LoadPrescription, Movement, Workout } from '../engine/index.js';
+import { Photo } from '../components/Photo.js';
 import { Glyph, Kicker, Meter, Note } from '../components/ui.js';
 import { groupByProfile } from '../lib/format.js';
+import type { UserProfile } from '../types.js';
 
 /** Blokkens overskrift afhænger af, om der også er en styrkedel. */
 function blockLabel(block: Block, hasStrength: boolean): string {
@@ -24,10 +27,11 @@ export function ResultError({ message, onAdjust }: { message: string; onAdjust: 
 }
 
 export function Result({
-  workout, saved, isFavorite, aiNotice,
+  workout, profile, saved, isFavorite, aiNotice,
   onBack, onEasier, onHarder, onRegenerate, onSave, onFavorite,
 }: {
   workout: Workout;
+  profile: UserProfile;
   saved: boolean;
   isFavorite: boolean;
   aiNotice: string | null;
@@ -42,6 +46,24 @@ export function Result({
   const info = eng.FORMATS[workout.format];
   const main = workout.blocks.find((b) => b.kind === 'conditioning') ?? workout.blocks.find((b) => b.kind === 'strength');
   const partner = workout.partner;
+
+  // Live "hvad hvis jeg løfter mere/mindre"-justeringer — ikke en del af den gemte
+  // workout eller historikken, nulstillet hver gang en ny workout åbnes. Nulstilles
+  // under render (React's anbefalede mønster for "state afhænger af et prop-skift"),
+  // ikke i en effekt, så det ikke tæller som en synkron setState i en effekt-krop.
+  const [overrides, setOverrides] = useState<Record<string, LoadPrescription>>({});
+  const [overridesFor, setOverridesFor] = useState(workout.id);
+  if (workout.id !== overridesFor) {
+    setOverridesFor(workout.id);
+    setOverrides({});
+  }
+
+  const adjustLoad = (key: string, ex: Exercise, kind: LoadKind, current: LoadPrescription, dir: 1 | -1): void => {
+    const next = eng.stepLoad(ex, kind, current.eachKg, dir, {
+      plates: profile.plates, bars: profile.bars, sandbags: profile.sandbags,
+    });
+    setOverrides((o) => ({ ...o, [key]: next }));
+  };
 
   return (
     <div className="ww-rise" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 12px)', maxWidth: 860 }}>
@@ -62,6 +84,12 @@ export function Result({
         </div>
         {info ? <p className="ww-lede" style={{ maxWidth: '60ch' }}>{info.da}</p> : null}
       </header>
+
+      <Photo
+        name="sandbag-lunge"
+        sizes="(min-width: 1024px) 860px, 100vw"
+        style={{ marginBottom: 26 }}
+      />
 
       {aiNotice ? (
         <div style={{ marginBottom: 18 }}>
@@ -105,6 +133,8 @@ export function Result({
             block={block}
             label={blockLabel(block, hasStrength)}
             participants={workout.participants}
+            overrides={overrides}
+            onAdjust={adjustLoad}
           />
         ))}
       </div>
@@ -208,11 +238,13 @@ function ProtocolRow({ k, v }: { k: string; v: string }) {
 }
 
 function BlockSection({
-  block, label, participants,
+  block, label, participants, overrides, onAdjust,
 }: {
   block: Block;
   label: string;
   participants: number;
+  overrides: Record<string, LoadPrescription>;
+  onAdjust: (key: string, ex: Exercise, kind: LoadKind, current: LoadPrescription, dir: 1 | -1) => void;
 }) {
   const accent = block.kind === 'warmup'
     ? { line: 'var(--ww-green-line)', dim: 'var(--ww-green-dim)', fg: 'var(--ww-green)' }
@@ -236,17 +268,35 @@ function BlockSection({
 
       <div style={{ display: 'flex', flexDirection: 'column' }}>
         {block.movements.map((m, i) => (
-          <MovementRow key={`${m.exerciseId}-${i}`} movement={m} participants={participants} />
+          <MovementRow
+            key={`${m.exerciseId}-${i}`}
+            movement={m}
+            participants={participants}
+            blockId={block.id}
+            index={i}
+            overrides={overrides}
+            onAdjust={onAdjust}
+          />
         ))}
       </div>
     </section>
   );
 }
 
-function MovementRow({ movement, participants }: { movement: Movement; participants: number }) {
+function MovementRow({
+  movement, participants, blockId, index, overrides, onAdjust,
+}: {
+  movement: Movement;
+  participants: number;
+  blockId: string;
+  index: number;
+  overrides: Record<string, LoadPrescription>;
+  onAdjust: (key: string, ex: Exercise, kind: LoadKind, current: LoadPrescription, dir: 1 | -1) => void;
+}) {
   const solo = participants === 1;
   const showTargets = movement.targets.some((t) => t.load) || movement.individualTargets;
   const groups = groupByProfile(movement.targets);
+  const ex = eng.BY_ID[movement.exerciseId];
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '14px 0', borderTop: '1px solid var(--ww-line)' }}>
@@ -262,20 +312,44 @@ function MovementRow({ movement, participants }: { movement: Movement; participa
                 </div>
               ) : null}
               <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
-                {g.items.map((t) => (
-                  <div
-                    key={t.label}
-                    style={{ display: 'flex', gap: 10, alignItems: 'baseline', flexWrap: 'wrap', fontSize: 14 }}
-                  >
-                    <span style={{ color: 'var(--ww-text-3)', minWidth: solo ? 0 : '9ch' }}>
-                      {solo ? '' : `${t.label}:`}
-                    </span>
-                    <span style={{ color: 'var(--ww-orange)', fontWeight: 600 }}>
-                      {movement.individualTargets ? `${t.amountText}${t.load ? ' · ' : ''}` : ''}
-                      {t.load?.text ?? ''}
-                    </span>
-                  </div>
-                ))}
+                {g.items.map((t) => {
+                  const key = `${blockId}_${index}_${t.label}`;
+                  const effective = overrides[key] ?? t.load;
+                  return (
+                    <div
+                      key={t.label}
+                      style={{ display: 'flex', gap: 10, alignItems: 'baseline', flexWrap: 'wrap', fontSize: 14 }}
+                    >
+                      <span style={{ color: 'var(--ww-text-3)', minWidth: solo ? 0 : '9ch' }}>
+                        {solo ? '' : `${t.label}:`}
+                      </span>
+                      <span style={{ color: 'var(--ww-orange)', fontWeight: 600 }}>
+                        {movement.individualTargets ? `${t.amountText}${t.load ? ' · ' : ''}` : ''}
+                      </span>
+                      {effective && ex ? (
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                          <button
+                            type="button"
+                            className="ww-load-step-btn"
+                            aria-label={`${movement.name}: mindre vægt til ${t.label}`}
+                            onClick={() => onAdjust(key, ex, effective.kind, effective, -1)}
+                          >
+                            −
+                          </button>
+                          <span style={{ color: 'var(--ww-orange)', fontWeight: 600 }}>{effective.text}</span>
+                          <button
+                            type="button"
+                            className="ww-load-step-btn"
+                            aria-label={`${movement.name}: mere vægt til ${t.label}`}
+                            onClick={() => onAdjust(key, ex, effective.kind, effective, 1)}
+                          >
+                            +
+                          </button>
+                        </span>
+                      ) : null}
+                    </div>
+                  );
+                })}
               </div>
             </div>
           ))}

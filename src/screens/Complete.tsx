@@ -1,3 +1,4 @@
+import { Photo } from '../components/Photo.js';
 import { Chip, Kicker, OptionRow } from '../components/ui.js';
 import { fmtTime } from '../lib/format.js';
 import type { Completion, HistoryStatus, Rpe } from '../types.js';
@@ -48,6 +49,12 @@ export function Complete({
             Du kan genoptage workouten senere fra Historik, hvis du er stoppet ved en fejl.
           </p>
         ) : null}
+
+        <Photo
+          name="high-five"
+          sizes="min(100vw - 40px, 540px)"
+          style={{ marginBottom: 28 }}
+        />
 
         <section aria-labelledby="ww-how" style={{ marginBottom: 26 }}>
           <h2 id="ww-how" style={{ fontSize: 15, fontWeight: 650, margin: '0 0 12px' }}>Hvordan gik det?</h2>

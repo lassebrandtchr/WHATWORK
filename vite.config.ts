@@ -86,8 +86,21 @@ export default defineConfig(({ mode, command }) => {
           // /api/ai-mix må aldrig serveres fra app-shellen.
           navigateFallbackDenylist: [/^\/api\//],
           cleanupOutdatedCaches: true,
-          // Motoren kører lokalt — der er ingen runtime-kald at cache.
-          runtimeCaching: [],
+          // Motoren kører lokalt, så der er ingen API-kald at cache. Fotoerne
+          // precaches bevidst ikke — det ville lægge flere megabyte på
+          // installationen. De havner i cachen, første gang de faktisk vises,
+          // og er derefter med offline.
+          runtimeCaching: [
+            {
+              urlPattern: ({ request }) => request.destination === 'image',
+              handler: 'CacheFirst',
+              options: {
+                cacheName: `${CACHE_VERSION}-photos`,
+                expiration: { maxEntries: 60, maxAgeSeconds: 60 * 60 * 24 * 90 },
+                cacheableResponse: { statuses: [0, 200] },
+              },
+            },
+          ],
         },
         devOptions: { enabled: false },
       }),

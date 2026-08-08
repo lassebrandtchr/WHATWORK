@@ -241,7 +241,7 @@ export function Dialog({
   );
 }
 
-type GlyphName = 'back' | 'close' | 'menu' | 'bolt' | 'star' | 'star-filled' | 'check' | 'chevron' | 'sun' | 'moon' | 'gear' | 'sound-on' | 'sound-off';
+type GlyphName = 'back' | 'close' | 'menu' | 'bolt' | 'star' | 'star-filled' | 'check' | 'chevron' | 'sun' | 'moon' | 'gear' | 'sound-on' | 'sound-off' | 'search';
 
 /** Appens egne glyffer. Ingen emoji, intet eksternt ikonbibliotek. */
 export function Glyph({ name, size = 20 }: { name: GlyphName; size?: number }) {
@@ -266,6 +266,12 @@ export function Glyph({ name, size = 20 }: { name: GlyphName; size?: number }) {
       />
     ),
     check: <path d="m5 12.6 4.6 4.4L19 7" {...common} />,
+    search: (
+      <g {...common}>
+        <circle cx="11" cy="11" r="6.4" />
+        <path d="m15.8 15.8 4 4" />
+      </g>
+    ),
     sun: (
       <g {...common}>
         <circle cx="12" cy="12" r="4" />
