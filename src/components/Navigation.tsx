@@ -89,8 +89,8 @@ export function DesktopHeader({
             lineHeight: 0, display: 'flex', alignItems: 'center', gap: 10,
           }}
         >
-          <WwMark size={30} />
-          <Wordmark size={19} />
+          <WwMark size={36} />
+          <Wordmark size={21} />
         </button>
         <nav style={{ display: 'flex', gap: 2, flex: 1 }} aria-label="Hovedmenu">
           {links.map((link) => (

@@ -141,8 +141,8 @@ export function App() {
             }}
             onClick={() => ww.go('home')}
           >
-            <WwMark size={28} />
-            <Wordmark size={18} />
+            <WwMark size={36} />
+            <Wordmark size={21} />
           </button>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <ThemeToggle theme={ww.settings.theme} onToggle={() => ww.setTheme(ww.settings.theme === 'dark' ? 'light' : 'dark')} />
