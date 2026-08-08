@@ -31,6 +31,15 @@
   --ww-orange-line: rgb(255 106 31 / 42%);
   --ww-on-orange: #180a02;
 
+  /* Glød under orange knapper. RGB-komponenter frem for færdige farver, så
+     alfaen kan skrues op og ned i takt med pulsen. */
+  --ww-glow-core: 255 106 31;
+  --ww-glow-halo: 255 145 89;
+  /* Varm hvid frem for ren hvid: strejfet skal læses som varme, ikke som plastik. */
+  --ww-glow-sheen: 255 234 212;
+  --ww-sheen-peak: 46%;
+  --ww-sheen-edge: 10%;
+
   /* Status. */
   --ww-green: #34d399;
   --ww-green-dim: rgb(52 211 153 / 14%);
@@ -84,6 +93,13 @@
   --ww-orange-dim: rgb(217 79 12 / 10%);
   --ww-orange-line: rgb(217 79 12 / 40%);
   --ww-on-orange: #fff6f1;
+
+  /* Lys baggrund æder glød, så kernen er mørkere og halo'en mere mættet. */
+  --ww-glow-core: 194 65 12;
+  --ww-glow-halo: 217 79 12;
+  --ww-glow-sheen: 255 240 230;
+  --ww-sheen-peak: 34%;
+  --ww-sheen-edge: 8%;
 
   --ww-green: #047857;
   --ww-green-dim: rgb(4 120 87 / 10%);
@@ -1016,6 +1032,8 @@ a {
 
 .ww-note--quiet .ww-note__label { color: var(--ww-text-3); }
 
+.ww-note--label-accent .ww-note__label { color: var(--ww-orange); }
+
 /* Bred tabel eller kodeblok må scrolle i sig selv, aldrig i siden. */
 .ww-scroll-x { overflow-x: auto; max-width: 100%; }
 
@@ -1029,4 +1047,119 @@ a {
   clip: rect(0 0 0 0);
   white-space: nowrap;
   border: 0;
+}
+
+/* ---------- Glød på orange knapper ---------- */
+
+/* Orange er appens ét-tryk-signal. De solide orange knapper trækker vejret én
+   gang hver 4,2 sekund, og et lysstrejf løber hen over fladen i samme takt — så
+   det læses som én bevægelse frem for to konkurrerende løkker.
+   Styrken bor i to registrerede properties: --ww-glow driver pulsen, og
+   --ww-glow-lift lægges oven i ved hover. Fordi box-shadow regner videre på
+   summen af de to, kan hover svare øjeblikkeligt uden at afbryde pulsen. */
+
+@property --ww-glow {
+  syntax: '<number>';
+  inherits: false;
+  initial-value: 0;
+}
+
+@property --ww-glow-lift {
+  syntax: '<number>';
+  inherits: false;
+  initial-value: 0;
+}
+
+.ww-btn--primary:not(:disabled),
+.ww-hero-cta:not(:disabled),
+.ww-timer__btn--main:not(.is-running):not(:disabled) {
+  --ww-glow: 0;
+  --ww-glow-lift: 0;
+  --ww-g: calc(var(--ww-glow) + var(--ww-glow-lift));
+
+  position: relative;
+  /* Lysstrejfet skal klippes af knappens egen radius. Skygger ligger uden for
+     boksen og rammes ikke af overflow. */
+  overflow: hidden;
+  /* Gør knappen til egen stacking context, så strejfet kan lægges bag teksten
+     med z-index -1 og aldrig sænker kontrasten på etiketten. */
+  isolation: isolate;
+  box-shadow:
+    inset 0 1px 0 rgb(var(--ww-glow-sheen) / calc(16% + var(--ww-g) * 22%)),
+    0 calc(6px + var(--ww-g) * 4px) calc(16px + var(--ww-g) * 16px)
+      calc(-12px + var(--ww-g) * 4px)
+      rgb(var(--ww-glow-core) / calc(28% + var(--ww-g) * 36%)),
+    0 calc(12px + var(--ww-g) * 10px) calc(34px + var(--ww-g) * 28px)
+      calc(-22px + var(--ww-g) * 7px)
+      rgb(var(--ww-glow-halo) / calc(20% + var(--ww-g) * 32%));
+  animation: ww-glow-breathe 4.2s cubic-bezier(0.42, 0, 0.58, 1) infinite;
+  transition:
+    --ww-glow-lift 0.24s ease-out,
+    background 0.14s,
+    border-color 0.14s,
+    color 0.14s,
+    transform 0.16s var(--ww-ease);
+}
+
+.ww-btn--primary:not(:disabled)::after,
+.ww-hero-cta:not(:disabled)::after,
+.ww-timer__btn--main:not(.is-running):not(:disabled)::after {
+  content: '';
+  position: absolute;
+  /* -1px dækker knappens egen kantstreg, så strejfet ikke stopper inden kanten. */
+  inset: -1px;
+  z-index: -1;
+  pointer-events: none;
+  background: linear-gradient(
+    74deg,
+    rgb(var(--ww-glow-sheen) / 0%) 40%,
+    rgb(var(--ww-glow-sheen) / var(--ww-sheen-edge)) 46%,
+    rgb(var(--ww-glow-sheen) / var(--ww-sheen-peak)) 50%,
+    rgb(var(--ww-glow-sheen) / var(--ww-sheen-edge)) 54%,
+    rgb(var(--ww-glow-sheen) / 0%) 60%
+  );
+  transform: translate3d(-135%, 0, 0);
+  /* Næsten symmetrisk kurve: lys der går forbi, ikke noget der lander. */
+  animation: ww-glow-sheen 4.2s cubic-bezier(0.4, 0.05, 0.5, 0.95) infinite;
+}
+
+/* Strejfet krydser midten omkring 10 % af takten, og pulsen topper på 12 %, så
+   de to læses som ét glimt. Resten af takten ligger knappen stille. */
+@keyframes ww-glow-breathe {
+  0%, 46%, 100% { --ww-glow: 0; }
+  12% { --ww-glow: 1; }
+}
+
+@keyframes ww-glow-sheen {
+  0% { transform: translate3d(-135%, 0, 0); }
+  20% { transform: translate3d(135%, 0, 0); }
+  100% { transform: translate3d(135%, 0, 0); }
+}
+
+/* Hover lægger sig oven i pulsen frem for at afløse den. */
+:is(.ww-btn--primary, .ww-hero-cta, .ww-timer__btn--main:not(.is-running)):not(:disabled):hover {
+  --ww-glow-lift: 0.9;
+  transform: translateY(-1px);
+}
+
+:is(.ww-btn--primary, .ww-hero-cta, .ww-timer__btn--main:not(.is-running)):not(:disabled):active {
+  --ww-glow-lift: 0.15;
+  transform: translateY(1px);
+}
+
+/* Uden bevægelse holder knappen en fast, tydelig glød — den må ikke se død ud. */
+@media (prefers-reduced-motion: reduce) {
+  .ww-btn--primary:not(:disabled),
+  .ww-hero-cta:not(:disabled),
+  .ww-timer__btn--main:not(.is-running):not(:disabled) {
+    --ww-glow: 0.55;
+    animation: none;
+  }
+
+  .ww-btn--primary:not(:disabled)::after,
+  .ww-hero-cta:not(:disabled)::after,
+  .ww-timer__btn--main:not(.is-running):not(:disabled)::after {
+    animation: none;
+    opacity: 0;
+  }
 }

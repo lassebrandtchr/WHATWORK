@@ -8,7 +8,7 @@ function blockLabel(block: Block, hasStrength: boolean): string {
   switch (block.kind) {
     case 'warmup': return 'Opvarmning';
     case 'strength': return 'Del 1 — Styrke';
-    case 'conditioning': return hasStrength ? 'Del 2 — Conditioning' : 'Hoveddel';
+    case 'conditioning': return hasStrength ? 'Del 2 — Conditioning' : 'Hovedworkout';
     default: return '';
   }
 }
@@ -71,7 +71,7 @@ export function Result({
 
       {/* Arbejdsmåde, pause og skift */}
       <section aria-labelledby="ww-protocol" style={{ marginBottom: 22 }}>
-        <h2 id="ww-protocol" className="ww-kicker" style={{ marginBottom: 12 }}>Sådan afvikles den</h2>
+        <h2 id="ww-protocol" className="ww-kicker ww-kicker--accent" style={{ marginBottom: 12 }}>Sådan afvikles den</h2>
         <div className="ww-card" style={{ padding: '18px 20px' }}>
           <dl style={{ margin: 0, display: 'grid', gap: 12 }}>
             <ProtocolRow k="Hvem arbejder" v={partner.working} />
@@ -112,7 +112,7 @@ export function Result({
       {/* Udstyrslogistik */}
       {partner.logistics.length ? (
         <section aria-labelledby="ww-logistics" style={{ marginBottom: 22 }}>
-          <h2 id="ww-logistics" className="ww-kicker" style={{ marginBottom: 12 }}>Udstyrslogistik</h2>
+          <h2 id="ww-logistics" className="ww-kicker ww-kicker--accent" style={{ marginBottom: 12 }}>Udstyrslogistik</h2>
           <div className="ww-card" style={{ padding: '18px 20px', display: 'flex', flexDirection: 'column', gap: 8 }}>
             {partner.logistics.map((line) => (
               <p key={line} style={{ margin: 0, fontSize: 14.5, lineHeight: 1.6, color: 'var(--ww-body)' }}>{line}</p>
@@ -127,7 +127,7 @@ export function Result({
 
       {/* Hvorfor denne workout */}
       <section aria-labelledby="ww-why" style={{ marginBottom: 22 }}>
-        <h2 id="ww-why" className="ww-kicker" style={{ marginBottom: 12 }}>Hvorfor denne workout</h2>
+        <h2 id="ww-why" className="ww-kicker ww-kicker--accent" style={{ marginBottom: 12 }}>Hvorfor denne workout</h2>
         <div className="ww-card" style={{ padding: '18px 20px', display: 'flex', flexDirection: 'column', gap: 8 }}>
           {workout.explanation.map((line) => (
             <p key={line} style={{ margin: 0, fontSize: 14.5, lineHeight: 1.6, color: 'var(--ww-body)', textWrap: 'pretty' }}>
@@ -144,7 +144,7 @@ export function Result({
 
       {/* Workout-DNA */}
       <section aria-labelledby="ww-dna" style={{ marginBottom: 22 }}>
-        <h2 id="ww-dna" className="ww-kicker" style={{ marginBottom: 12 }}>Workout-DNA</h2>
+        <h2 id="ww-dna" className="ww-kicker ww-kicker--accent" style={{ marginBottom: 12 }}>Workout-DNA</h2>
         <div className="ww-card" style={{ padding: '18px 20px' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {eng.DNA_AXES.map((axis) => {
@@ -182,7 +182,7 @@ export function Result({
       </div>
 
       <div style={{ marginTop: 14 }}>
-        <Note label="Hvad knapperne gør" tone="quiet">
+        <Note label="Hvad knapperne gør" tone="quiet" accent>
           «Gør den lettere» skruer conditioning og styrke to trin ned, «Gør den værre» skruer op.
           «Ny workout» henter en ny variation. Alle tre beholder dine valg af tid, deltagere,
           udstyr og hensyn, genberegner kilo og tid og kører workouten gennem den samme kontrol —
@@ -223,8 +223,8 @@ function BlockSection({
       style={{ padding: '22px 20px', borderColor: accent.line, background: accent.dim }}
     >
       <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 16, marginBottom: 6 }}>
-        <h2 className="ww-kicker" style={{ margin: 0, color: accent.fg }}>{label}</h2>
-        <span className="ww-num" style={{ fontSize: 13, color: 'var(--ww-text-3)', whiteSpace: 'nowrap' }}>
+        <h2 className="ww-kicker ww-kicker--accent" style={{ margin: 0 }}>{label}</h2>
+        <span className="ww-num" style={{ fontSize: 13, fontWeight: 700, color: 'var(--ww-green)', whiteSpace: 'nowrap' }}>
           ca. {block.minutes} min
         </span>
       </div>

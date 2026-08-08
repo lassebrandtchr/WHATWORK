@@ -152,13 +152,16 @@ export function PageHeader({
 
 /** Fremhævet note. Etiketten bærer betydningen, så farve aldrig står alene. */
 export function Note({
-  label, children, tone = 'accent',
+  label, children, tone = 'accent', accent = false,
 }: {
   label: string;
   children: ReactNode;
   tone?: 'accent' | 'danger' | 'good' | 'quiet';
+  /** Tvinger label-farven til orange, uanset `tone` — bruges hvor kun labelen skal
+   * matche appens øvrige orange overskrifter, uden at ændre resten af notens tone. */
+  accent?: boolean;
 }) {
-  const cls = tone === 'accent' ? '' : ` ww-note--${tone}`;
+  const cls = (tone === 'accent' ? '' : ` ww-note--${tone}`) + (accent ? ' ww-note--label-accent' : '');
   return (
     <div className={`ww-note${cls}`}>
       <span className="ww-note__label">{label}</span>
