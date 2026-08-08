@@ -15,6 +15,7 @@ export const EQUIPMENT: EquipmentItem[] = [
   { id: 'assaultbike', name: 'Assault Bike', machine: true, countable: true, def: 1, onByDefault: true, hint: 'Fan bike' },
   { id: 'sled', name: 'Slæde', countable: true, def: 1, onByDefault: true, hint: 'Skub og træk' },
   { id: 'box', name: 'Box', countable: true, def: 5, onByDefault: true, hint: 'Plyobox' },
+  { id: 'bench', name: 'Justerbar bænk', countable: true, def: 2, onByDefault: true, hint: 'Fladt til skrå, 0–70°' },
   { id: 'pullupbar', name: 'Pull-up bar', countable: true, def: 6, onByDefault: true, hint: 'Stang at hænge i' },
   { id: 'wallball', name: 'Wall ball', countable: true, def: 10, onByDefault: true, hint: 'Bold og mål' },
   { id: 'sandbag', name: 'Sandbag', countable: true, def: 8, onByDefault: true, hint: 'Træningssæk' },

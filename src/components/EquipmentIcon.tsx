@@ -95,6 +95,14 @@ const GLYPHS: Record<string, ReactElement> = {
       <path d="M12 12.8V18" />
     </g>
   ),
+  /* Justerbar bænk: skrå flade på ben, med hævet ryglæn. */
+  bench: (
+    <g {...S}>
+      <path d="M3 16 11 12.4" />
+      <path d="M11 12.4V8l6-2.6" />
+      <path d="M5 16v4M9.4 13.7v4M17 5.9v4" />
+    </g>
+  ),
   /* Pull-up-stang: stativ med tværstang. */
   pullupbar: (
     <g {...S}>
