@@ -148,7 +148,7 @@ export function Result({
               <p key={line} style={{ margin: 0, fontSize: 14.5, lineHeight: 1.6, color: 'var(--ww-body)' }}>{line}</p>
             ))}
             <p style={{ margin: '4px 0 0', fontSize: 13.5, color: 'var(--ww-text-3)' }}>
-              Regn med op til {Math.max(5, ...(main?.movements ?? []).map((m) => m.transitionSec))} sekunders
+              Regn med op til {Math.max(10, ...(main?.movements ?? []).map((m) => m.transitionSec))} sekunders
               skiftetid mellem stationerne. Den er lagt ind i tidsbudgettet.
             </p>
           </div>

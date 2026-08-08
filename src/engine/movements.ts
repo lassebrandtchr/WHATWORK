@@ -102,7 +102,7 @@ export function buildMovement(
   ));
 
   const workSec = reps * ex.sec * (opts.sets ?? 1);
-  const transitionSec = ex.machine ? 10 : ex.eq.includes('barbell') ? 8 : ex.eq.includes('sled') ? 12 : 5;
+  const transitionSec = 10;
 
   return {
     exerciseId: ex.id,

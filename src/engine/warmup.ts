@@ -119,7 +119,7 @@ export function buildWarmup(
 
   // Tiden fordeles på to runder, så bevægelserne når at blive bedre anden gang.
   const rounds = min >= 6 ? 2 : 1;
-  const transitionSec = 5;
+  const transitionSec = 10;
   const perItem = Math.floor((min * 60) / rounds / Math.max(1, chosen.length));
   const workSec = clamp(perItem - transitionSec, 25, 50);
 
