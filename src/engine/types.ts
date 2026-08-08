@@ -93,6 +93,10 @@ export interface Exercise {
   warmupCue?: string;
   /** Bevægelsesmønstre denne opvarmningsøvelse forbereder. */
   primes?: MovementPattern[];
+  /** Hvor muskulært krævende/langsom øvelsen er ved intervalarbejde — styrer både
+   * hvor stor en del af arbejdstiden der reelt bruges på reps, og minimumspausen.
+   * Udeladt betyder 'low' (cyklisk kondition, tempoet holder hele vinduet). */
+  grind?: 'low' | 'medium' | 'high';
 }
 
 export interface FormatInfo {
@@ -207,6 +211,9 @@ export interface Block {
   /** Kun på almindelig EMOM: hvert `movements.length`. interval efterfølges af ét
    * hvileminut, og `rounds` tæller fulde cyklusser (arbejde + hvile), ikke enkeltintervaller. */
   restEveryCycle?: boolean;
+  /** Kun på Interval: stationerne har ikke et fast måltal — man når så langt man kan
+   * på arbejdstiden, og skriver selv antallet ned. */
+  openStations?: boolean;
   partner?: PartnerProtocol;
   /** Kun på opvarmning: "35 sekunders arbejde · 5 sekunders skift". */
   timing?: string;

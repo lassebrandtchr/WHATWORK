@@ -21,6 +21,9 @@ const pushPress = byId('push_press');
 const burpee = byId('burpee');
 const ski = byId('ski');
 const row = byId('row');
+const ringRow = byId('ring_row');
+const dip = byId('dip');
+const airSquat = byId('air_squat');
 
 describe('buildStrength — ramp til tung 5RM', () => {
   it('kan vælge ramp-skemaet ved niveau 5 for et kvalificerende løft', () => {
@@ -146,5 +149,56 @@ describe('buildConditioning — EMOM med hvileminut', () => {
       format: 'e2mom', exercises: [ski, row], minutes: 25,
     });
     expect(block?.restEveryCycle).toBeUndefined();
+  });
+});
+
+describe('buildConditioning — realistiske reps/pauser i Interval for muskulært krævende øvelser', () => {
+  const grindReq = normalizeRequest({ minutes: 20, men: 1, level: 4, condition: 9, seed: 1 });
+
+  it('foreslår langt færre reps for Ring Row/Dips end for en ren kondition-liste ved samme arbejdstid', () => {
+    const block = buildConditioning(grindReq, mulberry32(1), {
+      format: 'interval', exercises: [ringRow, dip], minutes: 12,
+    });
+    block?.movements.forEach((m) => expect(m.reps).toBeLessThanOrEqual(8));
+  });
+
+  it('sætter mindst 30 sekunders pause, når listen indeholder en høj-grind øvelse, selv ved høj kondition', () => {
+    const block = buildConditioning(grindReq, mulberry32(1), {
+      format: 'interval', exercises: [ringRow, dip], minutes: 12,
+    });
+    expect(block?.restSec ?? 0).toBeGreaterThanOrEqual(30);
+  });
+
+  it('beholder den korte, konditionsstyrede pause for en ren kondition-/kropsvægtsliste', () => {
+    const block = buildConditioning(grindReq, mulberry32(1), {
+      format: 'interval', exercises: [airSquat, burpee], minutes: 12,
+    });
+    expect(block?.restSec ?? 0).toBeLessThan(30);
+  });
+
+  it('samme mønster gælder Team rotation', () => {
+    const block = buildConditioning(grindReq, mulberry32(1), {
+      format: 'team_rotation', exercises: [ringRow, dip], minutes: 12,
+    });
+    expect(block?.restSec ?? 0).toBeGreaterThanOrEqual(30);
+  });
+
+  it('bliver et "så mange som muligt"-format for høj-grind stationer ved lang arbejdstid', () => {
+    const intenseReq = normalizeRequest({ minutes: 20, men: 1, level: 4, condition: 9, seed: 1 });
+    const block = buildConditioning(intenseReq, mulberry32(1), {
+      format: 'interval', exercises: [ringRow, dip], minutes: 12,
+    });
+    // condition >= 7 giver 40 sek. arbejde — netop over open-stations-tærsklen.
+    expect(block?.workSec).toBe(40);
+    expect(block?.openStations).toBe(true);
+    block?.movements.forEach((m) => expect(m.display).toContain('så mange som muligt'));
+  });
+
+  it('rører ikke måltallet for en ren kondition-liste, selv ved lang arbejdstid', () => {
+    const block = buildConditioning(grindReq, mulberry32(1), {
+      format: 'interval', exercises: [airSquat, burpee], minutes: 12,
+    });
+    expect(block?.openStations).toBeUndefined();
+    block?.movements.forEach((m) => expect(m.display).not.toContain('så mange som muligt'));
   });
 });

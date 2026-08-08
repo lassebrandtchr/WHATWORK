@@ -27,6 +27,11 @@ function resize(ex: Exercise, req: NormalizedRequest, rnd: Rng, reps: number): M
   return buildMovement(ex, req, rnd, { reps, intensity: 1, ...(cue ? { cue } : {}) });
 }
 
+/** Hvor stor en del af arbejdstiden en 'grind'-klasse reelt bruges på reps — kropsvægts-
+ * træk (Ring Row, Dips, Pull-ups) og teknisk krævende oly-/pres-løft er langsommere og
+ * mere lokalt udmattende end cyklisk kondition, selv uden tungt udstyr. */
+const GRIND_FILL: Record<'low' | 'medium' | 'high', number> = { low: 1, medium: 0.8, high: 0.62 };
+
 /**
  * Antal gentagelser, der passer i et interval af den givne længde.
  *
@@ -34,16 +39,32 @@ function resize(ex: Exercise, req: NormalizedRequest, rnd: Rng, reps: number): M
  * for kropsvægt og maskiner, men ikke for et tungt løft, hvor grebet, teknikken og
  * vejrtrækningen sætter et lavere reelt tempo, jo længere sættet varer. Tungt udstyr får
  * derfor et lavere effektivt fill og må aldrig overskride øvelsens egen normale rep-loft.
+ * `grind` dæmper tilsvarende for kropsvægts-/kettlebell-øvelser, der er muskulært
+ * krævende uden at være "tungt udstyr" i denne forstand.
  */
 function repsForInterval(ex: Exercise, seconds: number, fill = 0.62): number {
   const heavy = isHeavyImplement(ex);
-  const effectiveFill = heavy ? fill * 0.7 : fill;
+  const grindFactor = GRIND_FILL[ex.grind ?? 'low'];
+  const effectiveFill = (heavy ? fill * 0.7 : fill) * grindFactor;
   const target = seconds * effectiveFill;
   const step = ex.unit === 'cal' ? 1 : ex.unit === 'm' ? 25 : ex.unit === 'sec' ? 5 : 1;
   const raw = ex.unit === 'sec' ? target : target / ex.sec;
   const [lo, hi] = ex.rep ?? [1, 999];
   const ceiling = heavy ? hi : hi * 1.5;
   return clamp(Math.max(step, roundTo(raw, step)), Math.min(lo, 3), ceiling);
+}
+
+/** Minimum-pause i sekunder for den tungeste (højeste) grind-klasse i en øvelsesliste —
+ * Ring Row/Dips/Pull-ups og lignende må aldrig få en kortere pause end det, uanset hvor
+ * højt konditionsniveauet er skruet op. */
+const GRIND_MIN_REST: Record<'low' | 'medium' | 'high', number> = { low: 0, medium: 15, high: 30 };
+
+function restFor(exercises: Exercise[], baseRest: number): number {
+  const worst = exercises.reduce<'low' | 'medium' | 'high'>(
+    (acc, e) => (GRIND_MIN_REST[e.grind ?? 'low'] > GRIND_MIN_REST[acc] ? (e.grind ?? 'low') : acc),
+    'low',
+  );
+  return Math.max(baseRest, GRIND_MIN_REST[worst]);
 }
 
 export interface ConditioningOptions {
@@ -76,6 +97,7 @@ export function buildConditioning(
   let workSec: number | undefined;
   let restSec: number | undefined;
   let restEveryCycle: boolean | undefined;
+  let openStations: boolean | undefined;
 
   const perRound = () => roundSeconds(movements);
 
@@ -126,7 +148,7 @@ export function buildConditioning(
     prescription = `${rounds} runder pr. person · I skiftes efter hver øvelse · cap ${min} min`;
   } else if (format === 'team_rotation') {
     workSec = req.condition >= 7 ? 45 : 60;
-    restSec = req.condition >= 7 ? 15 : 20;
+    restSec = restFor(exercises, req.condition >= 7 ? 15 : 20);
     everySec = workSec + restSec;
     const stations = movements.length;
     rounds = Math.max(2, Math.floor((min * 60) / (everySec * stations)));
@@ -139,13 +161,18 @@ export function buildConditioning(
     cap = min;
   } else if (format === 'interval') {
     workSec = req.condition >= 7 ? 40 : 60;
-    restSec = req.condition >= 7 ? 20 : 30;
+    restSec = restFor(exercises, req.condition >= 7 ? 20 : 30);
     everySec = workSec + restSec;
     const sets = Math.max(3, Math.floor((min * 60) / (everySec * movements.length)));
+    // Ved høj grind og lang arbejdstid bliver et fast måltal for usikkert — man når så
+    // langt man kan, og noterer selv antallet, i stedet for at motoren gætter et tal.
+    const wantsOpenStations = exercises.some((e) => e.grind === 'high') && workSec >= 40;
     movements = movements.map((_m, i) => {
       const ex = exercises[i] as Exercise;
-      return resize(ex, req, rnd, repsForInterval(ex, workSec ?? 40, 0.85));
+      const built = resize(ex, req, rnd, repsForInterval(ex, workSec ?? 40, 0.85));
+      return wantsOpenStations ? { ...built, display: `${ex.name} · så mange som muligt` } : built;
     });
+    if (wantsOpenStations) openStations = true;
     title = `Interval ${workSec}/${restSec}`;
     rounds = sets;
     prescription = `${sets} sæt · ${workSec} sekunders arbejde / ${restSec} sekunders pause pr. station`;
@@ -198,6 +225,7 @@ export function buildConditioning(
     ...(workSec === undefined ? {} : { workSec }),
     ...(restSec === undefined ? {} : { restSec }),
     ...(restEveryCycle === undefined ? {} : { restEveryCycle }),
+    ...(openStations === undefined ? {} : { openStations }),
   };
 }
 

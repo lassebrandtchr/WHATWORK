@@ -165,7 +165,9 @@ function conditioningSegments(block: Block, workout: Workout): TimerSegment[] {
           ...(format === 'team_rotation'
             ? { worker: 'Alle arbejder på hver sin station', resting: '—' }
             : {}),
-          hint: format === 'team_rotation' ? 'Skift station, når uret siger til.' : 'Arbejd hårdt — pausen kommer.',
+          hint: block.openStations
+            ? 'Notér dit antal, når tiden er gået.'
+            : format === 'team_rotation' ? 'Skift station, når uret siger til.' : 'Arbejd hårdt — pausen kommer.',
         });
         const last = r === rounds - 1 && i === n - 1;
         if (!last) {
