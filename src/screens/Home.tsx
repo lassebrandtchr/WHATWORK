@@ -5,7 +5,7 @@ import { plural, relDate } from '../lib/format.js';
 import type { HistoryEntry } from '../types.js';
 import type { Screen } from '../types.js';
 
-const QUICK_TIMES = [20, 30, 45, 60];
+const QUICK_TIMES = [10, 15, 20, 25, 30, 40, 45, 60, 75, 90];
 
 export interface HomeProps {
   name: string;

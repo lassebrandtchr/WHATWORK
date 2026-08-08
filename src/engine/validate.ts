@@ -8,9 +8,9 @@ import type {
 } from './types.js';
 
 export const DNA_AXES: DnaAxis[] = [
-  { id: 'engine', name: 'Engine' },
+  { id: 'engine', name: 'Kondition' },
   { id: 'legs', name: 'Ben' },
-  { id: 'hinge', name: 'Posterior' },
+  { id: 'hinge', name: 'Baglår' },
   { id: 'press', name: 'Pres' },
   { id: 'pull', name: 'Træk' },
   { id: 'core', name: 'Core' },
