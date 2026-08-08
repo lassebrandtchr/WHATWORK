@@ -2034,3 +2034,158 @@ lander på `origin/main` uden konflikt. Hvis `git push` afvises pga. divergens, 
 læs situationen (`git fetch && git log HEAD..origin/main --oneline`) i stedet for at
 tvinge — ved simple, ikke-overlappende ændringer er et almindeligt `git pull --rebase`
 efterfulgt af et nyt `git push` den rigtige vej frem.
+
+---
+
+# Runde 2 — Task 16-26
+
+Del A–G (Task 1-15) er implementeret, testet og pushet. Denne del af planen dækker
+Del H–R fra spec-tilføjelsen. Samme rytme: implementér → test/typecheck/lint →
+commit pr. task. Fuld slutverifikation + push samles i Task 26 (ikke én pr. del, for
+ikke at spamme CI/build 11 gange for beslægtede, lavrisiko-ændringer i samme runde).
+
+## Task 16: Del H — Historik viser reel trænet tid
+
+**Files:** Modify `src/state/useWhatwork.ts` (`entryFor`, `saveCompletion`)
+
+- [ ] Tilføj `actualMinutes?: number` som 7. parameter til `entryFor`, brug
+  `actualMinutes ?? w.estimatedMinutes` som `minutes`.
+- [ ] I `saveCompletion`, send `Math.max(1, mins)` som `actualMinutes` til `entryFor`.
+- [ ] Skriv/opdatér en test i `App.test.tsx`: start en workout, spol frem et par
+  minutter med fake timers, afslut som "Afbrudt", bekræft at `history[0].minutes` er
+  lavt (ikke `workout.estimatedMinutes`).
+- [ ] `npm test && npm run typecheck` grønt. Commit.
+
+## Task 17: Del I — Realistiske reps/pauser i Interval
+
+**Files:** Modify `src/engine/types.ts` (`Exercise.grind`), `src/engine/data/exercises.ts`
+(grind-felter), `src/engine/blocks.ts` (`repsForInterval`, `restFor`, `openStations`),
+`src/engine/timerplan.ts` (hint ved `openStations`). Test: `src/engine/blocks.test.ts`.
+
+- [ ] Skriv fejlende tests først: Ring Row/Dips i en `interval`-blok med `condition: 9`
+  skal give ≤ 8 reps og `restSec >= 30`.
+- [ ] Tilføj `grind?: 'low' | 'medium' | 'high'` til `Exercise`.
+- [ ] Sæt `grind` på de navngivne øvelser i spec'ens Del I-liste.
+- [ ] Implementér `GRIND_FILL`/opdateret `repsForInterval`, `GRIND_MIN_REST`/`restFor`,
+  brug `restFor` i `interval`- og `team_rotation`-grenene.
+- [ ] Implementér `openStations`-feltet og dets brug i `timerplan.ts`s
+  interval/team_rotation-gren.
+- [ ] Kør tests, ret indtil grønt. `npm run typecheck`. Commit.
+
+## Task 18: Del J — Orange overskrifter + "Hovedworkout"
+
+**Files:** Modify `src/screens/Result.tsx`, `src/components/ui.tsx` (`Note`
+`accent`-prop), `src/index.css` (`.ww-note--label-accent`).
+
+- [ ] Tilføj `ww-kicker--accent` til de fire navngivne `<h2 className="ww-kicker">` i
+  Result.tsx (protocol, logistics, why, dna).
+- [ ] Ret `blockLabel()`: `'Hoveddel'` → `'Hovedworkout'`.
+- [ ] `BlockSection`s `<h2>`: fjern `color: accent.fg`, tilføj
+  `className="ww-kicker ww-kicker--accent"`.
+- [ ] Tilføj `accent?: boolean` til `Note`, ny CSS-regel, sæt `accent` på "Hvad
+  knapperne gør".
+- [ ] `npm run typecheck && npm run lint`. Commit.
+
+## Task 19: Del L — Grønne, fede tidsangivelser
+
+**Files:** Modify `src/screens/Result.tsx` (`ca. {block.minutes} min`-span).
+
+- [ ] Tilføj `fontWeight: 700, color: 'var(--ww-green)'` til span-stylen.
+- [ ] Commit sammen med Task 18 (samme fil, samme browser-check) eller separat — én
+  commit, klart beskrevet.
+
+## Task 20: Del K — Større logo + responsivitet
+
+**Files:** Modify `App.tsx`/`Navigation.tsx` (`WwMark size`), `src/index.css`
+(eventuelle nye smal-skærm-regler, kun hvis testen finder noget at rette).
+
+- [ ] Hæv `WwMark`s `size` i desktop-header og mobil-header.
+- [ ] `npm run typecheck`. Commit logo-ændringen for sig.
+- [ ] Resize-test (Task 26's browser-check) ved de seks viewports fra spec'en; ret
+  konkrete overløb/brud, hvis nogen findes, i en opfølgende commit.
+
+## Task 21: Del M — Justerbar vægt pr. øvelse
+
+**Files:** Modify `src/engine/loads.ts` (`stepLoad`, eksportér `WALLBALLS`/`KETTLEBELLS`
+internt uændret), `src/engine/index.ts` (eksportér `stepLoad`), `src/screens/Result.tsx`
+(`profile`-prop, `overrides`-state, justeringsknapper), `src/App.tsx` (`profile`-prop
+til `<Result>`), `src/index.css` (`.ww-step-btn`). Test: `src/engine/loads.test.ts`.
+
+- [ ] Skriv fejlende tests for `stepLoad` (barbell op/ned, kettlebell nabo-snap,
+  grænseklampning).
+- [ ] Implementér `stepLoad` + `listFor` i loads.ts, eksportér.
+- [ ] `Result` får `profile`-prop; `App.tsx` sender `ww.profile`.
+- [ ] Implementér `overrides`-state + `adjust`-handler i `Result`; giv `profile`,
+  `overrides`, `onAdjust` videre til `BlockSection`/`MovementRow`.
+- [ ] Tilføj +/- knapper i `MovementRow` ved `t.load`, med `.ww-step-btn`-styling.
+- [ ] `npm test && npm run typecheck && npm run lint`. Browser-check: generér en
+  workout med bænkpres, juster vægten op/ned, bekræft skive-teksten opdaterer sig.
+  Commit.
+
+## Task 22: Del N — Liquid Glass bundmenu
+
+**Files:** Modify `src/components/Navigation.tsx` (`MobileNav`), `src/index.css`
+(`.ww-tab-highlight`).
+
+- [ ] Implementér `useLayoutEffect`-målingen og `--ww-tab-x`/`--ww-tab-w`.
+- [ ] Tilføj `.ww-tab-highlight`-elementet og dets CSS (glas-stil, transition,
+  `prefers-reduced-motion`-undtagelse).
+- [ ] `npm run typecheck`. Browser-check ved 375px bredde: skift mellem alle fire
+  faner, bekræft glidende animation og korrekt startposition ved direkte navigation.
+  Commit.
+
+## Task 23: Del O — "WHATWORK?"
+
+**Files:** Modify `Wordmark.tsx`, `WwMark.tsx`, `index.html`, `vite.config.ts`,
+`Onboarding.tsx`, `About.tsx`, `Profile.tsx`, `Navigation.tsx` (kun de steder, spec'ens
+Del O lister — ikke løbende prosa, ikke `PAGES_BASE`).
+
+- [ ] Foretag alle otte navngivne tekstændringer.
+- [ ] `npm run build` (verificerer at PWA-manifestet og HTML stadig genererer korrekt
+  med det nye navn).
+- [ ] `npm test` — ret enhver streng-match-test, der forventede det gamle navn.
+- [ ] Commit.
+
+## Task 24: Del P — Burpee Broad Jump + flere variationer + perf-test
+
+**Files:** Modify `src/engine/data/exercises.ts`, `src/screens/Generator.tsx`
+(PICKABLE), `src/engine/smartmix.ts` (`formatPool`, `spreadWeight`,
+`MAX_CANDIDATES`). Test: `src/engine/data/exercises.test.ts`, `src/engine/engine.test.ts`
+(ny perf-test).
+
+- [ ] Tilføj `burpee_broad_jump` til kataloget + `PICKABLE`, med en test der bekræfter
+  begge dele (spejler Del C+G's mønster).
+- [ ] Skriv perf-testen (100 genereringer < 1500 ms) FØR ændringerne, bekræft den
+  allerede består på nuværende (64-candidate) baseline — den er en regressionsvagt,
+  ikke en TDD-red-green for selve variationsændringen.
+- [ ] Implementér de tre ændringer: bredere `formatPool`, blødere `spreadWeight`,
+  `MAX_CANDIDATES` 64→128.
+- [ ] Kør hele `engine`-mappens tests + perf-testen. Bekræft `npm run build` og en
+  manuel gennerering i browseren stadig føles øjeblikkelig (ingen synlig forsinkelse
+  ud over de faste 7 sekunders loading-animation). Commit.
+
+## Task 25: Del Q + Del R — Hjem-hurtigvalg og DNA-navne
+
+**Files:** Modify `src/screens/Home.tsx` (`QUICK_TIMES`), `src/engine/validate.ts`
+(`DNA_AXES`).
+
+- [ ] Udvid `QUICK_TIMES` til at matche `TIME_OPTIONS`.
+- [ ] Ret `DNA_AXES`-navnene (`Kondition`, `Baglår`).
+- [ ] `npm run typecheck && npm test`. Commit (kan være én fælles commit — begge er
+  små, urelaterede tekst-/datarettelser).
+
+## Task 26: Runde 2 — slutverifikation, resize-test og push
+
+- [ ] `npm run typecheck && npm run lint && npm test && npm run build` — alt grønt.
+- [ ] Genkør performance-testen isoleret (`npx vitest run -t "100 workouts"`) og
+  notér den faktiske tid — bekræft den er langt under 1500 ms-grænsen.
+- [ ] Browser: generér en workout, bekræft Del H (afbryd tidligt, tjek historik-tid),
+  Del J/L (orange overskrifter, grøn/fed "ca. X min"), Del M (justér en vægt, se
+  skiverne opdatere), Del O (titel/logo viser "WHATWORK?").
+- [ ] `resize_window` gennem de seks viewports fra Del K's spec-tabel på Hjem,
+  Generér workout, Resultat og Timer — ret konkrete brud, genkør resten af
+  test-suiten efter enhver rettelse.
+- [ ] Skift mellem bundmenuens fire faner (Del N) og bekræft den glidende highlight.
+- [ ] `git add -A && git status` — bekræft kun tilsigtede filer er staged (README.md's
+  allerede-eksisterende, ikke-relaterede ændring holdes fortsat udenfor).
+- [ ] `git push origin main`.
