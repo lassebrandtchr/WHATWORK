@@ -12,6 +12,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "icons": "node scripts/generate-icons.mjs",
+    "photos": "node scripts/generate-photos.mjs",
     "lint": "eslint ."
   },
   "dependencies": {

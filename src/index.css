@@ -1464,12 +1464,18 @@ a {
    */
   .ww-hero-photo::after {
     background:
-      radial-gradient(ellipse 46% 78% at 50% 52%, rgba(11, 13, 16, 0.82) 0%, rgba(11, 13, 16, 0) 100%),
+      radial-gradient(
+        ellipse 30% 58% at 50% 48%,
+        rgba(11, 13, 16, 0.8) 0%,
+        rgba(11, 13, 16, 0.54) 58%,
+        rgba(11, 13, 16, 0) 100%
+      ),
       linear-gradient(
         180deg,
-        rgba(11, 13, 16, 0.7) 0%,
-        rgba(11, 13, 16, 0.28) 34%,
-        rgba(11, 13, 16, 0.78) 76%,
+        rgba(11, 13, 16, 0.52) 0%,
+        rgba(11, 13, 16, 0.06) 26%,
+        rgba(11, 13, 16, 0.14) 62%,
+        rgba(11, 13, 16, 0.72) 92%,
         #0b0d10 100%
       );
   }
