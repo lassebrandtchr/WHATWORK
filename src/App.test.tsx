@@ -218,6 +218,9 @@ describe('WHATWORK — kerneflow', () => {
       expect(screen.getAllByText('Afbrudt').length).toBeGreaterThan(0);
       // Systemet registrerer selv, hvor langt man nåede — ikke som en fuldført workout.
       expect(screen.getByText(/Nåede \d+%/)).toBeInTheDocument();
+      // Kun ~30 sekunder er reelt gået (25s + 5s, pausen fryser tiden) — historikken
+      // skal vise den faktisk trænede tid, ikke workoutens fulde planlagte varighed.
+      expect(screen.getByText(/· 1 min/)).toBeInTheDocument();
 
       // Workouten kan åbnes igen fra historikken.
       fireEvent.click(screen.getAllByRole('button', { name: 'Åbn' })[0] as HTMLElement);

@@ -593,12 +593,12 @@ export function useWhatwork() {
   const entryFor = useCallback(
     (
       w: Workout, status: HistoryStatus, result = '', rpe: HistoryEntry['rpe'] = '',
-      progressPct?: number, lastExercise?: string,
+      progressPct?: number, lastExercise?: string, actualMinutes?: number,
     ): HistoryEntry => ({
       id: `${w.id}_${Date.now()}`,
       title: w.title,
       format: w.formatName,
-      minutes: w.estimatedMinutes,
+      minutes: actualMinutes ?? w.estimatedMinutes,
       date: new Date().toISOString(),
       status,
       rpe,
@@ -686,7 +686,10 @@ export function useWhatwork() {
       : timeText;
     const result = completion.note || auto;
     setHistory((h) => [
-      entryFor(w, completion.status, result, completion.rpe, completion.progressPct, completion.lastExercise),
+      entryFor(
+        w, completion.status, result, completion.rpe, completion.progressPct,
+        completion.lastExercise, Math.max(1, mins),
+      ),
       ...h,
     ]);
 
