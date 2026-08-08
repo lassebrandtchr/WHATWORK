@@ -59,7 +59,7 @@ function targetFor(
     const step = stepFor(ex.unit, baseAmount);
     amount = Math.max(step, roundTo(baseAmount * factor, step));
   }
-  const ctx = { plates: req.plates, bars: req.bars, inventory: req.inventory };
+  const ctx = { plates: req.plates, bars: req.bars, sandbags: req.sandbags, inventory: req.inventory };
   const load = pct === undefined ? scaleLoad(ex, person, ctx) : scaleLoadPct(ex, person, pct, ctx);
   return {
     label: person.label,

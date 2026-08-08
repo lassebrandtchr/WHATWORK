@@ -1,4 +1,4 @@
-import { DEFAULT_BARS, DEFAULT_PLATES } from './data/equipment.js';
+import { DEFAULT_BARS, DEFAULT_PLATES, DEFAULT_SANDBAGS } from './data/equipment.js';
 import { MIN_LOADS } from './data/exercises.js';
 import { clamp, roundTo } from './rng.js';
 import type { Exercise, LoadKind, LoadPrescription, PlatePlan, Person, Profile } from './types.js';
@@ -17,8 +17,6 @@ export const fmtKg = (v: number): string =>
 const KETTLEBELLS = [8, 10, 12, 16, 20, 24, 28, 32, 36, 40];
 /** Wall balls findes i faste vægte. */
 const WALLBALLS = [4, 6, 9, 10, 12];
-/** Sandbags. */
-const SANDBAGS = [20, 30, 40, 50, 60, 70, 80];
 
 function snapToList(value: number, list: number[], floor: number): number {
   const allowed = list.filter((v) => v >= floor - 0.001);
@@ -82,6 +80,7 @@ export function planPlates(targetKg: number, plates: number[] = DEFAULT_PLATES, 
 export interface LoadContext {
   plates?: number[];
   bars?: number[];
+  sandbags?: number[];
   inventory?: Record<string, number>;
 }
 
@@ -112,7 +111,8 @@ function prescribe(ex: Exercise, kind: LoadKind, perUnit: number, floor: number,
       return { totalKg: kg, eachKg: kg, kind, text: fmtKg(kg) };
     }
     case 'bag': {
-      const kg = snapToList(perUnit, SANDBAGS, floor);
+      const list = ctx.sandbags?.length ? ctx.sandbags : DEFAULT_SANDBAGS;
+      const kg = snapToList(perUnit, list, floor);
       return { totalKg: kg, eachKg: kg, kind, text: fmtKg(kg) };
     }
     case 'sled': {

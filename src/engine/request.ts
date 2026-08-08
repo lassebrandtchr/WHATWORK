@@ -1,5 +1,5 @@
 import {
-  DEFAULT_BARS, DEFAULT_EQUIPMENT, DEFAULT_PLATES, EQUIPMENT_BY_ID,
+  DEFAULT_BARS, DEFAULT_EQUIPMENT, DEFAULT_PLATES, DEFAULT_SANDBAGS, EQUIPMENT_BY_ID,
 } from './data/equipment.js';
 import { clamp, makeSeed } from './rng.js';
 import { EXERCISE_DATA_VERSION, ENGINE_VERSION, RULES_VERSION } from './version.js';
@@ -95,6 +95,7 @@ export function normalizeRequest(raw: WorkoutRequest): NormalizedRequest {
     equipment,
     plates: (raw.plates?.length ? raw.plates : DEFAULT_PLATES).slice().sort((a, b) => b - a),
     bars: (raw.bars?.length ? raw.bars : DEFAULT_BARS).slice().sort((a, b) => b - a),
+    sandbags: (raw.sandbags?.length ? raw.sandbags : DEFAULT_SANDBAGS).slice().sort((a, b) => b - a),
     surprise: Boolean(raw.surprise),
     recentSignatures: raw.recentSignatures ?? [],
     recentPatterns: raw.recentPatterns ?? [],

@@ -254,6 +254,8 @@ export interface NormalizedRequest {
   plates: number[];
   /** Stangvægte brugeren har adgang til. */
   bars: number[];
+  /** Sandbag-vægte brugeren faktisk har, tungeste først. */
+  sandbags: number[];
   surprise: boolean;
   /** Signaturer fra de seneste workouts, brugt til at undgå gentagelse. */
   recentSignatures: WorkoutSignature[];
@@ -360,6 +362,7 @@ export interface WorkoutRequest {
   counts?: Record<string, number>;
   plates?: number[];
   bars?: number[];
+  sandbags?: number[];
   profile?: Profile;
   recentSignatures?: WorkoutSignature[];
   recentPatterns?: string[];

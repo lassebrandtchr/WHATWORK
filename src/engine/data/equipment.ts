@@ -42,6 +42,10 @@ export const DEFAULT_PLATES = [25, 20, 15, 10, 5, 2.5, 1.25];
 export const BAR_SIZES = [20, 15, 10];
 export const DEFAULT_BARS = [20, 15];
 
+/** Sandbags i kg — faste vægte, som findes i de fleste sale. */
+export const SANDBAG_SIZES = [10, 20, 30];
+export const DEFAULT_SANDBAGS = [10, 20, 30];
+
 export const CARE_AREAS: CareArea[] = [
   { id: 'shoulder', name: 'Skuldre' },
   { id: 'back', name: 'Lænd' },

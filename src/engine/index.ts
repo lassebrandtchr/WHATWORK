@@ -7,7 +7,7 @@ export * from './types.js';
 export * from './version.js';
 export {
   EQUIPMENT, DEFAULT_EQUIPMENT, EQUIPMENT_BY_ID, PLATE_SIZES, DEFAULT_PLATES,
-  BAR_SIZES, DEFAULT_BARS, CARE_AREAS, FOCUS_TAGS, LEVELS,
+  BAR_SIZES, DEFAULT_BARS, SANDBAG_SIZES, DEFAULT_SANDBAGS, CARE_AREAS, FOCUS_TAGS, LEVELS,
 } from './data/equipment.js';
 export { EXERCISES, BY_ID, MIN_LOADS } from './data/exercises.js';
 export { FORMATS, FORMAT_LIST, EVERY_SEC, isEmomFamily, formatName } from './data/formats.js';
