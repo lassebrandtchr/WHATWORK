@@ -113,10 +113,16 @@ function bucketOrder(req: NormalizedRequest, rnd: Rng): string[] {
   return [...new Set(order)];
 }
 
-function movementCount(minutes: number, format: FormatId, rnd: Rng): number {
+export function movementCount(minutes: number, format: FormatId, rnd: Rng): number {
   if (format === 'chipper') return minutes >= 30 ? 5 : 4;
   if (format === 'ladder') return 2 + (rnd() < 0.4 ? 1 : 0);
   if (format === 'strength') return 0;
+  if (format === 'amrap' || format === 'fortime') {
+    if (minutes <= 10) return 2;
+    if (minutes <= 18) return rnd() < 0.5 ? 2 : 3;
+    if (minutes <= 25) return rnd() < 0.45 ? 4 : 3;
+    return rnd() < 0.4 ? 5 : 4;
+  }
   if (minutes <= 10) return 2;
   if (minutes <= 18) return rnd() < 0.5 ? 2 : 3;
   return rnd() < 0.45 ? 4 : 3;

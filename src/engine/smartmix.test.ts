@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { chooseExercises, ensureFullBodyCoverage, mainPool } from './smartmix.js';
+import { chooseExercises, ensureFullBodyCoverage, mainPool, movementCount } from './smartmix.js';
 import { normalizeRequest } from './request.js';
 import { mulberry32 } from './rng.js';
 import { BY_ID } from './data/exercises.js';
@@ -64,5 +64,32 @@ describe('chooseExercises — fuld krop og bredere variation', () => {
         expect(pull).toBeGreaterThan(0);
       }
     }
+  });
+});
+
+describe('movementCount — AMRAP/For Time kan nu gå op til 5 øvelser', () => {
+  it('rammer aldrig over 4 øvelser under 26 minutter', () => {
+    const rnd = () => 0.999; // vælger altid den øvre gren
+    for (const minutes of [8, 15, 20, 25]) {
+      expect(movementCount(minutes, 'amrap', rnd)).toBeLessThanOrEqual(4);
+      expect(movementCount(minutes, 'fortime', rnd)).toBeLessThanOrEqual(4);
+    }
+  });
+
+  it('kan ramme 5 øvelser ved 26+ minutter, når terningen falder rigtigt', () => {
+    const rnd = () => 0; // under 0.4-tærsklen → vælger 5
+    expect(movementCount(30, 'amrap', rnd)).toBe(5);
+    expect(movementCount(30, 'fortime', rnd)).toBe(5);
+  });
+
+  it('falder tilbage til 4 øvelser ved 26+ minutter, når terningen falder højt', () => {
+    const rnd = () => 0.999; // over 0.4-tærsklen → vælger 4
+    expect(movementCount(30, 'amrap', rnd)).toBe(4);
+  });
+
+  it('rører ikke EMOM-familien, Interval eller Ladder', () => {
+    const rnd = () => 0.999;
+    expect(movementCount(40, 'emom', rnd)).toBeLessThanOrEqual(4);
+    expect(movementCount(40, 'interval', rnd)).toBeLessThanOrEqual(4);
   });
 });
