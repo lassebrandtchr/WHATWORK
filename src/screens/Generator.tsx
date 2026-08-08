@@ -8,12 +8,13 @@ import type { GenDraft, GenStep } from '../types.js';
 const TIME_OPTIONS = [10, 15, 20, 25, 30, 40, 45, 60, 75, 90];
 
 /** De øvelser, det giver mening at kunne ønske eller fravælge for én dag. */
-const PICKABLE = [
+export const PICKABLE = [
   'push_press', 'strict_press', 'pull_up', 'band_pull_up', 'clean_and_jerk',
   'hang_power_clean', 'power_clean', 'kb_swing', 'devil_press', 'box_jump_over',
   'sled_push', 'sled_pull', 'assault', 'wall_ball', 'row', 'ski', 'bike',
   'sandbag_shoulder', 'walking_lunge', 'db_reverse_lunge', 'thruster', 'burpee',
   'burpee_box_jump_over', 'double_under', 'toes_to_bar',
+  'bench_press', 'incline_bench_press', 'push_up', 'diamond_push_up', 'decline_push_up',
 ];
 
 const STEP_COPY: Record<GenStep, [string, string]> = {
