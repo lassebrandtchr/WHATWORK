@@ -7,7 +7,8 @@
 `src/engine/data/equipment.ts`, `src/engine/loads.ts`, `src/engine/movements.ts`,
 `src/engine/request.ts`, `src/engine/index.ts`, `src/types.ts`, `src/state/useWhatwork.ts`,
 `src/screens/Generator.tsx`, `src/screens/Equipment.tsx`, `src/screens/Result.tsx`,
-`src/screens/Timer.tsx`, `src/index.css`, ny fil `src/lib/sound.ts`
+`src/screens/Timer.tsx`, `src/index.css`, `src/components/EquipmentIcon.tsx`, ny fil
+`src/lib/sound.ts`
 
 ## Baggrund
 
@@ -383,6 +384,86 @@ enhedstestes direkte (jsdom har ikke `AudioContext`) — dækker alle fem overga
 tabellen ovenfor plus et par negative tilfælde (fx `transition → transition`, som ikke bør
 forekomme, men ikke må kaste en fejl).
 
+## Del G — Skrå bænkpres + push-up-varianter
+
+### Ny udstyrstype: justerbar bænk
+
+Skrå bænkpres bruger ikke en plyobox som underlag — det er en justerbar bænk (typisk
+0–70°, brugeren vælger selv vinklen efter, hvor meget skulderfokus de vil have). Denne
+udstyrstype findes slet ikke i dag; `box`
+([equipment.ts:17](../../../src/engine/data/equipment.ts)) er en plyobox til spring/step
+og er *ikke* det samme redskab. Ny post i `EQUIPMENT`
+([equipment.ts:7](../../../src/engine/data/equipment.ts)):
+
+```ts
+{ id: 'bench', name: 'Justerbar bænk', countable: true, def: 2, onByDefault: true, hint: 'Fladt til skrå, 0–70°' },
+```
+
+`countable`/`def: 2` matcher, hvordan `box` allerede er modelleret — antallet styrer
+rotation ved flere deltagere. `onByDefault: true`, da de fleste sale har mindst én. Kræver
+ingen ændringer i `Equipment.tsx` ud over det, der allerede sker automatisk — udstyrsgrid'et
+([Equipment.tsx:38](../../../src/screens/Equipment.tsx)) itererer `EQUIPMENT` generisk.
+
+**Ikon:** ny post i `GLYPHS`-kortet ([EquipmentIcon.tsx:19](../../../src/components/EquipmentIcon.tsx)),
+tegnet i samme stil som de øvrige (skrå bænk-flade med ben og hævet ryglæn), så den ikke
+falder tilbage til standard-kropsvægt-ikonet.
+
+**Sideeffekt — ensretning af eksisterende Bench Press:** i dag bruger både `bench_press` og
+`db_bench` fejlagtigt `box` som underlag ([exercises.ts:57-58](../../../src/engine/data/exercises.ts)),
+formentlig fordi der ikke fandtes noget bænk-udstyr, da de blev skrevet. Nu hvor `bench`
+findes, rettes begges `eq` fra `['barbell', 'box']`/`['dumbbell', 'box']` til
+`['barbell', 'bench']`/`['dumbbell', 'bench']` — samme rettelse, brugeren bad om for skrå
+bænkpres, anvendt konsekvent. `bench` er `onByDefault: true`, så eksisterende brugere
+mister ikke adgang til øvelserne ved denne rettelse. `dip` ([exercises.ts:59](../../../src/engine/data/exercises.ts))
+bruger fortsat `box` — dét er korrekt, en box som forhøjning til dips er reelt udstyr.
+
+### Ny øvelse: Skrå bænkpres
+
+```ts
+E({
+  id: 'incline_bench_press', name: 'Incline Bench Press', cat: 'press',
+  eq: ['barbell', 'bench'], lvl: 2, tech: 2, avoid: ['shoulder'],
+  da: 'Bænken vinklet 45–70°. Skulderbladene samlet, kontrolleret ned til øverste bryst.',
+  fat: { press: 3, shoulder: 3, cns: 2 }, sec: 4, rep: [3, 10],
+  load: { m: 75, f: 42 }, sub: ['bench_press', 'db_shoulder_press'], weight: 0.75,
+}),
+```
+
+Referencevægten (75/42 kg) sættes lavere end fladt bænkpres (90/50 kg) — løftet er hårdere
+ved samme vægt pga. den forlængede vej og øget skulderinvolvering, som du påpegede. `avoid:
+['shoulder']` tilføjes (findes ikke på almindelig `bench_press`), fordi skråt pres belaster
+skulderen mere direkte. Tilføjes til `PICKABLE` ([Generator.tsx:11](../../../src/screens/Generator.tsx)),
+sammen med `bench_press` fra Del C.
+
+### To nye push-up-varianter
+
+`push_up` findes allerede ([exercises.ts:50](../../../src/engine/data/exercises.ts)) men
+mangler i `PICKABLE` — rettes samme sted som bænkpres. Derudover to nye kataloge-poster,
+samme skema som de øvrige pres-øvelser:
+
+```ts
+E({ id: 'diamond_push_up', name: 'Diamond Push-up', cat: 'press', lvl: 2, tech: 2,
+  avoid: ['wrist', 'shoulder'],
+  da: 'Hænderne samlet under brystet, tommel mod tommel. Mere triceps, sværere end almindelig push-up.',
+  fat: { press: 3, core: 1 }, sec: 2.2, rep: [8, 20], sub: ['push_up'], weight: 0.7 }),
+
+E({ id: 'decline_push_up', name: 'Decline Push-up', cat: 'press', eq: ['box'], lvl: 2,
+  da: 'Fødderne hævet på boxen. Mere skulder- og øvre brystbelastning.',
+  fat: { press: 3, shoulder: 1, core: 1 }, sec: 2.2, rep: [8, 20], sub: ['push_up'], weight: 0.8 }),
+```
+
+Begge tilføjes til `PICKABLE`. Ingen af dem er `accessory: true` — de er fuldgyldige
+hoveddels-øvelser, ligesom `hr_push_up` allerede er, ikke skaleringer af `push_up`.
+
+## Ikke i scope (tilføjelse til Del G)
+
+- `incline_bench_press` tilføjes **ikke** til `RAMP_ELIGIBLE_IDS`
+  ([blocks.ts:197](../../../src/engine/blocks.ts)) — den ramp-mod-5RM-struktur, der findes
+  fra tidligere spec, er bevidst holdt til de seks navngivne hovedløft. Kan tilføjes senere
+  som en selvstændig beslutning, hvis det ønskes.
+- Ingen dumbbell-variant af skrå pres (Incline Dumbbell Press) — kun den efterspurgte
+  vægtstangsversion.
+
 ## Test (samlet)
 
 - Eksisterende `App.test.tsx`/`engine.test.ts`/`timer.test.ts`-suiter skal fortsat bestå.
@@ -395,6 +476,9 @@ forekomme, men ikke må kaste en fejl).
   - Sandbag-belastning snapper til `req.sandbags` (ikke det gamle faste spænd); tom/udeladt
     liste falder tilbage til `DEFAULT_SANDBAGS`.
   - `kindFor(...)`-tabellen for timer-lyde (ren funktion, alle fem overgangstyper).
+  - `incline_bench_press`, `diamond_push_up`, `decline_push_up` og `push_up` findes i
+    `PICKABLE`; `bench_press`/`db_bench`/`incline_bench_press` kræver `bench` (ikke `box`)
+    i deres `eq`.
 
 ## Ikke i scope
 
