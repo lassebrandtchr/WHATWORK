@@ -269,21 +269,55 @@ som `--ww-orange` allerede har og bruges til badges/kanter
 --ww-red-line: rgb(220 38 38 / 42%);     /* lys tema: rgb(185 28 28 / 40%) */
 ```
 
-### `Result.tsx`
+### `Result.tsx` — farve **og** adskilte kort, ikke kun farve på én fælles boks
 
-`BlockSection` ([Result.tsx:211](../../../src/screens/Result.tsx)) får en farve udledt af
-`block.kind`:
+Ren farvekodning er ikke nok til at gøre skiftet utvetydigt — opvarmning og hoveddel skal
+stå i hver deres tydeligt afgrænsede boks, ikke i samme kort med en tynd streg imellem.
+I dag er alle blokke pakket ind i ét fælles `ww-card`
+([Result.tsx:101](../../../src/screens/Result.tsx)), og `BlockSection`
+([Result.tsx:211](../../../src/screens/Result.tsx)) sætter kun en `borderTop` mellem dem
+(`first ? 'none' : '1px solid var(--ww-line)'`) — visuelt én sammenhængende flade.
+
+**Ny struktur:** den fælles wrapper erstattes af en simpel `flex column` med luft imellem,
+og hver blok bliver sit **eget** `ww-card` i stedet for en `<section>` inde i ét delt kort:
+
+```tsx
+{/* Blokke — hver sin tydeligt adskilte boks, farvet efter opvarmning/hoveddel */}
+<div style={{ display: 'flex', flexDirection: 'column', gap: 14, marginBottom: 22 }}>
+  {workout.blocks.map((block) => (
+    <BlockSection
+      key={block.id}
+      block={block}
+      label={blockLabel(block, hasStrength)}
+      participants={workout.participants}
+    />
+  ))}
+</div>
+```
+
+`BlockSection` mister sin `first`-prop (ikke længere nødvendig, når hver blok er sit eget
+kort) og bliver selv et `ww-card`, farvet efter `block.kind`:
 
 ```ts
 const accent = block.kind === 'warmup'
-  ? { fg: 'var(--ww-green)', line: 'var(--ww-green-line)', dim: 'var(--ww-green-dim)' }
-  : { fg: 'var(--ww-red)', line: 'var(--ww-red-line)', dim: 'var(--ww-red-dim)' };
+  ? { line: 'var(--ww-green-line)', dim: 'var(--ww-green-dim)', fg: 'var(--ww-green)' }
+  : { line: 'var(--ww-red-line)', dim: 'var(--ww-red-dim)', fg: 'var(--ww-red)' };
+
+<section
+  className="ww-card"
+  style={{ padding: '22px 20px', borderColor: accent.line, background: accent.dim }}
+>
 ```
 
-Bruges til: en 3px venstre-kant på selve `<section>` (`borderLeft: '3px solid ${accent.line}'`),
-og overskriftens (`<h2 className="ww-kicker">`) farve sættes til `accent.fg` i stedet for
-standard-kickerfarven. `blockLabel` ([Result.tsx:7](../../../src/screens/Result.tsx)) er
-uændret — kun farven på den tekst, den allerede returnerer.
+`borderColor`/`background` overskriver `.ww-card`s standardværdier
+([index.css:467](../../../src/index.css)) inline — kortets radius og struktur bevares,
+kun farven ændres, samme kompositionsmønster som `.ww-badge--accent` allerede bruger
+([index.css:772](../../../src/index.css)). Overskriftens (`<h2 className="ww-kicker">`)
+farve sættes til `accent.fg`. Resultatet: to (eller flere, ved styrke + conditioning)
+synligt separate, farvede kort efter hinanden med luft imellem — ikke til at tage fejl af,
+hvor det ene slutter og det andet starter, selv for en bruger der ikke kan skelne
+grøn/rød. `blockLabel` ([Result.tsx:7](../../../src/screens/Result.tsx)) er uændret — kun
+selve indpakningen og farven ændrer sig.
 
 ### `Timer.tsx`
 
