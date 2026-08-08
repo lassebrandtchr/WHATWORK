@@ -97,14 +97,13 @@ export function Result({
         </div>
       </section>
 
-      {/* Blokke */}
-      <div className="ww-card" style={{ overflow: 'hidden', marginBottom: 22 }}>
-        {workout.blocks.map((block, i) => (
+      {/* Blokke — hver sin tydeligt adskilte boks, farvet efter opvarmning/hoveddel */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 14, marginBottom: 22 }}>
+        {workout.blocks.map((block) => (
           <BlockSection
             key={block.id}
             block={block}
             label={blockLabel(block, hasStrength)}
-            first={i === 0}
             participants={workout.participants}
           />
         ))}
@@ -209,17 +208,22 @@ function ProtocolRow({ k, v }: { k: string; v: string }) {
 }
 
 function BlockSection({
-  block, label, participants, first,
+  block, label, participants,
 }: {
   block: Block;
   label: string;
   participants: number;
-  first: boolean;
 }) {
+  const accent = block.kind === 'warmup'
+    ? { line: 'var(--ww-green-line)', dim: 'var(--ww-green-dim)', fg: 'var(--ww-green)' }
+    : { line: 'var(--ww-red-line)', dim: 'var(--ww-red-dim)', fg: 'var(--ww-red)' };
   return (
-    <section style={{ borderTop: first ? 'none' : '1px solid var(--ww-line)', padding: '22px 20px' }}>
+    <section
+      className="ww-card"
+      style={{ padding: '22px 20px', borderColor: accent.line, background: accent.dim }}
+    >
       <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 16, marginBottom: 6 }}>
-        <h2 className="ww-kicker" style={{ margin: 0 }}>{label}</h2>
+        <h2 className="ww-kicker" style={{ margin: 0, color: accent.fg }}>{label}</h2>
         <span className="ww-num" style={{ fontSize: 13, color: 'var(--ww-text-3)', whiteSpace: 'nowrap' }}>
           ca. {block.minutes} min
         </span>
