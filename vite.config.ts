@@ -61,8 +61,8 @@ export default defineConfig(({ mode, command }) => {
         injectRegister: null,
         manifest: {
           id: command === 'build' ? PAGES_BASE : '/',
-          name: 'WHATWORK',
-          short_name: 'WHATWORK',
+          name: 'WHATWORK?',
+          short_name: 'WHATWORK?',
           description: 'Bygget til funktionel fitness.',
           lang: 'da-DK',
           dir: 'ltr',

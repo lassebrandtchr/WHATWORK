@@ -48,7 +48,7 @@ describe('WHATWORK — kerneflow', () => {
     await user.click(screen.getByRole('button', { name: 'Videre' }));
     expect(screen.getByRole('heading', { name: 'Hvad har du at arbejde med?' })).toBeInTheDocument();
 
-    await user.click(screen.getByRole('button', { name: 'Start WHATWORK' }));
+    await user.click(screen.getByRole('button', { name: 'Start WHATWORK?' }));
     expect(await screen.findByText('Hvad skal vi træne?')).toBeInTheDocument();
   });
 
@@ -58,7 +58,7 @@ describe('WHATWORK — kerneflow', () => {
 
     await user.click(await screen.findByRole('button', { name: 'Fortsæt uden bruger' }));
     await user.click(screen.getByRole('button', { name: /Avanceret/ }));
-    for (const label of ['Videre', 'Videre', 'Videre', 'Start WHATWORK']) {
+    for (const label of ['Videre', 'Videre', 'Videre', 'Start WHATWORK?']) {
       await user.click(screen.getByRole('button', { name: label }));
     }
 
@@ -303,7 +303,7 @@ describe('WHATWORK — ruter og indstillinger', () => {
       ['#/udstyr', 'Udstyr'],
       ['#/indstillinger', 'Indstillinger'],
       ['#/import-eksport', 'Import og eksport'],
-      ['#/om', 'Om WHATWORK'],
+      ['#/om', 'Om WHATWORK?'],
       ['#/program', 'Program'],
     ];
     for (const [hash, heading] of routes) {

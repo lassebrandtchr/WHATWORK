@@ -4,16 +4,26 @@ import type { CSSProperties, ReactNode } from 'react';
 /* Små byggeklodser, der går igen på tværs af skærmene. */
 
 export function Chip({
-  on = false, onClick, children, style, label,
+  on = false, onClick, children, style, label, tone = 'accent',
 }: {
   on?: boolean;
   onClick: () => void;
   children: ReactNode;
   style?: CSSProperties;
   label?: string;
+  /** `danger` bruges, hvor et valgt chip betyder "fravalgt" — orange ville læses
+   *  som tilvalgt, ligesom alle andre steder i appen. */
+  tone?: 'accent' | 'danger';
 }) {
   return (
-    <button type="button" className="ww-chip" aria-pressed={on} onClick={onClick} style={style} aria-label={label}>
+    <button
+      type="button"
+      className={`ww-chip${tone === 'danger' ? ' ww-chip--off' : ''}`}
+      aria-pressed={on}
+      onClick={onClick}
+      style={style}
+      aria-label={label}
+    >
       {children}
     </button>
   );

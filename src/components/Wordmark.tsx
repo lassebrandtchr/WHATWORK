@@ -1,7 +1,7 @@
 import type { CSSProperties } from 'react';
 
 /**
- * WHATWORK-logoet: to identiske tekstlag, hver klippet til en halvdel og skudt
+ * WHATWORK?-logoet: to identiske tekstlag, hver klippet til en halvdel og skudt
  * en anelse fra hinanden, så ordet får det "skårne" glitch-udtryk fra brandets
  * splash-skærm. Ren tekst i Archivo 900 — skarpt i enhver størrelse og på
  * enhver skærmtæthed, uden rasterbillede.
@@ -21,12 +21,12 @@ export function Wordmark({ size = 22, style }: { size?: number; style?: CSSPrope
   return (
     <span
       role="img"
-      aria-label="WHATWORK"
+      aria-label="WHATWORK?"
       style={{
         position: 'relative', display: 'inline-block', ...style,
       }}
     >
-      <span aria-hidden="true" style={{ ...glyph, opacity: 0 }}>WHATWORK</span>
+      <span aria-hidden="true" style={{ ...glyph, opacity: 0 }}>WHATWORK?</span>
       <span
         aria-hidden="true"
         style={{
@@ -36,7 +36,7 @@ export function Wordmark({ size = 22, style }: { size?: number; style?: CSSPrope
           transform: 'translate(-0.028em, -0.05em)',
         }}
       >
-        WHATWORK
+        WHATWORK?
       </span>
       <span
         aria-hidden="true"
@@ -47,7 +47,7 @@ export function Wordmark({ size = 22, style }: { size?: number; style?: CSSPrope
           transform: 'translate(0.028em, 0.05em)',
         }}
       >
-        WHATWORK
+        WHATWORK?
       </span>
     </span>
   );

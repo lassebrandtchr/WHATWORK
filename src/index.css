@@ -402,6 +402,16 @@ a {
   line-height: 1;
 }
 
+/* Et valgt chip, der betyder "fravalgt". Rød plus kryds, så det aldrig forveksles
+   med appens orange tilvalg. */
+.ww-chip--off[aria-pressed='true'] {
+  background: var(--ww-red-dim);
+  border-color: var(--ww-red-line);
+  color: var(--ww-red-soft);
+}
+
+.ww-chip--off[aria-pressed='true']::before { content: '✕'; }
+
 .ww-row {
   width: 100%;
   min-height: 60px;
@@ -786,7 +796,10 @@ a {
   -webkit-backdrop-filter: blur(14px) saturate(140%);
   border: 1px solid var(--ww-glass-line);
   pointer-events: none;
-  transition: transform 0.32s var(--ww-ease), width 0.32s var(--ww-ease);
+  /* Kun transform animeres — bredden sættes stadig af --ww-tab-w, men de fire faner
+     har lige bredde i grid'et (repeat(4,1fr)), så den ændrer sig reelt aldrig ved et
+     faneskift. At holde den ude af transition-listen undgår layout-thrash. */
+  transition: transform 0.32s var(--ww-ease);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1436,8 +1449,9 @@ a {
   background: linear-gradient(
     180deg,
     rgba(11, 13, 16, 0.78) 0%,
-    rgba(11, 13, 16, 0.34) 30%,
-    rgba(11, 13, 16, 0.84) 74%,
+    rgba(11, 13, 16, 0.32) 26%,
+    rgba(11, 13, 16, 0.62) 52%,
+    rgba(11, 13, 16, 0.86) 76%,
     #0b0d10 100%
   );
 }

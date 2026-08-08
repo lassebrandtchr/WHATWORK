@@ -37,7 +37,7 @@ export function Profile({
     { id: 'settings', label: 'Indstillinger' },
     { id: 'transfer', label: 'Import og eksport' },
     { id: 'help', label: 'Hjælp' },
-    { id: 'about', label: 'Om WHATWORK' },
+    { id: 'about', label: 'Om WHATWORK?' },
   ];
 
   return (

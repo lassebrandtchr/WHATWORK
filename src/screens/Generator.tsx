@@ -434,6 +434,12 @@ const equipmentNames = (e: Exercise): string[] => e.eq
   .filter((id) => id !== 'bodyweight')
   .map((id) => eng.EQUIPMENT_BY_ID[id]?.name ?? id);
 
+/** "Air Runner · Air Runner" hjælper ingen — udstyr, der allerede står i navnet, ryger ud. */
+const extraEquipment = (e: Exercise): string[] => {
+  const name = fold(e.name);
+  return equipmentNames(e).filter((eq) => !name.includes(fold(eq)));
+};
+
 /** Alt, en søgning må ramme. Teknikcuen holdes udenfor — den giver kun støj. */
 const haystack = (e: Exercise): string =>
   fold([e.name, e.id, ...muscleNames(e), ...equipmentNames(e)].join(' '));
@@ -447,7 +453,7 @@ const CATALOG: PickableExercise[] = PICKABLE
   .map((ex) => ({
     ex,
     search: haystack(ex),
-    meta: [...muscleNames(ex), ...equipmentNames(ex)].join(' · '),
+    meta: [...muscleNames(ex), ...extraEquipment(ex)].join(' · '),
   }))
   .sort((a, b) => a.ex.name.localeCompare(b.ex.name, 'da'));
 
@@ -600,7 +606,7 @@ function ExercisePicker({ gen, patch, toggle }: StepProps & { toggle: ToggleFn }
           <Kicker style={{ marginBottom: 10 }}>Fravalgt ({gen.excluded.length})</Kicker>
           <div className="ww-wrap">
             {chosen(gen.excluded).map((e) => (
-              <Chip key={`ex-${e.id}`} on onClick={() => skip(e.id)} label={`Fjern ${e.name} fra fravalgte`}>
+              <Chip key={`ex-${e.id}`} on tone="danger" onClick={() => skip(e.id)} label={`Fjern ${e.name} fra fravalgte`}>
                 {e.name}
               </Chip>
             ))}

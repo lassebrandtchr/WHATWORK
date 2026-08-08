@@ -93,3 +93,27 @@ describe('movementCount — AMRAP/For Time kan nu gå op til 5 øvelser', () => 
     expect(movementCount(40, 'interval', rnd)).toBeLessThanOrEqual(4);
   });
 });
+
+describe('ønskede accessory-øvelser', () => {
+  const withCurl = (): NormalizedRequest =>
+    normalizeRequest({ minutes: 30, men: 1, level: 3, focus: 'allround', included: ['db_curl'], seed: 7 });
+
+  /* En bicep curl skal aldrig dukke tilfældigt op i en Hyrox-hoveddel … */
+  it('bicep curl er ikke i den almindelige kandidatpulje', () => {
+    expect(mainPool(withCurl()).some((e) => e.id === 'db_curl')).toBe(false);
+  });
+
+  /* … men når brugeren udtrykkeligt beder om den, skal den lægges ind. */
+  it('bicep curl kommer med, når den er ønsket', () => {
+    const r = withCurl();
+    const chosen = chooseExercises(r, mulberry32(7), 4);
+    expect(chosen.map((e) => e.id)).toContain('db_curl');
+  });
+
+  it('en fravalgt øvelse kommer aldrig med', () => {
+    const r = normalizeRequest({
+      minutes: 30, men: 1, level: 3, focus: 'allround', excluded: ['burpee'], seed: 7,
+    });
+    expect(mainPool(r).some((e) => e.id === 'burpee')).toBe(false);
+  });
+});

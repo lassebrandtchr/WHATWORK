@@ -144,7 +144,7 @@ export function Onboarding({
       <div style={{ display: 'flex', gap: 10, paddingTop: 24 }}>
         <button type="button" className="ww-btn ww-btn--ghost ww-btn--lg" onClick={onNext}>Spring over</button>
         <button type="button" className="ww-btn ww-btn--primary ww-btn--lg ww-btn--block" onClick={onNext}>
-          {step === ONB_STEPS - 1 ? 'Start WHATWORK' : 'Videre'}
+          {step === ONB_STEPS - 1 ? 'Start WHATWORK?' : 'Videre'}
         </button>
       </div>
     </main>

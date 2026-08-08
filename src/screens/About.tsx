@@ -16,7 +16,7 @@ export function About() {
     <div style={{ paddingTop: 'calc(env(safe-area-inset-top) + 20px)', maxWidth: 760 }}>
       <PageHeader
         kicker="Om appen"
-        title="Om WHATWORK"
+        title="Om WHATWORK?"
         lede="En dansk, local-first træningsapp til funktionel fitness, partnerworkouts og holdtræning."
       />
 

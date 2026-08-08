@@ -27,7 +27,7 @@ export const SECONDARY: { id: Screen; label: string; hint: string }[] = [
   { id: 'settings', label: 'Indstillinger', hint: 'Tema, AI Mix, lyd og haptik' },
   { id: 'transfer', label: 'Import og eksport', hint: 'Tag dine data med dig' },
   { id: 'help', label: 'Hjælp', hint: 'Formater og timeren' },
-  { id: 'about', label: 'Om WHATWORK', hint: 'Hvad appen er — og ikke er' },
+  { id: 'about', label: 'Om WHATWORK?', hint: 'Hvad appen er — og ikke er' },
 ];
 
 export function MobileNav({ screen, onGo }: { screen: Screen; onGo: (s: Screen) => void }) {

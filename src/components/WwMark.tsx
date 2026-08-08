@@ -10,7 +10,7 @@ export function WwMark({ size = 56 }: { size?: number }) {
       height={size}
       viewBox="0 0 512 512"
       role="img"
-      aria-label="WHATWORK"
+      aria-label="WHATWORK?"
       style={{ display: 'block', flex: 'none' }}
     >
       <rect
