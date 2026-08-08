@@ -76,7 +76,7 @@ export function Home({
         <span style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
           <span style={{ fontSize: 22, fontWeight: 750, letterSpacing: '-0.02em' }}>Generér workout</span>
           <span style={{ fontSize: 13.5, fontWeight: 500, opacity: 0.82 }}>
-            Smart Mix bygger op til 64 sikre variationer og vælger den bedste
+            Smart Mix bygger op til 128 sikre variationer og vælger den bedste
           </span>
         </span>
       </button>

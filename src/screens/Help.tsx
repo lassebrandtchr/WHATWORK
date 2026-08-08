@@ -8,7 +8,7 @@ const SECTIONS: { title: string; body: string[] }[] = [
     body: [
       'Du fortæller, hvor lang tid I har, hvem der træner, hvilket niveau, hvilken retning og '
       + 'hvilket udstyr der står i salen. Resten er lokal regnekraft.',
-      'Smart Mix bygger op til 64 forskellige forslag på én gang. Hvert forslag køres gennem den '
+      'Smart Mix bygger op til 128 forskellige forslag på én gang. Hvert forslag køres gennem den '
       + 'samme kontrol: udstyr, niveau, skånehensyn, volumen på tekniske løft, tidsbudget og '
       + 'logistik. De forslag, der ikke lever op til kontrollen, kasseres — de bliver aldrig vist.',
       'Til sidst sammenlignes de tilbageværende med dine seneste workouts, så du ikke får samme '
