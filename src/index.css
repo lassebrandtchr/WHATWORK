@@ -656,7 +656,7 @@ a {
   border: 1px solid var(--ww-line);
   border-radius: var(--ww-r);
   background: var(--ww-surface);
-  max-height: min(56svh, 460px);
+  max-height: min(46svh, 384px);
   overflow-y: auto;
   overscroll-behavior: contain;
 }
@@ -768,6 +768,29 @@ a {
   z-index: 45;
   border-top: 1px solid var(--ww-line);
   padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* "Liquid glass"-highlight, der glider hen over den aktive fane. Positionen sættes
+   af MobileNav via --ww-tab-x/--ww-tab-w (målt med getBoundingClientRect), selve
+   glasset genbruger appens eksisterende --ww-glass-tokens. */
+.ww-tab-highlight {
+  position: absolute;
+  top: 6px;
+  left: 0;
+  width: var(--ww-tab-w, 0px);
+  height: 46px;
+  transform: translateX(var(--ww-tab-x, 0px));
+  border-radius: 14px;
+  background: var(--ww-glass);
+  backdrop-filter: blur(14px) saturate(140%);
+  -webkit-backdrop-filter: blur(14px) saturate(140%);
+  border: 1px solid var(--ww-glass-line);
+  pointer-events: none;
+  transition: transform 0.32s var(--ww-ease), width 0.32s var(--ww-ease);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ww-tab-highlight { transition: none; }
 }
 
 .ww-tab {

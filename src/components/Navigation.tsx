@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useLayoutEffect, useRef } from 'react';
 import { initialsOf } from '../lib/format.js';
 import { Glyph, ThemeToggle } from './ui.js';
 import { Wordmark } from './Wordmark.js';
@@ -31,14 +31,32 @@ export const SECONDARY: { id: Screen; label: string; hint: string }[] = [
 ];
 
 export function MobileNav({ screen, onGo }: { screen: Screen; onGo: (s: Screen) => void }) {
+  const barRef = useRef<HTMLElement>(null);
+  const activeRef = useRef<HTMLButtonElement>(null);
+
+  // Måler den aktive fanes position og skriver den som CSS-variabler, så
+  // .ww-tab-highlight kan glide dertil med en almindelig CSS-transition — ingen
+  // animationsbibliotek nødvendigt.
+  useLayoutEffect(() => {
+    const bar = barRef.current;
+    const active = activeRef.current;
+    if (!bar || !active) return;
+    const barRect = bar.getBoundingClientRect();
+    const activeRect = active.getBoundingClientRect();
+    bar.style.setProperty('--ww-tab-x', `${activeRect.left - barRect.left}px`);
+    bar.style.setProperty('--ww-tab-w', `${activeRect.width}px`);
+  }, [screen]);
+
   return (
-    <nav className="ww-tabbar ww-glass" aria-label="Hovedmenu">
+    <nav className="ww-tabbar ww-glass" aria-label="Hovedmenu" ref={barRef}>
+      <span className="ww-tab-highlight" aria-hidden="true" />
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)' }}>
         {TABS.map((tab) => (
           <button
             key={tab.id}
             type="button"
             className="ww-tab"
+            ref={screen === tab.id ? activeRef : undefined}
             aria-current={screen === tab.id ? 'page' : undefined}
             onClick={() => onGo(tab.id)}
           >
