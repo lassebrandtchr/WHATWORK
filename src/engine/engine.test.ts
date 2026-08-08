@@ -380,14 +380,52 @@ describe('timerplan', () => {
     w.blocks.forEach((b) => expect(blockIds.has(b.id)).toBe(true));
   });
 
-  it('laver ét segment pr. interval i en EMOM', () => {
+  it('laver ét segment pr. interval i en EMOM (eller arbejde+hvile-cyklusser ved høj intensitet)', () => {
     const w = build({ minutes: 20, men: 1, level: 3, condition: 9, strength: 1, seed: 1 });
     const plan = eng.buildTimerPlan(w);
     const cond = w.blocks.find((b) => b.kind === 'conditioning');
     if (cond?.format === 'emom') {
       const work = plan.segments.filter((s) => s.blockId === cond.id && s.kind === 'work');
-      expect(work.length).toBe(cond.rounds);
+      const rest = plan.segments.filter((s) => s.blockId === cond.id && s.kind === 'rest');
       expect(work[0]?.seconds).toBe(60);
+      if (cond.restEveryCycle) {
+        const n = cond.movements.length;
+        expect(work.length).toBe((cond.rounds ?? 0) * n);
+        expect(rest.length).toBe(cond.rounds);
+        expect(rest[0]?.seconds).toBe(60);
+        expect(rest[0]?.label).toContain('Hvile');
+      } else {
+        expect(work.length).toBe(cond.rounds);
+        expect(rest.length).toBe(0);
+      }
+    }
+  });
+
+  it('bygger en EMOM med hvile-cyklus for en workout, hvor det er tydeligt intenst', () => {
+    let w: Workout | null = null;
+    let cond: Block | undefined;
+    for (let seed = 1; seed <= 300 && !cond; seed++) {
+      const candidate = build({ minutes: 25, men: 1, level: 3, condition: 10, strength: 1, seed });
+      const c = candidate.blocks.find((b) => b.kind === 'conditioning' && b.format === 'emom' && b.restEveryCycle);
+      if (c) { w = candidate; cond = c; }
+    }
+    if (!w || !cond) {
+      throw new Error('fandt ingen EMOM-med-hvile-workout i 300 forsøg — undersøg formatPool/movementCount');
+    }
+    const plan = eng.buildTimerPlan(w);
+    const rest = plan.segments.filter((s) => s.blockId === cond?.id && s.kind === 'rest');
+    const work = plan.segments.filter((s) => s.blockId === cond?.id && s.kind === 'work');
+    expect(rest.length).toBe(cond.rounds);
+    expect(work.length).toBe((cond.rounds ?? 0) * cond.movements.length);
+    // Rækkefølgen skal være N arbejdssegmenter, så ét hvilesegment, gentaget.
+    const relevant = plan.segments.filter((s) => s.blockId === cond?.id);
+    const n = cond.movements.length;
+    for (let r = 0; r < (cond.rounds ?? 0); r++) {
+      const cycleStart = r * (n + 1);
+      for (let i = 0; i < n; i++) {
+        expect(relevant[cycleStart + i]?.kind).toBe('work');
+      }
+      expect(relevant[cycleStart + n]?.kind).toBe('rest');
     }
   });
 

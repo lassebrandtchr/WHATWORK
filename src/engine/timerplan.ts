@@ -118,6 +118,26 @@ function conditioningSegments(block: Block, workout: Workout): TimerSegment[] {
   if (format && isEmomFamily(format)) {
     const every = block.everySec ?? 60;
     const n = block.movements.length || 1;
+    if (block.restEveryCycle) {
+      for (let r = 0; r < rounds; r++) {
+        for (let i = 0; i < n; i++) {
+          const m = block.movements[i] as Movement;
+          segs.push({
+            id: nextId(), blockId: block.id, blockTitle: title, kind: 'work',
+            label: `${FORMATS[format]?.name ?? format} · runde ${r + 1} af ${rounds} · min ${i + 1}`,
+            seconds: every, countUp: false, movement: m, round: r + 1, totalRounds: rounds,
+            hint: 'Arbejd, og hvil resten af minuttet.',
+          });
+        }
+        segs.push({
+          id: nextId(), blockId: block.id, blockTitle: title, kind: 'rest',
+          label: `Hvile · runde ${r + 1} af ${rounds}`,
+          seconds: every, countUp: false,
+          hint: 'Fuld pause — saml kræfter til næste runde.',
+        });
+      }
+      return segs;
+    }
     for (let i = 0; i < rounds; i++) {
       const m = block.movements[i % n] as Movement;
       segs.push({
