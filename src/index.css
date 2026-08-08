@@ -814,6 +814,12 @@ a {
   -webkit-backdrop-filter: blur(14px) saturate(140%);
   border: 1px solid var(--ww-glass-line);
   pointer-events: none;
+  /* z-index: -1 er nødvendigt, ikke kosmetisk — som positioneret element ville
+     highlighten ellers altid blive tegnet ovenpå de ikke-positionerede fane-knapper
+     (§ CSS-stacking: positionerede elementer lægger sig over normal flow, uanset
+     DOM-rækkefølge), så teksten på den aktive fane blev visket ud af det blurrede
+     glas. Negativ z-index sender den bagom i stedet. */
+  z-index: -1;
   /* Kun transform animeres — bredden sættes stadig af --ww-tab-w, men de fire faner
      har lige bredde i grid'et (repeat(4,1fr)), så den ændrer sig reelt aldrig ved et
      faneskift. At holde den ude af transition-listen undgår layout-thrash. */
