@@ -151,6 +151,19 @@ export function validate(
     }
   }
 
+  // Hård regel: en hoveddel på over 25 minutter skal have mindst 4 forskellige
+  // øvelser. Opvarmning, cooldown og en selvstændig styrke-/skills-del tæller
+  // ikke med — de er andre blokke med deres eget øvelsesvalg.
+  if (main && main.kind === 'conditioning' && main.minutes > 25) {
+    const distinctMain = new Set(main.movements.map((m) => m.exerciseId)).size;
+    if (distinctMain < 4) {
+      issues.push({
+        code: 'MAIN_VARIETY', sev: 'error',
+        msg: `Hoveddelen varer over 25 minutter og skal have mindst 4 forskellige øvelser (har ${distinctMain}).`,
+      });
+    }
+  }
+
   return issues;
 }
 

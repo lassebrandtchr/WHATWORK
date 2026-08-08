@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { StarField } from './StarField.js';
 import { Glyph } from './ui.js';
 
 /**
@@ -57,9 +58,7 @@ export function SurpriseButton({
         aria-expanded={needsTime ? open : undefined}
         onClick={() => (needsTime ? setOpen((v) => !v) : onSurprise(minutes))}
       >
-        <span className="ww-sparkle__dust ww-sparkle__dust--a" aria-hidden="true" />
-        <span className="ww-sparkle__dust ww-sparkle__dust--b" aria-hidden="true" />
-        <span className="ww-sparkle__dust ww-sparkle__dust--c" aria-hidden="true" />
+        <StarField />
         <span className="ww-sparkle__icon">
           <Glyph name="sparkle" size={compact ? 20 : 32} />
         </span>

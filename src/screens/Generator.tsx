@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import * as eng from '../engine/index.js';
 import type { CareId, Exercise, FocusId, MuscleId, MuscleRegion } from '../engine/index.js';
 import { EquipmentIcon } from '../components/EquipmentIcon.js';
+import { GenerateWorkoutButton } from '../components/GenerateWorkoutButton.js';
 import { Photo } from '../components/Photo.js';
 import { SurpriseButton } from '../components/SurpriseButton.js';
 import { Chip, Counter, Glyph, Kicker, Note, OptionRow, StepHeader } from '../components/ui.js';
@@ -129,10 +130,7 @@ export function Generator({
                 </div>
               ))}
             </div>
-            <button type="button" className="ww-btn ww-btn--primary ww-btn--lg ww-btn--block" onClick={onGenerate}>
-              <Glyph name="bolt" size={20} />
-              Generér workout
-            </button>
+            <GenerateWorkoutButton className="ww-btn--lg ww-btn--block" onClick={onGenerate} />
             {/* Tiden er allerede valgt her, så overraskelsen kan gå direkte i gang. */}
             <div style={{ marginTop: 10 }}>
               <SurpriseButton compact minutes={gen.minutes} onSurprise={onSurprise} />

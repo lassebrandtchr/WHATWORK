@@ -1,3 +1,4 @@
+import { GenerateWorkoutButton } from '../components/GenerateWorkoutButton.js';
 import { Photo } from '../components/Photo.js';
 import { EmptyState, Glyph, PageHeader } from '../components/ui.js';
 import { relDate } from '../lib/format.js';
@@ -31,7 +32,7 @@ export function Favorites({
           <EmptyState
             title="Ingen favoritter endnu"
             body="Tryk «Gør til favorit» på en workout, så lander den her og kan køres igen med ét tryk."
-            action={<button type="button" className="ww-btn ww-btn--primary ww-btn--lg" onClick={onGenerate}>Generér workout</button>}
+            action={<GenerateWorkoutButton className="ww-btn--lg" onClick={onGenerate} />}
           />
         </>
       ) : (

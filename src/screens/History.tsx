@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { GenerateWorkoutButton } from '../components/GenerateWorkoutButton.js';
 import { Photo } from '../components/Photo.js';
 import { EmptyState, Glyph, PageHeader } from '../components/ui.js';
 import { fmtDuration, relDate } from '../lib/format.js';
@@ -80,7 +81,7 @@ export function History({
         <EmptyState
           title="Ingen workouts endnu"
           body="Når du gemmer eller gennemfører en workout, lander den her — med format, tid og resultat."
-          action={<button type="button" className="ww-btn ww-btn--primary ww-btn--lg" onClick={onGenerate}>Generér workout</button>}
+          action={<GenerateWorkoutButton className="ww-btn--lg" onClick={onGenerate} />}
         />
       ) : (
         <>

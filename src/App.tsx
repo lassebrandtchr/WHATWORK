@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { BottomBar, DesktopHeader, Drawer, MobileNav } from './components/Navigation.js';
 import { Confetti } from './components/Confetti.js';
+import { GenerateWorkoutButton } from './components/GenerateWorkoutButton.js';
 import { SurpriseButton } from './components/SurpriseButton.js';
 import { EmptyState, Glyph, ThemeToggle } from './components/ui.js';
 import { Wordmark } from './components/Wordmark.js';
@@ -234,9 +235,7 @@ export function App() {
                   body="Der er ikke nogen workout at vise lige nu. Byg en ny, eller åbn en fra din historik."
                   action={(
                     <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                      <button type="button" className="ww-btn ww-btn--primary ww-btn--lg" onClick={ww.resetGenerator}>
-                        Generér workout
-                      </button>
+                      <GenerateWorkoutButton className="ww-btn--lg" onClick={ww.resetGenerator} />
                       <button type="button" className="ww-btn ww-btn--lg" onClick={() => ww.go('history')}>
                         Åbn historikken
                       </button>

@@ -94,6 +94,23 @@ describe('movementCount — AMRAP/For Time kan nu gå op til 5 øvelser', () => 
   });
 });
 
+describe('movementCount — hoveddele over 25 minutter skal have mindst 4 øvelser', () => {
+  it('rammer aldrig under 4 øvelser over 25 minutter, uanset terningen', () => {
+    for (const rnd of [() => 0, () => 0.5, () => 0.999]) {
+      for (const format of ['emom', 'e2mom', 'interval', 'team_rotation', 'you_go_i_go', 'partner_shared', 'ladder', 'amrap', 'fortime'] as const) {
+        expect(movementCount(30, format, rnd)).toBeGreaterThanOrEqual(4);
+        expect(movementCount(45, format, rnd)).toBeGreaterThanOrEqual(4);
+      }
+    }
+  });
+
+  it('lader stadig 18–25 minutter variere frit ned til 3 øvelser', () => {
+    const rnd = () => 0.999; // over 0.45-tærsklen → vælger den lave gren
+    expect(movementCount(20, 'emom', rnd)).toBe(3);
+    expect(movementCount(25, 'interval', rnd)).toBe(3);
+  });
+});
+
 describe('ønskede accessory-øvelser', () => {
   const withCurl = (): NormalizedRequest =>
     normalizeRequest({ minutes: 30, men: 1, level: 3, focus: 'allround', included: ['db_curl'], seed: 7 });

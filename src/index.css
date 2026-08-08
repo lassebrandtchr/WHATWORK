@@ -910,15 +910,17 @@ a {
   width: 100%;
   min-height: 96px;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 18px;
+  justify-content: center;
+  gap: 4px;
   padding: 18px 22px;
   border: none;
   border-radius: var(--ww-r-lg);
   background: var(--ww-orange);
   color: var(--ww-on-orange);
   cursor: pointer;
-  text-align: left;
+  text-align: center;
   box-shadow: 0 18px 44px -26px var(--ww-orange);
   transition: transform 0.14s var(--ww-ease), background 0.14s;
 }
@@ -926,7 +928,7 @@ a {
 .ww-hero-cta:hover { background: var(--ww-orange-hi); }
 .ww-hero-cta:active { transform: translateY(2px); }
 
-.ww-hero-cta__text { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.ww-hero-cta__text { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; min-width: 0; }
 .ww-hero-cta__title { font-size: 22px; font-weight: 750; letter-spacing: -0.02em; }
 .ww-hero-cta__sub { font-size: 13.5px; font-weight: 500; opacity: 0.82; }
 
@@ -953,8 +955,10 @@ a {
   flex: 1;
   min-height: 96px;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 16px;
+  justify-content: center;
+  gap: 4px;
   padding: 18px 20px;
   border: 1px solid var(--ww-navy-line);
   border-radius: var(--ww-r-lg);
@@ -963,7 +967,7 @@ a {
     linear-gradient(148deg, var(--ww-navy-hi) 0%, var(--ww-navy) 46%, var(--ww-navy-deep) 100%);
   color: var(--ww-on-navy);
   cursor: pointer;
-  text-align: left;
+  text-align: center;
   /* Knappen inviterer til gentagne tryk; uden dette markerer et hurtigt
      dobbelttryk etiketten i stedet for at aktivere knappen. */
   user-select: none;
@@ -1004,50 +1008,43 @@ a {
   animation: ww-sparkle-sheen 3.2s cubic-bezier(0.4, 0.05, 0.5, 0.95) infinite;
 }
 
-.ww-sparkle__dust {
+/* Stjernefeltet — se StarField.tsx. Hvert korn er sin egen node (to lag: en
+   ydre "anker"-node, JS flytter væk fra musen via --rx/--ry, og en indre prik,
+   der blinker efter sit eget lags takt) i stedet for et fladt baggrundslag, så
+   hvert korn kan vige for markøren uden at de andre to lags takt forstyrres.
+   Feltet selv er inset:0 og pointer-events:none — knappen forbliver fuldt
+   klikbar under det, og lyttelsen efter musen sker på selve knappen. */
+.ww-star-field { position: absolute; inset: 0; z-index: -1; pointer-events: none; overflow: hidden; container-type: inline-size; }
+
+.ww-star-anchor {
   position: absolute;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-  background-repeat: no-repeat;
+  transform: translate3d(var(--rx, 0px), var(--ry, 0px), 0);
+  transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Under ca. 150px bredde (empty-state-knapperne) vises kun det tætteste lag af
+   korn — nok til at læses som stjernestøv uden at flimre på en lille flade. */
+.ww-star-anchor[data-tier='2'], .ww-star-anchor[data-tier='3'] { display: none; }
+@container (min-width: 150px) {
+  .ww-star-anchor[data-tier='2'] { display: block; }
+}
+@container (min-width: 260px) {
+  .ww-star-anchor[data-tier='3'] { display: block; }
+}
+
+.ww-star-dot {
+  display: block;
+  border-radius: 50%;
+  background: rgb(var(--ww-navy-spark) / 100%);
   /* Halo om hvert korn — uden den læses prikkerne som støj frem for som lys. */
   filter: drop-shadow(0 0 3px rgb(var(--ww-navy-spark) / 55%));
 }
 
-.ww-sparkle__dust--a {
-  background-image:
-    radial-gradient(circle 1.5px at 7% 24%, rgb(var(--ww-navy-spark) / 95%), rgb(var(--ww-navy-spark) / 0%)),
-    radial-gradient(circle 1.1px at 19% 70%, rgb(var(--ww-navy-spark) / 90%), rgb(var(--ww-navy-spark) / 0%)),
-    radial-gradient(circle 1.7px at 32% 15%, rgb(var(--ww-navy-spark) / 95%), rgb(var(--ww-navy-spark) / 0%)),
-    radial-gradient(circle 1.2px at 45% 83%, rgb(var(--ww-navy-spark) / 88%), rgb(var(--ww-navy-spark) / 0%)),
-    radial-gradient(circle 1.6px at 58% 33%, rgb(var(--ww-navy-spark) / 95%), rgb(var(--ww-navy-spark) / 0%)),
-    radial-gradient(circle 1.1px at 72% 75%, rgb(var(--ww-navy-spark) / 88%), rgb(var(--ww-navy-spark) / 0%)),
-    radial-gradient(circle 1.8px at 87% 26%, rgb(var(--ww-navy-spark) / 95%), rgb(var(--ww-navy-spark) / 0%)),
-    radial-gradient(circle 1.2px at 95% 63%, rgb(var(--ww-navy-spark) / 90%), rgb(var(--ww-navy-spark) / 0%));
-  animation: ww-dust-a 2.9s ease-in-out infinite;
-}
-
-.ww-sparkle__dust--b {
-  background-image:
-    radial-gradient(circle 1.3px at 12% 80%, rgb(var(--ww-navy-spark) / 92%), rgb(var(--ww-navy-spark) / 0%)),
-    radial-gradient(circle 2px at 27% 41%, rgb(var(--ww-navy-spark) / 98%), rgb(var(--ww-navy-spark) / 0%)),
-    radial-gradient(circle 1.2px at 40% 21%, rgb(var(--ww-navy-spark) / 88%), rgb(var(--ww-navy-spark) / 0%)),
-    radial-gradient(circle 1.6px at 53% 68%, rgb(var(--ww-navy-spark) / 95%), rgb(var(--ww-navy-spark) / 0%)),
-    radial-gradient(circle 1.1px at 67% 17%, rgb(var(--ww-navy-spark) / 88%), rgb(var(--ww-navy-spark) / 0%)),
-    radial-gradient(circle 1.9px at 80% 54%, rgb(var(--ww-navy-spark) / 96%), rgb(var(--ww-navy-spark) / 0%)),
-    radial-gradient(circle 1.3px at 92% 86%, rgb(var(--ww-navy-spark) / 90%), rgb(var(--ww-navy-spark) / 0%));
-  animation: ww-dust-b 4.3s ease-in-out infinite;
-}
-
-.ww-sparkle__dust--c {
-  background-image:
-    radial-gradient(circle 2.2px at 9% 50%, rgb(var(--ww-navy-spark) / 100%), rgb(var(--ww-navy-spark) / 0%)),
-    radial-gradient(circle 1.4px at 36% 59%, rgb(var(--ww-navy-spark) / 92%), rgb(var(--ww-navy-spark) / 0%)),
-    radial-gradient(circle 1.7px at 63% 88%, rgb(var(--ww-navy-spark) / 95%), rgb(var(--ww-navy-spark) / 0%)),
-    radial-gradient(circle 2.4px at 77% 31%, rgb(var(--ww-navy-spark) / 100%), rgb(var(--ww-navy-spark) / 0%)),
-    radial-gradient(circle 1.3px at 89% 47%, rgb(var(--ww-navy-spark) / 90%), rgb(var(--ww-navy-spark) / 0%));
-  animation: ww-dust-c 6.1s ease-in-out infinite;
-}
+/* Samme tre primtalsagtigt forskudte takter som før (2,9 / 4,3 / 6,1 s), nu
+   pr. korn i stedet for pr. baggrundslag. */
+.ww-star-dot--a { animation: ww-dust-a 2.9s ease-in-out infinite; }
+.ww-star-dot--b { animation: ww-dust-b 4.3s ease-in-out infinite; }
+.ww-star-dot--c { animation: ww-dust-c 6.1s ease-in-out infinite; }
 
 .ww-sparkle__icon {
   display: flex;
@@ -1057,11 +1054,12 @@ a {
   animation: ww-sparkle-icon 3.2s ease-in-out infinite;
 }
 
-.ww-sparkle__text { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.ww-sparkle__text { display: flex; flex-direction: column; align-items: center; gap: 3px; min-width: 0; }
 .ww-sparkle__label { font-size: 22px; font-weight: 750; letter-spacing: -0.02em; }
 .ww-sparkle__sub { font-size: 13.5px; font-weight: 500; color: rgb(var(--ww-navy-spark) / 82%); }
 
 .ww-sparkle--sm {
+  flex-direction: row;
   min-height: 54px;
   gap: 10px;
   padding: 0 16px;
@@ -1123,8 +1121,9 @@ a {
    tidspunkt, hvor alle tre lag er synlige, og strejfet lægges bare fladt på. */
 @media (prefers-reduced-motion: reduce) {
   .ww-sparkle::before { animation: none; transform: none; opacity: 0.35; }
-  .ww-sparkle__dust { animation: none; opacity: 0.8; }
+  .ww-star-dot { animation: none; opacity: 0.8; }
   .ww-sparkle__icon { animation: none; }
+  .ww-star-anchor, .ww-kb-anchor { transition: none; }
 }
 
 /* ---------------------------------------------------------------------------
@@ -1171,11 +1170,8 @@ a {
 @media (max-width: 599px) {
   .ww-cta-pair .ww-hero-cta,
   .ww-cta-pair .ww-sparkle {
-    /* Ikonet øverst i begge, så etiketterne starter på samme linje — også når
-       den ene knap har to ord, der ombrydes, og den anden kun har ét. */
-    flex-direction: column;
-    align-items: flex-start;
-    justify-content: flex-start;
+    /* Begge knapper er allerede centrerede lodret og vandret — her justeres kun
+       plads og skriftstørrelse til den smallere spalte. */
     gap: 10px;
     min-height: 116px;
     padding: 16px 15px;
@@ -1228,6 +1224,7 @@ a {
 .ww-list-item:hover { color: var(--ww-orange); }
 
 .ww-tile {
+  width: 100%;
   min-height: 88px;
   border: 1px solid var(--ww-line);
   background: var(--ww-surface);
@@ -1552,8 +1549,7 @@ a {
   initial-value: 0;
 }
 
-.ww-btn--primary:not(:disabled),
-.ww-hero-cta:not(:disabled),
+.ww-btn--primary:not(.ww-btn--kb):not(:disabled),
 .ww-timer__btn--main:not(.is-running):not(:disabled) {
   --ww-glow: 0;
   --ww-glow-lift: 0;
@@ -1583,8 +1579,7 @@ a {
     transform 0.16s var(--ww-ease);
 }
 
-.ww-btn--primary:not(:disabled)::after,
-.ww-hero-cta:not(:disabled)::after,
+.ww-btn--primary:not(.ww-btn--kb):not(:disabled)::after,
 .ww-timer__btn--main:not(.is-running):not(:disabled)::after {
   content: '';
   position: absolute;
@@ -1619,31 +1614,88 @@ a {
 }
 
 /* Hover lægger sig oven i pulsen frem for at afløse den. */
-:is(.ww-btn--primary, .ww-hero-cta, .ww-timer__btn--main:not(.is-running)):not(:disabled):hover {
+:is(.ww-btn--primary:not(.ww-btn--kb), .ww-timer__btn--main:not(.is-running)):not(:disabled):hover {
   --ww-glow-lift: 0.9;
   transform: translateY(-1px);
 }
 
-:is(.ww-btn--primary, .ww-hero-cta, .ww-timer__btn--main:not(.is-running)):not(:disabled):active {
+:is(.ww-btn--primary:not(.ww-btn--kb), .ww-timer__btn--main:not(.is-running)):not(:disabled):active {
   --ww-glow-lift: 0.15;
   transform: translateY(1px);
 }
 
 /* Uden bevægelse holder knappen en fast, tydelig glød — den må ikke se død ud. */
 @media (prefers-reduced-motion: reduce) {
-  .ww-btn--primary:not(:disabled),
-  .ww-hero-cta:not(:disabled),
+  .ww-btn--primary:not(.ww-btn--kb):not(:disabled),
   .ww-timer__btn--main:not(.is-running):not(:disabled) {
     --ww-glow: 0.55;
     animation: none;
   }
 
-  .ww-btn--primary:not(:disabled)::after,
-  .ww-hero-cta:not(:disabled)::after,
+  .ww-btn--primary:not(.ww-btn--kb):not(:disabled)::after,
   .ww-timer__btn--main:not(.is-running):not(:disabled)::after {
     animation: none;
     opacity: 0;
   }
+}
+
+/* ---------------------------------------------------------------------------
+   Kettlebells på "Generér workout"
+
+   Alle "Generér workout"-knapper i appen deler samme levende mønster: i stedet
+   for ét lyn i venstre side og en pulserende glød, er der en håndfuld små og
+   mellemstore kettlebells spredt ud over hele fladen (se KettlebellField.tsx).
+   De svæver stille hver for sig og viger blidt for musen på desktop — ellers
+   ligger knappen helt roligt. `.ww-btn--kb` er modifieren, der lægges på de
+   almindelige `.ww-btn--primary`-knapper; `.ww-hero-cta` har mønstret indbygget.
+--------------------------------------------------------------------------- */
+
+.ww-hero-cta,
+.ww-btn--kb {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+}
+
+.ww-hero-cta:hover,
+.ww-btn--kb:not(:disabled):hover { transform: translateY(-1px); }
+.ww-hero-cta:active,
+.ww-btn--kb:not(:disabled):active { transform: translateY(1px); }
+
+.ww-btn--kb__label { position: relative; z-index: 1; }
+
+.ww-kb-field { position: absolute; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; container-type: inline-size; }
+
+.ww-kb-anchor {
+  position: absolute;
+  transform: translate3d(var(--rx, 0px), var(--ry, 0px), 0);
+  transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Samme optrapning som stjernefeltet: få korn på en lille knap, hele mønstret
+   på hero-CTA'en. */
+.ww-kb-anchor[data-tier='2'], .ww-kb-anchor[data-tier='3'] { display: none; }
+@container (min-width: 150px) {
+  .ww-kb-anchor[data-tier='2'] { display: block; }
+}
+@container (min-width: 260px) {
+  .ww-kb-anchor[data-tier='3'] { display: block; }
+}
+
+.ww-kb-idle {
+  display: block;
+  color: rgb(var(--ww-glow-sheen) / 100%);
+  animation: ww-kb-float 8s ease-in-out infinite;
+  transform-origin: center;
+}
+
+@keyframes ww-kb-float {
+  0%, 100% { transform: translate3d(0, 0, 0) rotate(0deg); }
+  50% { transform: translate3d(0, -5px, 0) rotate(4deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ww-kb-idle { animation: none; }
 }
 
 /* ---------------------------------------------------------------------------

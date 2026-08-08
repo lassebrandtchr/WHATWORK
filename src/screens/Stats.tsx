@@ -1,4 +1,5 @@
 import * as eng from '../engine/index.js';
+import { GenerateWorkoutButton } from '../components/GenerateWorkoutButton.js';
 import { Photo } from '../components/Photo.js';
 import { EmptyState, Meter, PageHeader } from '../components/ui.js';
 import { fmtDuration, isoWeek } from '../lib/format.js';
@@ -45,7 +46,7 @@ export function Stats({ history, onGenerate }: { history: HistoryEntry[]; onGene
         <EmptyState
           title="Ingen data endnu"
           body="Så snart du har gennemført din første workout, kan du følge volumen, fordeling og streak her."
-          action={<button type="button" className="ww-btn ww-btn--primary ww-btn--lg" onClick={onGenerate}>Generér workout</button>}
+          action={<GenerateWorkoutButton className="ww-btn--lg" onClick={onGenerate} />}
         />
       </div>
     );

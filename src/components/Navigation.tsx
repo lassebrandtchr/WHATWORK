@@ -1,6 +1,7 @@
 import { useEffect, useLayoutEffect, useRef } from 'react';
 import type { ReactNode } from 'react';
 import { initialsOf } from '../lib/format.js';
+import { GenerateWorkoutButton } from './GenerateWorkoutButton.js';
 import { Glyph, ThemeToggle } from './ui.js';
 import { Wordmark } from './Wordmark.js';
 import { WwMark } from './WwMark.js';
@@ -184,9 +185,13 @@ export function BottomBar({
               {secondary.label}
             </button>
           ) : null}
-          <button type="button" className="ww-btn ww-btn--primary ww-btn--lg ww-btn--block" onClick={onClick}>
-            {label}
-          </button>
+          {label === 'Generér workout' ? (
+            <GenerateWorkoutButton className="ww-btn--lg ww-btn--block" onClick={onClick} />
+          ) : (
+            <button type="button" className="ww-btn ww-btn--primary ww-btn--lg ww-btn--block" onClick={onClick}>
+              {label}
+            </button>
+          )}
         </div>
         {extra ? <div style={{ marginTop: 8 }}>{extra}</div> : null}
       </div>

@@ -120,9 +120,18 @@ function bucketOrder(req: NormalizedRequest, rnd: Rng): string[] {
   return [...new Set(order)];
 }
 
+/**
+ * Regel: en hoveddel på over 25 minutter skal have mindst 4 forskellige øvelser
+ * — se `MAIN_VARIETY` i validate.ts, som fanger de tilfælde, hvor øvelsespuljen
+ * reelt er for lille til at indfri det. Under 25 minutter må grenene stadig
+ * variere frit ned til 2–3, som før.
+ */
 export function movementCount(minutes: number, format: FormatId, rnd: Rng): number {
   if (format === 'chipper') return minutes >= 30 ? 5 : 4;
-  if (format === 'ladder') return 2 + (rnd() < 0.4 ? 1 : 0);
+  if (format === 'ladder') {
+    if (minutes > 25) return rnd() < 0.5 ? 5 : 4;
+    return 2 + (rnd() < 0.4 ? 1 : 0);
+  }
   if (format === 'strength') return 0;
   if (format === 'amrap' || format === 'fortime') {
     if (minutes <= 10) return 2;
@@ -132,7 +141,8 @@ export function movementCount(minutes: number, format: FormatId, rnd: Rng): numb
   }
   if (minutes <= 10) return 2;
   if (minutes <= 18) return rnd() < 0.5 ? 2 : 3;
-  return rnd() < 0.45 ? 4 : 3;
+  if (minutes <= 25) return rnd() < 0.45 ? 4 : 3;
+  return 4;
 }
 
 /**
@@ -338,6 +348,10 @@ function humanError(issues: Issue[], req: NormalizedRequest): string {
   }
   if (e.code === 'LEVEL') {
     return 'De ønskede øvelser kræver et højere niveau, end du har valgt.';
+  }
+  if (e.code === 'MAIN_VARIETY') {
+    return 'Med den valgte tid og de valgte øvelser kan hoveddelen ikke nå op på 4 forskellige øvelser, '
+      + 'som kræves over 25 minutter. Tilføj mere udstyr, eller fjern et fravalg.';
   }
   return e.msg;
 }

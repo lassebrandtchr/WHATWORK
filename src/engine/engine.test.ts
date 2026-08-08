@@ -319,6 +319,40 @@ describe('udstyr og validering', () => {
       expect(allAccessory).toBe(false);
     }
   });
+
+  it('giver hoveddelen mindst 4 forskellige øvelser, når den varer over 25 minutter', () => {
+    let checked = 0;
+    for (let seed = 1; seed <= 200; seed++) {
+      const w = build({ minutes: 45, men: 1, level: 4, condition: 8, seed });
+      const cond = w.blocks.find((b) => b.kind === 'conditioning');
+      if (!cond || cond.minutes <= 25) continue;
+      checked += 1;
+      const distinct = new Set(cond.movements.map((m) => m.exerciseId)).size;
+      expect(distinct).toBeGreaterThanOrEqual(4);
+    }
+    // Sikrer at testen faktisk rammer situationen, den skal dække.
+    expect(checked).toBeGreaterThan(20);
+  });
+
+  it('tæller ikke opvarmning eller en selvstændig styrkedel med i 4-øvelses-kravet', () => {
+    let checked = 0;
+    // Lang session, så strength_cond'ens conditioning-andel (~55 % af hoveddelen)
+    // reelt kan komme over 25 minutter, mens der stadig er en selvstændig styrkedel.
+    for (let seed = 1; seed <= 200; seed++) {
+      const w = build({
+        minutes: 75, men: 1, level: 5, condition: 9, strength: 9, focus: 'heavy', seed,
+      });
+      const cond = w.blocks.find((b) => b.kind === 'conditioning');
+      const st = w.blocks.find((b) => b.kind === 'strength');
+      if (!cond || !st || cond.minutes <= 25) continue;
+      checked += 1;
+      // Kravet gælder kun hoveddelen (conditioning) — en sameksisterende, kortere
+      // styrkedel må godt have færre end 4 forskellige øvelser.
+      const distinct = new Set(cond.movements.map((m) => m.exerciseId)).size;
+      expect(distinct).toBeGreaterThanOrEqual(4);
+    }
+    expect(checked).toBeGreaterThan(0);
+  });
 });
 
 describe('intern kandidat-scoring (bruges kun til at vælge den bedste af op til 64 kandidater — vises aldrig i appen)', () => {

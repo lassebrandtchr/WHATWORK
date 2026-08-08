@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { KettlebellField } from '../components/KettlebellField.js';
 import { Photo } from '../components/Photo.js';
 import { SurpriseButton } from '../components/SurpriseButton.js';
 import { Glyph, Kicker } from '../components/ui.js';
@@ -74,7 +75,7 @@ export function Home({
 
       <div className="ww-cta-pair">
         <button type="button" className="ww-hero-cta" onClick={onGenerate}>
-          <Glyph name="bolt" size={34} />
+          <KettlebellField />
           <span className="ww-hero-cta__text">
             <span className="ww-hero-cta__title">Generér workout</span>
             <span className="ww-hero-cta__sub">
