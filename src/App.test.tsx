@@ -13,7 +13,7 @@ function seedOnboardedProfile(): void {
       profile: {
         name: 'Gæst', level: 3, sex: 'm', bodyweight: 82,
         equipment: null, counts: {}, plates: [25, 20, 15, 10, 5, 2.5, 1.25],
-        bars: [20, 15], onboarded: true,
+        bars: [20, 15], sandbags: [10, 20, 30], onboarded: true,
       },
       settings: { theme: 'dark', aiMix: false, sound: true, haptics: true, keepAwake: true },
       history: [], favorites: [], program: null, timer: null, timerWorkout: null,

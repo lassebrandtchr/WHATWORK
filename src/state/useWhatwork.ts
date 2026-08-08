@@ -22,6 +22,7 @@ const DEFAULT_PROFILE: UserProfile = {
   counts: {},
   plates: eng.DEFAULT_PLATES.slice(),
   bars: eng.DEFAULT_BARS.slice(),
+  sandbags: eng.DEFAULT_SANDBAGS.slice(),
   onboarded: false,
 };
 
@@ -218,6 +219,7 @@ export function useWhatwork() {
       if (!loadedProfile.equipment) loadedProfile.equipment = eng.DEFAULT_EQUIPMENT.slice();
       if (!loadedProfile.plates?.length) loadedProfile.plates = eng.DEFAULT_PLATES.slice();
       if (!loadedProfile.bars?.length) loadedProfile.bars = eng.DEFAULT_BARS.slice();
+      if (!loadedProfile.sandbags?.length) loadedProfile.sandbags = eng.DEFAULT_SANDBAGS.slice();
 
       const loadedSettings: Settings = { ...DEFAULT_SETTINGS, ...savedState.settings, theme: readTheme() };
       const restoredTimer = savedState.timer ?? null;
@@ -417,12 +419,13 @@ export function useWhatwork() {
       counts: draft.counts,
       plates: draft.plates,
       bars: profile.bars,
+      sandbags: profile.sandbags,
       profile: profile.sex,
       recentSignatures,
       recentPatterns: history.slice(0, 3).flatMap((h) => h.patterns ?? []),
       ...extra,
     }),
-    [profile.sex, profile.bars, history, recentSignatures],
+    [profile.sex, profile.bars, profile.sandbags, history, recentSignatures],
   );
 
   const animation = useRef<number | null>(null);

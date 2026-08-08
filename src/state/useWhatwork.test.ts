@@ -5,7 +5,7 @@ import type { UserProfile } from '../types.js';
 const profile: UserProfile = {
   name: 'Test', level: 3, sex: 'm', bodyweight: 82,
   equipment: null, counts: {}, plates: [25, 20, 15, 10, 5, 2.5, 1.25],
-  bars: [20, 15], onboarded: true,
+  bars: [20, 15], sandbags: [10, 20, 30], onboarded: true,
 };
 
 describe('freshGen — individuel kropsvægt', () => {

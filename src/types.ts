@@ -28,6 +28,8 @@ export interface UserProfile {
   /** Skivestørrelser brugeren faktisk har. */
   plates: number[];
   bars: number[];
+  /** Sandbag-vægte brugeren faktisk har. */
+  sandbags: number[];
   onboarded: boolean;
 }
 

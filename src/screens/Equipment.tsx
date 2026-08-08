@@ -25,6 +25,13 @@ export function Equipment({
     onPatch({ bars: next.length ? next : [20] });
   };
 
+  const toggleSandbag = (kg: number): void => {
+    const next = profile.sandbags.includes(kg)
+      ? profile.sandbags.filter((x) => x !== kg)
+      : [...profile.sandbags, kg];
+    onPatch({ sandbags: next.length ? next : [20] });
+  };
+
   return (
     <div style={{ paddingTop: 'calc(env(safe-area-inset-top) + 20px)', maxWidth: 860 }}>
       <PageHeader
@@ -91,9 +98,22 @@ export function Equipment({
         <p style={{ margin: '0 0 12px', fontSize: 13.5, color: 'var(--ww-text-3)', lineHeight: 1.6 }}>
           Den tungeste stang, der passer under forslaget, bliver valgt.
         </p>
-        <div className="ww-wrap">
+        <div className="ww-wrap" style={{ marginBottom: 20 }}>
           {eng.BAR_SIZES.map((b) => (
             <Chip key={b} on={profile.bars.includes(b)} onClick={() => toggleBar(b)}>{b} kg</Chip>
+          ))}
+        </div>
+
+        <h2 className="ww-kicker" style={{ marginBottom: 6 }}>Sandbag-vægte</h2>
+        <p style={{ margin: '0 0 12px', fontSize: 13.5, color: 'var(--ww-text-3)', lineHeight: 1.6 }}>
+          De vægte, du markerer her, er dem motoren vælger imellem — nærmest din
+          foreslåede belastning, justeret efter køn og niveau.
+        </p>
+        <div className="ww-wrap">
+          {eng.SANDBAG_SIZES.map((kg) => (
+            <Chip key={kg} on={profile.sandbags.includes(kg)} onClick={() => toggleSandbag(kg)}>
+              {kg} kg
+            </Chip>
           ))}
         </div>
       </section>

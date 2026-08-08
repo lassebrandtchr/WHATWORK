@@ -2,9 +2,15 @@ import { describe, expect, it } from 'vitest';
 import { scaleLoad } from './loads.js';
 import { BY_ID } from './data/exercises.js';
 import { DEFAULT_SANDBAGS } from './data/equipment.js';
-import type { Person } from './types.js';
+import type { Exercise, Person } from './types.js';
 
-const sandbagClean = BY_ID.sandbag_clean!;
+function byId(id: string): Exercise {
+  const ex = BY_ID[id];
+  if (!ex) throw new Error(`ukendt øvelse: ${id}`);
+  return ex;
+}
+
+const sandbagClean = byId('sandbag_clean');
 
 const person = (overrides: Partial<Person> = {}): Person => ({
   label: 'Test', profile: 'm', bodyweight: 88, level: 4, ...overrides,
