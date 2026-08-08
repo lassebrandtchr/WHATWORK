@@ -1,4 +1,5 @@
 import { useEffect, useLayoutEffect, useRef } from 'react';
+import type { ReactNode } from 'react';
 import { initialsOf } from '../lib/format.js';
 import { Glyph, ThemeToggle } from './ui.js';
 import { Wordmark } from './Wordmark.js';
@@ -166,23 +167,28 @@ export function DesktopHeader({
 
 /** Den faste primærhandling nederst. */
 export function BottomBar({
-  label, onClick, secondary,
+  label, onClick, secondary, extra,
 }: {
   label: string;
   onClick: () => void;
   secondary?: { label: string; onClick: () => void };
+  /** Sideordnet vej videre, der vises lige under primærhandlingen. */
+  extra?: ReactNode;
 }) {
   return (
     <div className="ww-bottom-bar ww-glass">
-      <div style={{ maxWidth: 1280, margin: '0 auto', display: 'flex', gap: 8 }}>
-        {secondary ? (
-          <button type="button" className="ww-btn ww-btn--lg" onClick={secondary.onClick}>
-            {secondary.label}
+      <div style={{ maxWidth: 1280, margin: '0 auto' }}>
+        <div style={{ display: 'flex', gap: 8 }}>
+          {secondary ? (
+            <button type="button" className="ww-btn ww-btn--lg" onClick={secondary.onClick}>
+              {secondary.label}
+            </button>
+          ) : null}
+          <button type="button" className="ww-btn ww-btn--primary ww-btn--lg ww-btn--block" onClick={onClick}>
+            {label}
           </button>
-        ) : null}
-        <button type="button" className="ww-btn ww-btn--primary ww-btn--lg ww-btn--block" onClick={onClick}>
-          {label}
-        </button>
+        </div>
+        {extra ? <div style={{ marginTop: 8 }}>{extra}</div> : null}
       </div>
     </div>
   );

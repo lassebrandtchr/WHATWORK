@@ -251,7 +251,7 @@ export function Dialog({
   );
 }
 
-type GlyphName = 'back' | 'close' | 'menu' | 'bolt' | 'star' | 'star-filled' | 'check' | 'chevron' | 'sun' | 'moon' | 'gear' | 'sound-on' | 'sound-off' | 'search';
+type GlyphName = 'back' | 'close' | 'menu' | 'bolt' | 'star' | 'star-filled' | 'check' | 'chevron' | 'sun' | 'moon' | 'gear' | 'sound-on' | 'sound-off' | 'search' | 'sparkle';
 
 /** Appens egne glyffer. Ingen emoji, intet eksternt ikonbibliotek. */
 export function Glyph({ name, size = 20 }: { name: GlyphName; size?: number }) {
@@ -276,6 +276,15 @@ export function Glyph({ name, size = 20 }: { name: GlyphName; size?: number }) {
       />
     ),
     check: <path d="m5 12.6 4.6 4.4L19 7" {...common} />,
+    /* Ét stort firetakket glimt med to gnister omkring. Fyldt frem for streget —
+       stjernestøv skal læses som lys, ikke som en optegnet form. */
+    sparkle: (
+      <g fill="currentColor" stroke="none">
+        <path d="M11.4 2.2c.85 4.1 1.95 5.2 6.05 6.05-4.1.85-5.2 1.95-6.05 6.05-.85-4.1-1.95-5.2-6.05-6.05 4.1-.85 5.2-1.95 6.05-6.05Z" />
+        <path d="M18.3 13.9c.42 2.04.97 2.59 3.01 3.01-2.04.42-2.59.97-3.01 3.01-.42-2.04-.97-2.59-3.01-3.01 2.04-.42 2.59-.97 3.01-3.01Z" />
+        <path d="M7.1 16.4c.3 1.44.69 1.83 2.13 2.13-1.44.3-1.83.69-2.13 2.13-.3-1.44-.69-1.83-2.13-2.13 1.44-.3 1.83-.69 2.13-2.13Z" />
+      </g>
+    ),
     search: (
       <g {...common}>
         <circle cx="11" cy="11" r="6.4" />

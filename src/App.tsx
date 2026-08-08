@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { BottomBar, DesktopHeader, Drawer, MobileNav } from './components/Navigation.js';
 import { Confetti } from './components/Confetti.js';
+import { SurpriseButton } from './components/SurpriseButton.js';
 import { EmptyState, Glyph, ThemeToggle } from './components/ui.js';
 import { Wordmark } from './components/Wordmark.js';
 import { WwMark } from './components/WwMark.js';
@@ -111,6 +112,11 @@ export function App() {
   const showBottomBar = onGenerator ? !(ww.isDesktop && atSummary) : onResultWithWorkout;
   const bottomLabel = onGenerator ? (atSummary ? 'Generér workout' : 'Videre') : 'Start workout';
   const bottomAction = onGenerator ? ww.genNext : ww.startTimer;
+  // "Overrask mig" hører sammen med "Generér workout" og følger den derfor helt
+  // ned i bundbjælken på de skærme, hvor det er dér, knappen står.
+  const bottomExtra = onGenerator && atSummary
+    ? <SurpriseButton compact minutes={ww.gen.minutes} onSurprise={ww.surpriseMe} />
+    : undefined;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100dvh' }}>
@@ -156,7 +162,7 @@ export function App() {
       <main
         style={{
           flex: 1, width: '100%', maxWidth: 1280, margin: '0 auto',
-          padding: `0 20px calc(env(safe-area-inset-bottom) + ${showBottomBar ? 168 : 96}px)`,
+          padding: `0 20px calc(env(safe-area-inset-bottom) + ${showBottomBar ? (bottomExtra ? 230 : 168) : 96}px)`,
         }}
       >
         {ww.screen === 'home' && (
@@ -187,6 +193,7 @@ export function App() {
             isDesktop={ww.isDesktop}
             onBack={ww.genBack}
             onGenerate={() => ww.runGenerate()}
+            onSurprise={ww.surpriseMe}
           />
         )}
 
@@ -320,7 +327,7 @@ export function App() {
         )}
       </main>
 
-      {showBottomBar ? <BottomBar label={bottomLabel} onClick={bottomAction} /> : null}
+      {showBottomBar ? <BottomBar label={bottomLabel} onClick={bottomAction} extra={bottomExtra} /> : null}
       {!ww.isDesktop && TABBED.includes(ww.screen) ? <MobileNav screen={ww.screen} onGo={ww.go} /> : null}
       {drawer ? <Drawer screen={ww.screen} onGo={ww.go} onClose={() => setDrawer(false)} /> : null}
     </div>

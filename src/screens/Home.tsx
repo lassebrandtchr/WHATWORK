@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Photo } from '../components/Photo.js';
+import { SurpriseButton } from '../components/SurpriseButton.js';
 import { Glyph, Kicker } from '../components/ui.js';
 import { plural, relDate } from '../lib/format.js';
 import type { HistoryEntry } from '../types.js';
@@ -13,7 +14,7 @@ export interface HomeProps {
   onGenerate: () => void;
   onQuickTime: (minutes: number) => void;
   onGo: (s: Screen) => void;
-  onSurprise: () => void;
+  onSurprise: (minutes: number) => void;
   onOpenLast: () => void;
   hasTimer: boolean;
   onResume: () => void;
@@ -71,15 +72,22 @@ export function Home({
         </div>
       </section>
 
-      <button type="button" className="ww-hero-cta" onClick={onGenerate}>
-        <Glyph name="bolt" size={34} />
-        <span style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-          <span style={{ fontSize: 22, fontWeight: 750, letterSpacing: '-0.02em' }}>Generér workout</span>
-          <span style={{ fontSize: 13.5, fontWeight: 500, opacity: 0.82 }}>
-            Smart Mix bygger op til 128 sikre variationer og vælger den bedste
+      <div className="ww-cta-pair">
+        <button type="button" className="ww-hero-cta" onClick={onGenerate}>
+          <Glyph name="bolt" size={34} />
+          <span className="ww-hero-cta__text">
+            <span className="ww-hero-cta__title">Generér workout</span>
+            <span className="ww-hero-cta__sub">
+              Smart Mix bygger op til 128 sikre variationer og vælger den bedste
+            </span>
           </span>
-        </span>
-      </button>
+        </button>
+        <SurpriseButton onSurprise={onSurprise} />
+      </div>
+      <p className="ww-cta-pair__note">
+        Smart Mix bygger op til 128 sikre variationer. Overrask mig springer opsætningen
+        over — vælg blot, hvor lang tid I har.
+      </p>
 
       <Photo
         name="sled-push"
@@ -89,10 +97,6 @@ export function Home({
       />
 
       <div style={{ marginTop: 26, borderTop: '1px solid var(--ww-line)' }}>
-        <button type="button" className="ww-line-btn" onClick={onSurprise}>
-          <span style={{ fontSize: 17, fontWeight: 600 }}>Overrask mig</span>
-          <span style={{ fontSize: 13, color: 'var(--ww-text-3)' }}>Ét tryk, dine standardvalg</span>
-        </button>
         <button type="button" className="ww-line-btn" onClick={() => onGo('program')}>
           <span style={{ fontSize: 17, fontWeight: 600 }}>Lav træningsprogram</span>
           <span style={{ fontSize: 13, color: 'var(--ww-text-3)' }}>2–12 uger</span>

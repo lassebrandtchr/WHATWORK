@@ -1,6 +1,7 @@
 import * as eng from '../engine/index.js';
 import type { Profile } from '../engine/index.js';
 import { EquipmentIcon } from '../components/EquipmentIcon.js';
+import { Photo } from '../components/Photo.js';
 import { OptionRow, StepHeader } from '../components/ui.js';
 import { ONB_STEPS } from '../state/useWhatwork.js';
 import type { UserProfile } from '../types.js';
@@ -64,6 +65,12 @@ export function Onboarding({
       <div style={{ flex: 1 }}>
         {step === 0 && (
           <div className="ww-stack">
+            <Photo
+              name="box-jump-over"
+              frame="portrait"
+              sizes="(min-width: 640px) 300px, 100vw"
+              style={{ marginBottom: 6, maxWidth: 300 }}
+            />
             {eng.LEVELS.map((level) => (
               <OptionRow
                 key={level.id}
@@ -120,7 +127,13 @@ export function Onboarding({
         )}
 
         {step === 3 && (
-          <div className="ww-eq-grid">
+          <>
+            <Photo
+              name="kb-swing"
+              sizes="(min-width: 640px) 620px, 100vw"
+              style={{ marginBottom: 18 }}
+            />
+            <div className="ww-eq-grid">
             {eng.EQUIPMENT.filter((e) => !e.always).map((e) => {
               const on = equipment.includes(e.id);
               return (
@@ -135,9 +148,10 @@ export function Onboarding({
                   <span className="ww-eq-tile__name">{e.name}</span>
                   <span className="ww-eq-tile__state">{on ? 'Valgt' : 'Fra'}</span>
                 </button>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
+          </>
         )}
       </div>
 

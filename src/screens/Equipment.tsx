@@ -42,7 +42,7 @@ export function Equipment({
       />
 
       <Photo
-        name="kb-swing"
+        name="equipment-collage"
         sizes="(min-width: 1024px) 860px, 100vw"
         style={{ marginBottom: 30 }}
       />

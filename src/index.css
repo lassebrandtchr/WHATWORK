@@ -40,6 +40,15 @@
   --ww-sheen-peak: 46%;
   --ww-sheen-edge: 10%;
 
+  /* Navy — kun "Overrask mig". Orange er dagens arbejde; navy er lykkehjulet,
+     og den må derfor gerne glimte, hvor resten af fladerne ligger stille. */
+  --ww-navy: #163a86;
+  --ww-navy-hi: #2054c4;
+  --ww-navy-deep: #08122d;
+  --ww-navy-line: rgb(132 172 255 / 44%);
+  --ww-on-navy: #eef4ff;
+  --ww-navy-spark: 210 228 255;
+
   /* Status. */
   --ww-green: #34d399;
   --ww-green-dim: rgb(52 211 153 / 14%);
@@ -100,6 +109,15 @@
   --ww-glow-sheen: 255 240 230;
   --ww-sheen-peak: 34%;
   --ww-sheen-edge: 8%;
+
+  /* Navy holder sin dybde i lys tilstand — knappen skal stå som et mørkt smykke
+     på det lyse papir, ikke som en udvasket blå flade. */
+  --ww-navy: #12306f;
+  --ww-navy-hi: #1c48a8;
+  --ww-navy-deep: #060e22;
+  --ww-navy-line: rgb(18 48 111 / 55%);
+  --ww-on-navy: #f2f6ff;
+  --ww-navy-spark: 219 233 255;
 
   --ww-green: #047857;
   --ww-green-dim: rgb(4 120 87 / 10%);
@@ -908,6 +926,270 @@ a {
 .ww-hero-cta:hover { background: var(--ww-orange-hi); }
 .ww-hero-cta:active { transform: translateY(2px); }
 
+.ww-hero-cta__text { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.ww-hero-cta__title { font-size: 22px; font-weight: 750; letter-spacing: -0.02em; }
+.ww-hero-cta__sub { font-size: 13.5px; font-weight: 500; opacity: 0.82; }
+
+/* ---------------------------------------------------------------------------
+   "Overrask mig" — den navyblå med stjernestøv
+
+   Knappen skal kunne stå ved siden af den orange uden at slås med den: samme
+   vægt og højde, men en helt anden temperatur. Dybden kommer fra tre lag —
+   en mørk navygradient som krop, et lysstrejf der løber hen over den, og tre
+   støvlag af små stjerner, der blinker i hver sin takt. Fordi takterne er
+   primtalsagtigt forskudte (2,9 / 4,3 / 6,1 s), gentager mønstret sig aldrig
+   synligt, og fladen glimter derfor konstant frem for at pulse i løkke.
+--------------------------------------------------------------------------- */
+
+.ww-sparkle-wrap { position: relative; display: flex; flex-direction: column; }
+
+.ww-sparkle {
+  position: relative;
+  /* Egen stacking context, så støv og strejf kan ligge på z-index -1: over
+     knappens egen baggrund, men altid under etiketten. */
+  isolation: isolate;
+  overflow: hidden;
+  width: 100%;
+  flex: 1;
+  min-height: 96px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 18px 20px;
+  border: 1px solid var(--ww-navy-line);
+  border-radius: var(--ww-r-lg);
+  background:
+    radial-gradient(120% 140% at 14% -10%, rgb(var(--ww-navy-spark) / 26%) 0%, rgb(var(--ww-navy-spark) / 0%) 52%),
+    linear-gradient(148deg, var(--ww-navy-hi) 0%, var(--ww-navy) 46%, var(--ww-navy-deep) 100%);
+  color: var(--ww-on-navy);
+  cursor: pointer;
+  text-align: left;
+  /* Knappen inviterer til gentagne tryk; uden dette markerer et hurtigt
+     dobbelttryk etiketten i stedet for at aktivere knappen. */
+  user-select: none;
+  box-shadow:
+    inset 0 1px 0 rgb(var(--ww-navy-spark) / 34%),
+    inset 0 -1px 0 rgb(0 0 0 / 40%),
+    0 16px 42px -26px rgb(32 84 196 / 95%);
+  transition: transform 0.16s var(--ww-ease), box-shadow 0.22s, filter 0.18s;
+}
+
+.ww-sparkle:hover {
+  filter: brightness(1.14);
+  transform: translateY(-1px);
+  box-shadow:
+    inset 0 1px 0 rgb(var(--ww-navy-spark) / 46%),
+    inset 0 -1px 0 rgb(0 0 0 / 40%),
+    0 22px 52px -24px rgb(32 84 196 / 100%);
+}
+
+.ww-sparkle:active { transform: translateY(1px); filter: brightness(1.02); }
+
+/* Lysstrejfet. Samme greb som på den orange knap, men koldt og en anelse hurtigere. */
+.ww-sparkle::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  z-index: -1;
+  pointer-events: none;
+  background: linear-gradient(
+    72deg,
+    rgb(var(--ww-navy-spark) / 0%) 38%,
+    rgb(var(--ww-navy-spark) / 12%) 46%,
+    rgb(var(--ww-navy-spark) / 52%) 50%,
+    rgb(var(--ww-navy-spark) / 12%) 54%,
+    rgb(var(--ww-navy-spark) / 0%) 62%
+  );
+  transform: translate3d(-140%, 0, 0);
+  animation: ww-sparkle-sheen 3.2s cubic-bezier(0.4, 0.05, 0.5, 0.95) infinite;
+}
+
+.ww-sparkle__dust {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-repeat: no-repeat;
+  /* Halo om hvert korn — uden den læses prikkerne som støj frem for som lys. */
+  filter: drop-shadow(0 0 3px rgb(var(--ww-navy-spark) / 55%));
+}
+
+.ww-sparkle__dust--a {
+  background-image:
+    radial-gradient(circle 1.5px at 7% 24%, rgb(var(--ww-navy-spark) / 95%), rgb(var(--ww-navy-spark) / 0%)),
+    radial-gradient(circle 1.1px at 19% 70%, rgb(var(--ww-navy-spark) / 90%), rgb(var(--ww-navy-spark) / 0%)),
+    radial-gradient(circle 1.7px at 32% 15%, rgb(var(--ww-navy-spark) / 95%), rgb(var(--ww-navy-spark) / 0%)),
+    radial-gradient(circle 1.2px at 45% 83%, rgb(var(--ww-navy-spark) / 88%), rgb(var(--ww-navy-spark) / 0%)),
+    radial-gradient(circle 1.6px at 58% 33%, rgb(var(--ww-navy-spark) / 95%), rgb(var(--ww-navy-spark) / 0%)),
+    radial-gradient(circle 1.1px at 72% 75%, rgb(var(--ww-navy-spark) / 88%), rgb(var(--ww-navy-spark) / 0%)),
+    radial-gradient(circle 1.8px at 87% 26%, rgb(var(--ww-navy-spark) / 95%), rgb(var(--ww-navy-spark) / 0%)),
+    radial-gradient(circle 1.2px at 95% 63%, rgb(var(--ww-navy-spark) / 90%), rgb(var(--ww-navy-spark) / 0%));
+  animation: ww-dust-a 2.9s ease-in-out infinite;
+}
+
+.ww-sparkle__dust--b {
+  background-image:
+    radial-gradient(circle 1.3px at 12% 80%, rgb(var(--ww-navy-spark) / 92%), rgb(var(--ww-navy-spark) / 0%)),
+    radial-gradient(circle 2px at 27% 41%, rgb(var(--ww-navy-spark) / 98%), rgb(var(--ww-navy-spark) / 0%)),
+    radial-gradient(circle 1.2px at 40% 21%, rgb(var(--ww-navy-spark) / 88%), rgb(var(--ww-navy-spark) / 0%)),
+    radial-gradient(circle 1.6px at 53% 68%, rgb(var(--ww-navy-spark) / 95%), rgb(var(--ww-navy-spark) / 0%)),
+    radial-gradient(circle 1.1px at 67% 17%, rgb(var(--ww-navy-spark) / 88%), rgb(var(--ww-navy-spark) / 0%)),
+    radial-gradient(circle 1.9px at 80% 54%, rgb(var(--ww-navy-spark) / 96%), rgb(var(--ww-navy-spark) / 0%)),
+    radial-gradient(circle 1.3px at 92% 86%, rgb(var(--ww-navy-spark) / 90%), rgb(var(--ww-navy-spark) / 0%));
+  animation: ww-dust-b 4.3s ease-in-out infinite;
+}
+
+.ww-sparkle__dust--c {
+  background-image:
+    radial-gradient(circle 2.2px at 9% 50%, rgb(var(--ww-navy-spark) / 100%), rgb(var(--ww-navy-spark) / 0%)),
+    radial-gradient(circle 1.4px at 36% 59%, rgb(var(--ww-navy-spark) / 92%), rgb(var(--ww-navy-spark) / 0%)),
+    radial-gradient(circle 1.7px at 63% 88%, rgb(var(--ww-navy-spark) / 95%), rgb(var(--ww-navy-spark) / 0%)),
+    radial-gradient(circle 2.4px at 77% 31%, rgb(var(--ww-navy-spark) / 100%), rgb(var(--ww-navy-spark) / 0%)),
+    radial-gradient(circle 1.3px at 89% 47%, rgb(var(--ww-navy-spark) / 90%), rgb(var(--ww-navy-spark) / 0%));
+  animation: ww-dust-c 6.1s ease-in-out infinite;
+}
+
+.ww-sparkle__icon {
+  display: flex;
+  flex: none;
+  color: rgb(var(--ww-navy-spark) / 100%);
+  filter: drop-shadow(0 0 7px rgb(var(--ww-navy-spark) / 70%));
+  animation: ww-sparkle-icon 3.2s ease-in-out infinite;
+}
+
+.ww-sparkle__text { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.ww-sparkle__label { font-size: 22px; font-weight: 750; letter-spacing: -0.02em; }
+.ww-sparkle__sub { font-size: 13.5px; font-weight: 500; color: rgb(var(--ww-navy-spark) / 82%); }
+
+.ww-sparkle--sm {
+  min-height: 54px;
+  gap: 10px;
+  padding: 0 16px;
+  border-radius: var(--ww-r);
+}
+
+.ww-sparkle--sm .ww-sparkle__label { font-size: 16px; font-weight: 700; }
+.ww-sparkle--sm .ww-sparkle__sub { display: none; }
+
+/* Tidsvalget. Uden en tid ved motoren ikke, hvor stor sessionen skal være, så
+   valget er et vilkår for knappen — ikke en indstilling ved siden af den. */
+.ww-sparkle-times {
+  margin-top: 10px;
+  padding: 14px;
+  border: 1px solid var(--ww-navy-line);
+  border-radius: var(--ww-r);
+  background: var(--ww-surface);
+  box-shadow: var(--ww-shadow);
+}
+
+.ww-sparkle-times__hint {
+  margin: 0 0 10px;
+  font-size: 13px;
+  color: var(--ww-text-2);
+}
+
+@keyframes ww-sparkle-sheen {
+  0% { transform: translate3d(-140%, 0, 0); }
+  26% { transform: translate3d(140%, 0, 0); }
+  100% { transform: translate3d(140%, 0, 0); }
+}
+
+@keyframes ww-dust-a {
+  0%, 100% { opacity: 0.22; transform: translate3d(0, 0, 0); }
+  36% { opacity: 1; }
+  68% { opacity: 0.4; transform: translate3d(-2px, -3px, 0); }
+}
+
+@keyframes ww-dust-b {
+  0%, 100% { opacity: 0.85; transform: translate3d(0, 0, 0); }
+  24% { opacity: 0.18; transform: translate3d(2px, 2px, 0); }
+  62% { opacity: 1; }
+}
+
+@keyframes ww-dust-c {
+  0%, 100% { opacity: 0.5; transform: translate3d(0, 0, 0); }
+  18% { opacity: 1; }
+  47% { opacity: 0.15; transform: translate3d(3px, -2px, 0); }
+  80% { opacity: 0.9; }
+}
+
+@keyframes ww-sparkle-icon {
+  0%, 100% { transform: scale(1) rotate(0deg); filter: drop-shadow(0 0 6px rgb(var(--ww-navy-spark) / 55%)); }
+  18% { transform: scale(1.12) rotate(-8deg); filter: drop-shadow(0 0 12px rgb(var(--ww-navy-spark) / 95%)); }
+  46% { transform: scale(1) rotate(0deg); }
+}
+
+/* Uden bevægelse skal knappen stadig se levende ud: støvet fryses på et
+   tidspunkt, hvor alle tre lag er synlige, og strejfet lægges bare fladt på. */
+@media (prefers-reduced-motion: reduce) {
+  .ww-sparkle::before { animation: none; transform: none; opacity: 0.35; }
+  .ww-sparkle__dust { animation: none; opacity: 0.8; }
+  .ww-sparkle__icon { animation: none; }
+}
+
+/* ---------------------------------------------------------------------------
+   Parret af primærknapper på Hjem
+
+   De to veje ind i en workout står side om side: den orange bygger sessionen
+   trin for trin, den navyblå springer opsætningen over. På smalle skærme er der
+   ikke plads til begge undertekster ved siden af hinanden, så de samles i én
+   linje under parret i stedet for at klemme knapperne.
+--------------------------------------------------------------------------- */
+
+.ww-cta-pair {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  align-items: stretch;
+}
+
+.ww-cta-pair > * { min-width: 0; }
+
+/* Tidsvalget hører til knappen, men skal have hele parrets bredde at folde sig
+   ud på — en spalte er for smal til ti tidschips. */
+.ww-cta-pair .ww-sparkle-wrap { position: static; }
+
+.ww-cta-pair .ww-sparkle-times {
+  position: absolute;
+  z-index: 40;
+  top: calc(100% + 10px);
+  left: 0;
+  right: 0;
+  margin-top: 0;
+  background: var(--ww-elevated);
+}
+
+.ww-cta-pair__note {
+  display: none;
+  margin: 12px 2px 0;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--ww-text-3);
+}
+
+@media (max-width: 599px) {
+  .ww-cta-pair .ww-hero-cta,
+  .ww-cta-pair .ww-sparkle {
+    /* Ikonet øverst i begge, så etiketterne starter på samme linje — også når
+       den ene knap har to ord, der ombrydes, og den anden kun har ét. */
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start;
+    gap: 10px;
+    min-height: 116px;
+    padding: 16px 15px;
+  }
+
+  .ww-cta-pair .ww-hero-cta__sub,
+  .ww-cta-pair .ww-sparkle__sub { display: none; }
+
+  .ww-cta-pair .ww-hero-cta__title,
+  .ww-cta-pair .ww-sparkle__label { font-size: 18px; line-height: 1.15; }
+
+  .ww-cta-pair__note { display: block; }
+}
+
 .ww-line-btn {
   width: 100%;
   min-height: 64px;
@@ -1519,4 +1801,31 @@ a {
     position: sticky;
     top: 88px;
   }
+}
+
+/* ---------------------------------------------------------------------------
+   Formatikonerne på Hjælp
+
+   Et lille kvadratisk motiv ved siden af hver formatforklaring. Fast bredde, så
+   alle forklaringer starter på samme lodrette linje uanset billedets indhold.
+--------------------------------------------------------------------------- */
+
+.ww-photo--thumb {
+  aspect-ratio: 1 / 1;
+  width: 84px;
+  flex: none;
+  border-radius: var(--ww-r);
+}
+
+.ww-format-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--ww-line);
+}
+
+@media (min-width: 640px) {
+  .ww-photo--thumb { width: 104px; }
+  .ww-format-row { gap: 20px; }
 }

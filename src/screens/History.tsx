@@ -85,10 +85,9 @@ export function History({
       ) : (
         <>
           <Photo
-            name="box-jump-over"
-            frame="portrait"
-            sizes="(min-width: 640px) 340px, 100vw"
-            style={{ marginBottom: 24, maxWidth: 340 }}
+            name="moments-collage"
+            sizes="(min-width: 1024px) 860px, 100vw"
+            style={{ marginBottom: 24 }}
           />
 
           <div style={{ display: 'flex', gap: 26, flexWrap: 'wrap', paddingBottom: 22, borderBottom: '1px solid var(--ww-line)', marginBottom: 18 }}>

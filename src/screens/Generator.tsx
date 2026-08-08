@@ -3,6 +3,7 @@ import * as eng from '../engine/index.js';
 import type { CareId, Exercise, FocusId, MuscleId, MuscleRegion } from '../engine/index.js';
 import { EquipmentIcon } from '../components/EquipmentIcon.js';
 import { Photo } from '../components/Photo.js';
+import { SurpriseButton } from '../components/SurpriseButton.js';
 import { Chip, Counter, Glyph, Kicker, Note, OptionRow, StepHeader } from '../components/ui.js';
 import { participantsOf } from '../state/useWhatwork.js';
 import type { GenDraft, GenStep } from '../types.js';
@@ -61,7 +62,7 @@ export function summaryRows(g: GenDraft): SummaryRow[] {
 }
 
 export function Generator({
-  gen, patch, step, steps, current, isDesktop, onBack, onGenerate,
+  gen, patch, step, steps, current, isDesktop, onBack, onGenerate, onSurprise,
 }: {
   gen: GenDraft;
   patch: (p: Partial<GenDraft>) => void;
@@ -71,6 +72,7 @@ export function Generator({
   isDesktop: boolean;
   onBack: () => void;
   onGenerate: () => void;
+  onSurprise: (minutes: number) => void;
 }) {
   const [title, help] = STEP_COPY[current];
   const rows = summaryRows(gen);
@@ -131,6 +133,10 @@ export function Generator({
               <Glyph name="bolt" size={20} />
               Generér workout
             </button>
+            {/* Tiden er allerede valgt her, så overraskelsen kan gå direkte i gang. */}
+            <div style={{ marginTop: 10 }}>
+              <SurpriseButton compact minutes={gen.minutes} onSurprise={onSurprise} />
+            </div>
             <Photo
               name="gen-phone-solo"
               frame="portrait"

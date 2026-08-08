@@ -15,7 +15,9 @@ type Frame =
   /** Bred banner over eller under en sektion. 4:3 på telefon, 3:2 på tablet, 2:1 på desktop. */
   | 'band'
   /** Stående motiv i en smal spalte — sidebar eller enkelt kolonne. Altid 4:5. */
-  | 'portrait';
+  | 'portrait'
+  /** Lille kvadrat ved siden af en tekst — formatikonerne på Hjælp. Fast bredde. */
+  | 'thumb';
 
 /**
  * Hvor bredt billedet reelt vises. Uden det ville browseren regne med fuld
@@ -24,6 +26,7 @@ type Frame =
 const DEFAULT_SIZES: Record<Frame, string> = {
   band: '(min-width: 1024px) 860px, 100vw',
   portrait: '(min-width: 1024px) 360px, 100vw',
+  thumb: '(min-width: 640px) 104px, 84px',
 };
 
 export function Photo({

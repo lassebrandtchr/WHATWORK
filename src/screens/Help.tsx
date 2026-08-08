@@ -1,4 +1,5 @@
 import * as eng from '../engine/index.js';
+import { formatPhoto } from '../assets/images/index.js';
 import { Photo } from '../components/Photo.js';
 import { Note, PageHeader } from '../components/ui.js';
 
@@ -73,10 +74,9 @@ export function Help() {
       />
 
       <Photo
-        name="ski-erg"
-        frame="portrait"
-        sizes="(min-width: 640px) 340px, 100vw"
-        style={{ marginBottom: 30, maxWidth: 340 }}
+        name="workout-anatomy"
+        sizes="(min-width: 1024px) 780px, 100vw"
+        style={{ marginBottom: 30 }}
       />
 
       <section aria-labelledby="ww-formats-help" style={{ marginBottom: 32 }}>
@@ -86,21 +86,36 @@ export function Help() {
           Her er, hvad hvert af dem betyder på dansk.
         </p>
         <dl style={{ margin: 0 }}>
-          {eng.FORMAT_LIST.map((f) => (
-            <div key={f.id} style={{ padding: '16px 0', borderBottom: '1px solid var(--ww-line)' }}>
-              <dt style={{ display: 'flex', gap: 10, alignItems: 'baseline', flexWrap: 'wrap', marginBottom: 6 }}>
-                <span style={{ fontSize: 17, fontWeight: 700 }}>{f.name}</span>
-                <span style={{ fontSize: 13, color: 'var(--ww-text-3)' }}>{f.long}</span>
-              </dt>
-              <dd style={{ margin: 0, fontSize: 14.5, color: 'var(--ww-body)', lineHeight: 1.6 }}>
-                {f.da}
-                <br />
-                <span style={{ color: 'var(--ww-text-2)' }}>Undervejs: {f.naa} Færdig: {f.faerdig}</span>
-              </dd>
-            </div>
-          ))}
+          {eng.FORMAT_LIST.map((f) => {
+            // Motivet viser, hvordan formatet ser ud i salen. Findes der ikke et
+            // til et nyt format, står forklaringen bare alene.
+            const thumb = formatPhoto(f.id);
+            return (
+              <div key={f.id} className="ww-format-row">
+                {thumb ? <Photo name={thumb} frame="thumb" /> : null}
+                <div style={{ minWidth: 0 }}>
+                  <dt style={{ display: 'flex', gap: 10, alignItems: 'baseline', flexWrap: 'wrap', marginBottom: 6 }}>
+                    <span style={{ fontSize: 17, fontWeight: 700 }}>{f.name}</span>
+                    <span style={{ fontSize: 13, color: 'var(--ww-text-3)' }}>{f.long}</span>
+                  </dt>
+                  <dd style={{ margin: 0, fontSize: 14.5, color: 'var(--ww-body)', lineHeight: 1.6 }}>
+                    {f.da}
+                    <br />
+                    <span style={{ color: 'var(--ww-text-2)' }}>Undervejs: {f.naa} Færdig: {f.faerdig}</span>
+                  </dd>
+                </div>
+              </div>
+            );
+          })}
         </dl>
       </section>
+
+      <Photo
+        name="ski-erg"
+        frame="portrait"
+        sizes="(min-width: 640px) 340px, 100vw"
+        style={{ marginBottom: 30, maxWidth: 340 }}
+      />
 
       {SECTIONS.map((s) => (
         <section key={s.title} aria-label={s.title} style={{ marginBottom: 30 }}>

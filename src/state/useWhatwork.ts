@@ -565,8 +565,9 @@ export function useWhatwork() {
     else setGenStep((s) => s + 1);
   }, [genStep, runGenerate]);
 
-  const surpriseMe = useCallback(() => {
-    const draft: GenDraft = { ...freshGen(profile), minutes: 30, condition: 7, strength: 5 };
+  /** Tiden er det eneste, overraskelsen ikke må gætte — resten sættes af profilen. */
+  const surpriseMe = useCallback((minutes = 30) => {
+    const draft: GenDraft = { ...freshGen(profile), minutes, condition: 7, strength: 5 };
     setGen(draft);
     runGenerate(draft, { surprise: true, seed: eng.makeSeed() });
   }, [profile, runGenerate]);

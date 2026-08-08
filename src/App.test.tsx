@@ -26,6 +26,16 @@ async function skipGeneration(): Promise<void> {
   await act(async () => { await vi.advanceTimersByTimeAsync(12_000); });
 }
 
+/**
+ * "Overrask mig" på Hjem folder først tidsvalget ud — uden en tid ved motoren
+ * ikke, hvor stor sessionen skal være, og knappen genererer ikke på en gætning.
+ */
+function surpriseFromHome(minutes = 30): void {
+  fireEvent.click(screen.getByRole('button', { name: /Overrask mig/ }));
+  const times = screen.getByRole('group', { name: 'Vælg tid til Overrask mig' });
+  fireEvent.click(within(times).getByRole('button', { name: `${minutes} min` }));
+}
+
 describe('WHATWORK — kerneflow', () => {
   it('starter på velkomstskærmen for en ny bruger', async () => {
     render(<App />);
@@ -162,7 +172,7 @@ describe('WHATWORK — kerneflow', () => {
       render(<App />);
       await act(async () => { await vi.advanceTimersByTimeAsync(0); });
 
-      fireEvent.click(screen.getByRole('button', { name: /Overrask mig/ }));
+      surpriseFromHome();
       expect(screen.getByRole('status')).toBeInTheDocument();
       await skipGeneration();
 
@@ -186,7 +196,7 @@ describe('WHATWORK — kerneflow', () => {
       render(<App />);
       await act(async () => { await vi.advanceTimersByTimeAsync(0); });
 
-      fireEvent.click(screen.getByRole('button', { name: /Overrask mig/ }));
+      surpriseFromHome();
       await skipGeneration();
 
       fireEvent.click(screen.getByRole('button', { name: 'Start workout' }));
@@ -249,7 +259,7 @@ describe('WHATWORK — kerneflow', () => {
     try {
       render(<App />);
       await act(async () => { await vi.advanceTimersByTimeAsync(0); });
-      fireEvent.click(screen.getByRole('button', { name: /Overrask mig/ }));
+      surpriseFromHome();
       await skipGeneration();
       fireEvent.click(screen.getByRole('button', { name: 'Start workout' }));
 
@@ -268,7 +278,7 @@ describe('WHATWORK — kerneflow', () => {
     try {
       const { container } = render(<App />);
       await act(async () => { await vi.advanceTimersByTimeAsync(0); });
-      fireEvent.click(screen.getByRole('button', { name: /Overrask mig/ }));
+      surpriseFromHome();
       await skipGeneration();
 
       // Fem forskellige workouts i træk — ingen af dem må have et opfundet navn.
