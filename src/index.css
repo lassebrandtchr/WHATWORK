@@ -33,8 +33,14 @@
 
   /* Status. */
   --ww-green: #34d399;
+  --ww-green-dim: rgb(52 211 153 / 14%);
+  --ww-green-line: rgb(52 211 153 / 42%);
   --ww-blue: #60a5fa;
+  --ww-blue-dim: rgb(96 165 250 / 14%);
+  --ww-blue-line: rgb(96 165 250 / 42%);
   --ww-red: #dc2626;
+  --ww-red-dim: rgb(220 38 38 / 14%);
+  --ww-red-line: rgb(220 38 38 / 42%);
   --ww-red-soft: #f87171;
   --ww-red-hot: #ff4438;
 
@@ -80,8 +86,14 @@
   --ww-on-orange: #fff6f1;
 
   --ww-green: #047857;
+  --ww-green-dim: rgb(4 120 87 / 10%);
+  --ww-green-line: rgb(4 120 87 / 40%);
   --ww-blue: #1d4ed8;
+  --ww-blue-dim: rgb(29 78 216 / 10%);
+  --ww-blue-line: rgb(29 78 216 / 40%);
   --ww-red: #b91c1c;
+  --ww-red-dim: rgb(185 28 28 / 10%);
+  --ww-red-line: rgb(185 28 28 / 40%);
   --ww-red-soft: #b91c1c;
   --ww-red-hot: #b91c1c;
 
