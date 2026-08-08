@@ -524,3 +524,671 @@ hoveddels-øvelser, ligesom `hr_push_up` allerede er, ikke skaleringer af `push_
   API.
 - En separat "session-only" lydkontakt adskilt fra Indstillinger — bekræftet af brugeren:
   timerens lydknap og Indstillinger er to visninger af samme, persisterede flag.
+
+---
+
+# Runde 2 — rettelser og udvidelser efter første push
+
+Del A–G ovenfor blev implementeret, testet og pushet til `main`. Brugeren har siden
+testet den live app og bedt om en række yderligere rettelser og features i samme
+arbejdsgang. De hedder Del H–R herunder, af samme spec, samme commit-rytme (test →
+implementér → verificér → commit pr. del), fælles slutverifikation og push til sidst.
+
+## Del H — Historik viser reel trænet tid, ikke den planlagte
+
+### Fejlen
+
+`entryFor()` ([useWhatwork.ts:593](../../../src/state/useWhatwork.ts)) sætter altid
+`minutes: w.estimatedMinutes` — workoutens *planlagte* varighed — uanset om posten
+kommer fra en fuldført session, en afbrudt session eller blot et "Gem" uden at træne.
+`saveCompletion()` ([useWhatwork.ts:678](../../../src/state/useWhatwork.ts)) har allerede
+den *faktiske* forløbne tid liggende i `completeFor.secs` (sat fra
+`view.sessionElapsed` i `openCompletion`, [useWhatwork.ts:667](../../../src/state/useWhatwork.ts))
+og bruger den til selve resultatteksten ("Afbrudt ved 28% — … · 6:12 på uret"), men
+sender den aldrig med til `entryFor` som `minutes`. Resultatet: en 60 minutters workout
+afbrudt efter 6 minutter gemmes i historikken som "60 min".
+
+### Rettelse
+
+`entryFor` får et nyt, valgfrit sidste parameter, `actualMinutes?: number`. Når det er
+sat, bruges det i stedet for `w.estimatedMinutes`:
+
+```ts
+const entryFor = useCallback(
+  (
+    w: Workout, status: HistoryStatus, result = '', rpe: HistoryEntry['rpe'] = '',
+    progressPct?: number, lastExercise?: string, actualMinutes?: number,
+  ): HistoryEntry => ({
+    id: `${w.id}_${Date.now()}`,
+    title: w.title,
+    format: w.formatName,
+    minutes: actualMinutes ?? w.estimatedMinutes,
+    date: new Date().toISOString(),
+    status,
+    rpe,
+    result,
+    ...(progressPct !== undefined ? { progressPct } : {}),
+    ...(lastExercise ? { lastExercise } : {}),
+    patterns: w.blocks.flatMap((b) => b.movements.map((m) => eng.BY_ID[m.exerciseId]?.cat ?? 'ukendt')),
+    signature: w.signature,
+    workout: w,
+  }),
+  [],
+);
+```
+
+`saveCompletion` beregner allerede `mins = Math.floor(secs / 60)`
+([useWhatwork.ts:681](../../../src/state/useWhatwork.ts)) — det tal sendes nu med:
+
+```ts
+const mins = Math.floor(secs / 60);
+const rest = secs % 60;
+...
+entryFor(w, completion.status, result, completion.rpe, completion.progressPct, completion.lastExercise, Math.max(1, mins)),
+```
+
+`Math.max(1, mins)` undgår en misvisende "0 min" for en session afbrudt i første minut.
+
+`saveWorkout`/`toggleFavorite` ([useWhatwork.ts:615](../../../src/state/useWhatwork.ts),
+[useWhatwork.ts:626](../../../src/state/useWhatwork.ts)) kalder fortsat `entryFor` uden
+det sjette argument — der er ingen løbet timer at måle på, når man gemmer eller sætter
+favorit fra Resultat-siden uden at have trænet, så `estimatedMinutes` er fortsat det
+korrekte tal der.
+
+**Test:** ny sag i `useWhatwork.test.ts` (eller en ny `src/state/history.test.ts`, hvis
+`entryFor` eksporteres til test — den er i dag ikke eksporteret, så testen dækkes i
+stedet via en let integrationstest i `App.test.tsx`, der starter en workout, spoler
+frem et par minutter med `vi.advanceTimersByTimeAsync`, afslutter med "Afbrudt", og
+bekræfter at historik-posten viser et lavt minuttal, ikke `estimatedMinutes`).
+
+## Del I — Realistiske reps og pauser i Interval-formatet
+
+### Problemet
+
+Et genereret "Interval 40/20" kunne indeholde "14 Ring Row" og "14 Dips" — urealistisk
+mange reps af tunge, teknisk krævende trækøvelser/pres-øvelser på 40 sekunder, og 20
+sekunders pause er for kort til reel restitution af skuldre/triceps/ryg mellem sæt af
+den type. `repsForInterval()` ([blocks.ts:38](../../../src/engine/blocks.ts)) bruger i
+dag ét fælles "fill"-forhold (62 %, dæmpet til ca. 43 % for `isHeavyImplement`, som kun
+dækker vægtstang/slæde) til at oversætte arbejdstid til reps — kropsvægtsøvelser som
+Ring Row, Dips, Pull-ups og Toes-to-Bar rammes ikke af den dæmpning, selvom de reelt er
+langsommere og mere lokalt udmattende end fx Air Squat eller Kettlebell Swing.
+
+### Løsning: øvelses-specifik intensitetsklasse
+
+Tilføjer et nyt, valgfrit felt til `Exercise`
+([types.ts:61](../../../src/engine/types.ts)):
+
+```ts
+/** Hvor muskulært krævende/langsom øvelsen er ved intervalarbejde — styrer både
+ * hvor stor en del af arbejdstiden der reelt bruges på reps, og minimumspausen. */
+grind?: 'low' | 'medium' | 'high';
+```
+
+`grind` sættes ud fra velkendt styrke-/konditionstræningspraksis (ikke fra en enkelt
+kilde, men fra den brede konsensus i S&C-litteraturen om lokal muskeludmattelse ved
+overkrops-trækøvelser i høj volumen — fx NSCA's retningslinjer for
+hviletid-efter-intensitet, som anbefaler 30–90 sek. ved højt volumen/moderat
+belastning for mindre muskelgrupper, og markant kortere for cyklisk
+kropsvægts-/maskinarbejde):
+
+- `'low'` (standard, sat implicit når feltet udelades): cyklisk kondition —
+  Air Squat, Row/Ski/Bike/Assault, Wall Ball, Burpees, Kettlebell Swing. Tempoet holder
+  stort set hele arbejdsvinduet.
+- `'medium'`: sammensatte, men ikke ekstremt trættende — Box Jump-Over, Devil Press,
+  Sandbag-øvelser, DB Snatch, Walking Lunge.
+- `'high'`: teknisk krævende overkrops-træk/pres eller høj CNS-belastning i høj volumen
+  — Ring Row, Dips, Pull-ups (alle varianter), Toes-to-Bar, HSPU, olympiske løft,
+  Thrusters.
+
+Konkrete `grind: 'high'`-tilføjelser i `src/engine/data/exercises.ts` (kun de øvelser,
+der findes i kataloget og reelt hører til klassen — resten arver `'low'` implicit):
+`ring_row`, `db_row`, `barbell_row`, `pull_up`, `band_pull_up`, `chest_to_bar`,
+`jumping_pull_up`, `toes_to_bar`, `hanging_knee_raise`, `dip`, `hspu`, `push_jerk`,
+`power_clean`, `hang_power_clean`, `clean_and_jerk`, `power_snatch`, `thruster`,
+`devil_press`, `sandbag_shoulder`. `grind: 'medium'` på: `box_jump_over`, `box_jump`,
+`db_snatch`, `db_walking_lunge`, `db_front_rack_lunge`, `sled_pull`,
+`burpee_pull_up`, `burpee_box_jump_over`, `kb_american_swing`.
+
+### Ændring i `repsForInterval` — realistisk repstal
+
+```ts
+const GRIND_FILL: Record<'low' | 'medium' | 'high', number> = { low: 1, medium: 0.8, high: 0.62 };
+
+function repsForInterval(ex: Exercise, seconds: number, fill = 0.62): number {
+  const heavy = isHeavyImplement(ex);
+  const grindFactor = GRIND_FILL[ex.grind ?? 'low'];
+  const effectiveFill = (heavy ? fill * 0.7 : fill) * grindFactor;
+  const target = seconds * effectiveFill;
+  const step = ex.unit === 'cal' ? 1 : ex.unit === 'm' ? 25 : ex.unit === 'sec' ? 5 : 1;
+  const raw = ex.unit === 'sec' ? target : target / ex.sec;
+  const [lo, hi] = ex.rep ?? [1, 999];
+  const ceiling = heavy ? hi : hi * 1.5;
+  return clamp(Math.max(step, roundTo(raw, step)), Math.min(lo, 3), ceiling);
+}
+```
+
+40 sek. arbejde på Ring Row (`sec: 2.5`, `grind: 'high'`): `40 * 0.62 * 0.62 ≈ 15.4`
+sek. effektivt → `15.4 / 2.5 ≈ 6` reps, ikke 14 — realistisk for uafbrudte, kontrollerede
+ring rows.
+
+### Ændring i Interval/Team rotation — minimumspause efter grind
+
+`buildConditioning`s `interval`- og `team_rotation`-grene
+([blocks.ts:117](../../../src/engine/blocks.ts),
+[blocks.ts:130](../../../src/engine/blocks.ts)) sætter i dag `restSec` som ét tal for
+*hele* blokken (15–30 sek., afhængig af `req.condition`), fælles for alle stationer.
+Det udvides til at tage højde for den *tungeste* (højeste grind-klasse) øvelse i
+listen:
+
+```ts
+const GRIND_MIN_REST: Record<'low' | 'medium' | 'high', number> = { low: 0, medium: 15, high: 30 };
+
+function restFor(exercises: Exercise[], baseRest: number): number {
+  const worst = exercises.reduce<'low' | 'medium' | 'high'>(
+    (acc, e) => (GRIND_MIN_REST[e.grind ?? 'low'] > GRIND_MIN_REST[acc] ? (e.grind ?? 'low') : acc),
+    'low',
+  );
+  return Math.max(baseRest, GRIND_MIN_REST[worst]);
+}
+```
+
+I `interval`-grenen: `restSec = restFor(exercises, req.condition >= 7 ? 20 : 30);` —
+samme for `team_rotation`. En liste med Ring Row/Dips kan dermed ikke få mindre end 30
+sekunders pause, uanset hvor højt konditionsniveauet er sat, mens en ren
+maskine-/kropsvægtsliste beholder dagens korte pauser.
+
+### Alternativ: AMRAP-pr.-station i stedet for fast repstal
+
+For formater, hvor et fast måltal ikke giver mening (høj `grind`, lang arbejdstid
+relativt til øvelsens tech-niveau), tilføjes en ny variant af Interval:
+`format: 'interval'` med et nyt, valgfrit blok-felt:
+
+```ts
+/** Kun på Interval: stationerne har ikke et fast måltal — man når så langt man kan
+ * på arbejdstiden, og skriver selv antallet ned. */
+openStations?: boolean;
+```
+
+Sat sandt, når `exercises.some((e) => e.grind === 'high')` og arbejdstiden pr. station
+er ≥ 40 sek. (kort arbejdstid + høj grind giver stadig mening som fast, lavt måltal —
+det er ved længere arbejdsvinduer, at et estimeret fast tal bliver mest usikkert).
+`movements[i].display` sættes til `${ex.name} · så mange som muligt` i stedet for et
+repstal, og `timerplan.ts`s `interval`/`team_rotation`-gren
+([timerplan.ts:133](../../../src/engine/timerplan.ts)) sætter `hint` til "Notér dit
+antal, når tiden er gået," i stedet for det nuværende faste hint — ingen ændring i
+selve segment-strukturen (stadig faste `work`/`rest`-sekunder), kun i hvad der vises
+som mål.
+
+**Test:** `blocks.test.ts` — Ring Row/Dips i en `interval`-blok med `condition: 9`
+giver ≤ 8 reps (ikke 14) og `restSec >= 30`; en ren `row`/`ski`/`air_squat`-liste
+beholder det korte, konditions-styrede `restSec`; en høj-grind station med lang
+arbejdstid sætter `openStations: true` og et "så mange som muligt"-display.
+
+## Del J — Orange sektions-overskrifter + "Hovedworkout"
+
+`.ww-kicker--accent` findes allerede ([index.css:248](../../../src/index.css)) og
+sætter `color: var(--ww-orange)` — den tilføjes til de navngivne overskrifter i stedet
+for at opfinde ny CSS:
+
+- `src/screens/Result.tsx:74` — `<h2 id="ww-protocol" className="ww-kicker ww-kicker--accent">Sådan afvikles den</h2>`
+- `src/screens/Result.tsx:115` — samme for `Udstyrslogistik`
+- `src/screens/Result.tsx:130` — samme for `Hvorfor denne workout`
+- `src/screens/Result.tsx:147` — samme for `Workout-DNA`
+- `blockLabel()` ([Result.tsx:7](../../../src/screens/Result.tsx)): `case 'conditioning':
+  return hasStrength ? 'Del 2 — Conditioning' : 'Hovedworkout';` (omdøbt fra "Hoveddel").
+  `BlockSection`s `<h2>` ([Result.tsx:226](../../../src/screens/Result.tsx)) mister sin
+  `color: accent.fg`-override og bruger i stedet `className="ww-kicker ww-kicker--accent"`
+  — kortets farvede kant/baggrund (grøn/rød, Del E) er uændret, kun selve
+  eyebrow-tekstens farve bliver orange i stedet for grøn/rød, så alle kickers i appen
+  er konsekvent orange, mens kort-niveauet stadig signalerer intensitet.
+- "Hvad knapperne gør" er ikke en `ww-kicker`, men et `<Note label="…" tone="quiet">`
+  ([Result.tsx:185](../../../src/screens/Result.tsx)), hvis label i dag altid er
+  `var(--ww-text-3)` for `tone="quiet"` ([index.css:1017](../../../src/index.css)). I
+  stedet for at ændre *alle* stille noter i appen (Equipment, Program, Settings,
+  Transfer bruger også `tone="quiet"`), får `Note`-komponenten
+  ([ui.tsx:154](../../../src/components/ui.tsx)) et nyt, valgfrit `accent?: boolean`-prop,
+  der — når sandt — lægger `ww-note__label--accent` til uanset `tone`:
+
+  ```tsx
+  export function Note({
+    label, children, tone = 'accent', accent = false,
+  }: {
+    label: string;
+    children: ReactNode;
+    tone?: 'accent' | 'danger' | 'good' | 'quiet';
+    accent?: boolean;
+  }) {
+    const cls = (tone === 'accent' ? '' : ` ww-note--${tone}`) + (accent ? ' ww-note--label-accent' : '');
+    return (
+      <div className={`ww-note${cls}`}>
+        <span className="ww-note__label">{label}</span>
+        {children}
+      </div>
+    );
+  }
+  ```
+
+  ny CSS-regel, høj nok specificitet til at slå `.ww-note--quiet .ww-note__label` ihjel:
+  `.ww-note--label-accent .ww-note__label { color: var(--ww-orange); }`. Kun
+  `Result.tsx`s "Hvad knapperne gør" sætter `accent` — alle andre noter er uændrede.
+
+**Test:** ingen ny automatiseret test nødvendig (ren styling) — verificeres visuelt +
+via `getComputedStyle` i Task 15-stil browser-check, samme metode som Del E.
+
+## Del K — Større logo + fuld responsivitet
+
+### Logo
+
+`WwMark` ([WwMark.tsx](../../../src/components/WwMark.tsx)) bruges i
+`DesktopHeader` med `size={30}` ([Navigation.tsx:92](../../../src/components/Navigation.tsx))
+og formentlig et tilsvarende sted i mobilheaderen (findes i `App.tsx`s topbjælke for
+mobil-visning — samme komponent, mindre `size`). Begge hæves: desktop `30 → 36`,
+mobil-header `size` (findes ved at søge `<WwMark` i `App.tsx`) hæves fra sin nuværende
+værdi til mindst `28` (typisk startpunkt er `24`, jf. samme forhold som desktop). Ingen
+strukturændring — kun `size`-proppen, som allerede skalerer hele SVG'et proportionalt.
+
+### Responsivitet
+
+Appens grundform er allerede fornuftig: `useIsDesktop()`
+([useWhatwork.ts:110](../../../src/state/useWhatwork.ts)) skifter mellem
+`MobileNav`/`DesktopHeader` ved 1024px, og hver skærm er en enkelt, centreret kolonne
+med `maxWidth` (760–860px) — det holder sig læsbart fra telefon til bred desktop uden
+separate tablet-layouts. `.ww-eq-grid` bruger allerede `repeat(auto-fill,
+minmax(104px, 1fr))` ([index.css:437](../../../src/index.css)), så udstyrsfliserne
+allerede reflower korrekt.
+
+"100 %-tilpasning på tværs af enheder" verificeres konkret (ikke påstået) ved at
+resize'e den kørende app til seks repræsentative viewports og rette det, der reelt går
+i stykker:
+
+| Viewport | Repræsenterer |
+|---|---|
+| 375×812 | iPhone (standard) |
+| 320×568 | Mindste almindelige iPhone (SE) |
+| 768×1024 | iPad, portræt / Android-tablet |
+| 1024×1366 | iPad, landskab |
+| 1280×800 | Bærbar |
+| 1920×1080 | Stor desktop-skærm |
+
+Konkrete rettelser, der allerede kan forudses fra kodegennemgangen:
+- Ved 320px bliver `Kicker`/`h1.ww-display` (brugt på Home/Generator) og
+  DNA-rækkens faste `width: 88`-label ([Result.tsx:154](../../../src/screens/Result.tsx))
+  de mest sandsynlige overløbspunkter — hvis testen bekræfter det, sættes en let
+  `@media (max-width: 360px)`-regel, der reducerer `.ww-display`s `font-size` og
+  fjerner DNA-labelens faste bredde til fordel for `flex: '0 1 auto'`.
+- Timerens faste kontrolknapper ([Timer.tsx](../../../src/screens/Timer.tsx)) og
+  callout-overlayet fra Del F testes eksplicit ved 320px bredde, da store, faste
+  `font-size: 28px`-tekster er det mest risikable element for at knække linjen for
+  tidligt på en meget smal skærm.
+
+Præcis hvilke regler der ender med at blive tilføjet, afhænger af, hvad
+resize-testen i Task 15 rent faktisk finder — denne sektion sætter rammen
+(bredder, hvilke skærme der prioriteres, og hvordan fejl rettes), ikke et facit på
+forhånd.
+
+## Del L — Grønne, fede tidsangivelser
+
+`ca. {block.minutes} min` ([Result.tsx:228](../../../src/screens/Result.tsx)) — den
+eneste forekomst af dette mønster i appen — farves og gøres fed:
+
+```tsx
+<span className="ww-num" style={{ fontSize: 13, fontWeight: 700, color: 'var(--ww-green)', whiteSpace: 'nowrap' }}>
+  ca. {block.minutes} min
+</span>
+```
+
+(Kun `fontWeight`/`color` tilføjet til den eksisterende `style`-linje.)
+
+## Del M — Justerbar vægt pr. øvelse med genberegnede skiver
+
+### Ny motorfunktion: `stepLoad`
+
+I dag beregnes hvert `PersonTarget.load` én gang ved generering
+(`scaleLoad`/`scaleLoadPct`, [loads.ts:162](../../../src/engine/loads.ts)) ud fra
+køn/niveau/kropsvægt — der er ingen vej til at bede motoren om "samme øvelse, men 5 kg
+tungere" bagefter. `prescribe()` ([loads.ts:97](../../../src/engine/loads.ts)) er
+allerede den funktion, der oversætter et ønsket antal kilo til en konkret, snappet
+belastning (skiver, kettlebell-størrelse, sandbag-vægt, osv.) — den mangler kun at
+blive eksporteret og pakket ind i en funktion, der tager "nuværende vægt + retning" i
+stedet for "rå beregnet ønske":
+
+```ts
+/** Faste lister, en +/- ét trin skal bevæge sig til nabo-værdien i, i stedet for at
+ * lægge et fast antal kilo til og risikere at snappe tilbage til samme værdi. */
+function listFor(ex: Exercise, kind: LoadKind, ctx: LoadContext): number[] | null {
+  if (kind === 'ball') return WALLBALLS;
+  if (kind === 'bag') return ctx.sandbags?.length ? ctx.sandbags : DEFAULT_SANDBAGS;
+  if ((kind === 'pair' || kind === 'single') && ex.eq.includes('kettlebell')) return KETTLEBELLS;
+  return null;
+}
+
+/** Ét trin op eller ned fra `currentEachKg` — til "juster vægten"-knapperne i UI'et.
+ * Genbruger `prescribe` til selve formateringen, så teksten altid matcher det, motoren
+ * ville have skrevet ved generering. */
+export function stepLoad(
+  ex: Exercise, kind: LoadKind, currentEachKg: number, direction: 1 | -1, ctx: LoadContext = {},
+): LoadPrescription {
+  const list = listFor(ex, kind, ctx);
+  let nextEach: number;
+  if (list) {
+    const sorted = [...list].sort((a, b) => a - b);
+    let idx = 0;
+    sorted.forEach((v, i) => {
+      if (Math.abs(v - currentEachKg) < Math.abs((sorted[idx] as number) - currentEachKg)) idx = i;
+    });
+    nextEach = sorted[clamp(idx + direction, 0, sorted.length - 1)] as number;
+  } else {
+    const step = kind === 'barbell' || kind === 'sled' ? 5 : 2.5;
+    const floor = kind === 'barbell' ? 0 : kind === 'sled' ? 20 : 1;
+    nextEach = Math.max(floor, roundTo(currentEachKg + direction * step, step));
+  }
+  return prescribe(ex, kind, nextEach, 0, ctx);
+}
+```
+
+`stepLoad` eksporteres fra `loads.ts` og videre fra `engine/index.ts`
+([index.ts:15](../../../src/engine/index.ts)), sammen med `WALLBALLS`/`KETTLEBELLS`
+(i dag modul-private konstanter i `loads.ts` — forbliver private, kun `stepLoad`
+eksponeres, så resten af motorens indkapsling er uændret).
+
+### UI: justeringsknapper i Result.tsx
+
+`Result`-komponenten får `profile: UserProfile` som ny prop (sendt fra `App.tsx`s
+`<Result profile={ww.profile} ... />`), som gives videre til `BlockSection` →
+`MovementRow`. Justeringer holdes i lokal state i `Result`, nulstillet hver gang en ny
+`workout` åbnes — de er en "hvad hvis jeg løfter mere/mindre"-visning, ikke en del af
+den gemte workout eller historikken:
+
+```tsx
+const [overrides, setOverrides] = useState<Record<string, eng.LoadPrescription>>({});
+useEffect(() => { setOverrides({}); }, [workout.id]);
+
+const adjust = (key: string, ex: eng.Exercise, kind: eng.LoadKind, current: eng.LoadPrescription, dir: 1 | -1) => {
+  const next = eng.stepLoad(ex, kind, current.eachKg, dir, {
+    plates: profile.plates, bars: profile.bars, sandbags: profile.sandbags,
+  });
+  setOverrides((o) => ({ ...o, [key]: next }));
+};
+```
+
+I `MovementRow` (nu med `profile`/`overrides`/`onAdjust`-props), hvor
+`t.load?.text ?? ''` i dag vises rent tekstligt
+([Result.tsx:275](../../../src/screens/Result.tsx)), tilføjes to små ikon-knapper
+(genbruger `.ww-round-btn`-mønstret, allerede brugt til runde-tælleren i Timer,
+[Timer.tsx:161](../../../src/screens/Timer.tsx)) omkring den *effektive* værdi
+(`overrides[key] ?? t.load`):
+
+```tsx
+{t.load ? (
+  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+    <button type="button" className="ww-step-btn" aria-label={`${movement.name}: mindre vægt til ${t.label}`}
+      onClick={() => onAdjust(key, ex, t.load!.kind, effectiveLoad, -1)}>−</button>
+    <span style={{ color: 'var(--ww-orange)', fontWeight: 600 }}>{effectiveLoad.text}</span>
+    <button type="button" className="ww-step-btn" aria-label={`${movement.name}: mere vægt til ${t.label}`}
+      onClick={() => onAdjust(key, ex, t.load!.kind, effectiveLoad, 1)}>+</button>
+  </span>
+) : null}
+```
+
+`key` er `` `${movement.exerciseId}_${i}_${t.label}` `` (blok-id + index + label —
+unikt inden for én workout-visning). Ny, lille CSS-klasse `.ww-step-btn` (26×26px,
+rund, samme visuelle familie som `.ww-round-btn` men mindre — passer til inline
+tekstflow i stedet for en fritstående kontrol).
+
+Vægtstang-øvelser viser dermed straks den nye "X kg i alt — Y kg stang + Z kg på hver
+side"-tekst ved tryk, præcis den formatering motoren allerede bruger ved generering —
+ingen dobbelt formateringslogik at holde i sync.
+
+**Test:** `stepLoad` testes direkte i `loads.test.ts` — ét trin op/ned for barbell
+genberegner skiver korrekt og runder til 5 kg; ét trin på en kettlebell-baseret
+øvelse rammer den *faktiske* nabo-kettlebell (ikke en vilkårlig ±2,5 kg, der kan snappe
+tilbage til samme værdi); ét trin ved den letteste/tungeste værdi i en liste går ikke
+under/over listens grænser.
+
+## Del N — "Liquid Glass" bundmenu
+
+`.ww-tab` ([index.css:612](../../../src/index.css)) skifter i dag kun tekstfarve ved
+`aria-current='page'` — der er ingen visuel "pille", der glider mellem faner. Tilføjes:
+
+- Et nyt `<span className="ww-tab__glass" />` inde i hver `.ww-tab`-knap i `MobileNav`
+  ([Navigation.tsx:37](../../../src/components/Navigation.tsx)), positioneret absolut
+  bag ikon+label.
+- `MobileNav` måler den aktive knaps position med `getBoundingClientRect()` i en
+  `useLayoutEffect` (afhænger af `screen`) og sætter et CSS custom property,
+  `--ww-tab-x`/`--ww-tab-w`, på `.ww-tabbar`-elementet — ét flydende "glas"-element
+  (`.ww-tab-highlight`), placeret som søskende til de fire faner (ikke inde i hver
+  enkelt), animeres med `transform: translateX(var(--ww-tab-x))` og
+  `width: var(--ww-tab-w)`, `transition: transform 0.32s var(--ww-ease), width 0.32s
+  var(--ww-ease)` — samme lette, "glidende" fornemmelse som resten af appens
+  `--ww-ease`-brug (fx timer-callouten i Del F).
+- Visuelt: afrundet rektangel (`border-radius: 14px`), `background:
+  var(--ww-glass)`, `backdrop-filter: blur(14px)`, `border: 1px solid
+  var(--ww-glass-line)` — samme tokens som `.ww-glass`-klassen allerede bruger til
+  navigation/sheets ([index.css:41-43](../../../src/index.css)), så det matcher
+  appens eksisterende "liquid glass"-sprog i stedet for at opfinde en ny stil.
+- `prefers-reduced-motion: reduce` ([index.css:201](../../../src/index.css)) slår
+  `transition` fra på `.ww-tab-highlight`, så brugere, der har bedt om mindre
+  bevægelse, får et øjeblikkeligt skift i stedet for en glidende animation.
+
+```tsx
+export function MobileNav({ screen, onGo }: { screen: Screen; onGo: (s: Screen) => void }) {
+  const barRef = useRef<HTMLDivElement>(null);
+  const activeRef = useRef<HTMLButtonElement>(null);
+
+  useLayoutEffect(() => {
+    const bar = barRef.current;
+    const active = activeRef.current;
+    if (!bar || !active) return;
+    const barRect = bar.getBoundingClientRect();
+    const activeRect = active.getBoundingClientRect();
+    bar.style.setProperty('--ww-tab-x', `${activeRect.left - barRect.left}px`);
+    bar.style.setProperty('--ww-tab-w', `${activeRect.width}px`);
+  }, [screen]);
+
+  return (
+    <nav className="ww-tabbar ww-glass" aria-label="Hovedmenu" ref={barRef}>
+      <span className="ww-tab-highlight" aria-hidden="true" />
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)' }}>
+        {TABS.map((tab) => (
+          <button
+            key={tab.id}
+            type="button"
+            className="ww-tab"
+            ref={screen === tab.id ? activeRef : undefined}
+            aria-current={screen === tab.id ? 'page' : undefined}
+            onClick={() => onGo(tab.id)}
+          >
+            {/* ...uændret indhold... */}
+          </button>
+        ))}
+      </div>
+    </nav>
+  );
+}
+```
+
+**Test:** ingen meningsfuld unit-test for en `getBoundingClientRect`-baseret
+layout-effekt (jsdom returnerer nul-rects) — verificeres visuelt: skift mellem alle
+fire faner i browser-checket og bekræft, at highlighten glider i stedet for at
+springe, samt at den rammer den rigtige fane ved direkte navigation (fx `Historik`
+åbnet fra et link, ikke via tabbaren).
+
+## Del O — Brandnavnet bliver "WHATWORK?"
+
+Ændres, hvor navnet/logoet **vises som sig selv** (titel, wordmark, install-navn,
+knapper der navngiver appen) — **ikke** i løbende sætninger, hvor "WHATWORK" bruges
+som et almindeligt navneord midt i en dansk sætning (fx "Så bygger WHATWORK resten
+…", "WHATWORK er en træningsplanlægger …") — der ville et tilføjet "?" læses som et
+spørgsmålstegn i selve sætningen, hvilket ikke er meningen, og heller ikke
+`vite.config.ts`s `PAGES_BASE = '/WHATWORK/'` ([vite.config.ts:44](../../../vite.config.ts)),
+som er en URL-sti for GitHub Pages-deployet, ikke tekst nogen ser.
+
+Ændres:
+
+- `src/components/Wordmark.tsx`: alle tre `WHATWORK`-tekstlag
+  ([Wordmark.tsx:29,39,50](../../../src/components/Wordmark.tsx)) → `WHATWORK?`, og
+  `aria-label="WHATWORK"` ([Wordmark.tsx:24](../../../src/components/Wordmark.tsx)) →
+  `aria-label="WHATWORK?"`.
+- `src/components/WwMark.tsx`: `aria-label="WHATWORK"` ([WwMark.tsx:13](../../../src/components/WwMark.tsx))
+  → `aria-label="WHATWORK?"` (selve ikonet er kun et "W", uændret — kun den
+  skærmlæser-beskrivende label opdateres for konsistens).
+- `index.html`: `<title>WHATWORK</title>` → `<title>WHATWORK?</title>`
+  ([index.html:14](../../../index.html)); `apple-mobile-web-app-title`
+  ([index.html:11](../../../index.html)) → `WHATWORK?`.
+- `vite.config.ts`: PWA-manifestets `name`/`short_name`
+  ([vite.config.ts](../../../vite.config.ts), `name: 'WHATWORK'`/`short_name:
+  'WHATWORK'`) → `WHATWORK?`.
+- `src/screens/Onboarding.tsx`: knapteksten `'Start WHATWORK'`
+  ([Onboarding.tsx:147](../../../src/screens/Onboarding.tsx)) → `'Start WHATWORK?'`.
+- `src/screens/About.tsx` (`title="Om WHATWORK"`), `src/screens/Profile.tsx`
+  (`{ id: 'about', label: 'Om WHATWORK' }`), `src/components/Navigation.tsx`
+  (`{ id: 'about', label: 'Om WHATWORK', hint: … }`) → `Om WHATWORK?` alle tre steder
+  — det er et menupunkt/sidetitel, der navngiver appen, ikke en sætning.
+
+**Ikke ændret** (bevidst — løbende prosa, ikke en navngivning): teksterne i
+`Home.tsx`, `Welcome.tsx`, `Generator.tsx`, `Help.tsx`, `About.tsx`s brødtekst,
+`Transfer.tsx`, og `index.html`s `meta description`.
+
+**Test:** `App.test.tsx` har formentlig en eksisterende `getByText`/snapshot-agtig
+sammenligning mod velkomstteksten eller titlen — gennemgås og opdateres, hvis en
+sådan streng-match findes; ellers ingen ny test nødvendig for en ren tekstændring.
+
+## Del P — Burpee Broad Jump, flere variationer, uændret hastighed
+
+### Burpee Broad Jump
+
+`burpee` findes allerede og er allerede i `PICKABLE`
+([exercises.ts](../../../src/engine/data/exercises.ts),
+[Generator.tsx:11](../../../src/screens/Generator.tsx)). Ny øvelse tilføjes efter
+`burpee_pull_up`:
+
+```ts
+E({ id: 'burpee_broad_jump', name: 'Burpee Broad Jump', cat: 'fullbody', lvl: 2, da: 'Burpee direkte over i et langt hop fremad. Land blødt, klar til næste.', fat: { engine: 3, legs: 2 }, sec: 4.5, rep: [8, 16], sub: ['burpee'], weight: 1.1 }),
+```
+
+Tilføjes til `PICKABLE`.
+
+### Flere, reelt forskellige variationer — uden at bremse generatoren
+
+`MAX_CANDIDATES = 64` ([smartmix.ts:21](../../../src/engine/smartmix.ts)) er **ikke**
+det samlede antal mulige workouts — det er, hvor mange kandidater *hver* generering
+bygger og scorer, før den vælger den bedste. Det faktiske variationsrum styres af
+kombinationen af formatpulje × øvelsespulje × tilfældighed, og er allerede langt
+større end 64 — men brugerens oplevelse af gentagelse er reel nok til at være værd at
+adressere. Tre uafhængige, billige ændringer, ingen af dem øger beregningstiden
+mærkbart:
+
+1. **Bredere formatpulje.** `formatPool()` ([smartmix.ts:39](../../../src/engine/smartmix.ts))
+   tilføjer et par ekstra formater i den brede, ikke-indsnævrede gren (linje 65-73):
+   `interval` og `ladder` optræder allerede, men kun én gang hver i den faste liste —
+   `chipper` mangler helt fra den brede pulje (kun tilgængelig ved `t >= 35`, uændret),
+   men `e4mom`/`e5mom` kan trygt komme ind tidligere (`t >= 20` i stedet for kun
+   implicit via de eksisterende `t >= 35`/`t >= 45`-grænser), så flere distinkte
+   format-titler reelt konkurrerer om at blive valgt ved kortere sessioner.
+2. **Blødere vægtningskurve i øvelsesvalg.** `spreadWeight`
+   ([smartmix.ts:129](../../../src/engine/smartmix.ts)) bruger i dag `Math.sqrt(e.weight
+   ?? 1)` til at dæmpe forskellen mellem højt og lavt vægtede øvelser. Ændres til
+   `Math.pow(e.weight ?? 1, 0.35)` — en anelse fladere kurve, så lavt vægtede (men
+   stadig gyldige) øvelser dukker markant oftere op over mange genereringer, uden at de
+   højt vægtede "kerne"-øvelser holder op med at være de hyppigste. Ren datavægtning,
+   ingen ny beregning.
+3. **`MAX_CANDIDATES` hæves fra 64 til 128.** Se performance-afsnittet nedenfor for
+   hvorfor dette er trygt.
+
+### Performance: hvorfor det ikke føles langsommere
+
+`generateWorkout` kaldes synkront fra `runGenerate`
+([useWhatwork.ts](../../../src/state/useWhatwork.ts)) — resultatet ligger klar på
+millisekunder. Det, brugeren oplever som "loading", er en **fast, scriptet
+animation** på `LOADING_MS = 7000`
+([useWhatwork.ts:37](../../../src/state/useWhatwork.ts)) — bevidst langsommere end
+den reelle beregning, som kommentaren i koden selv siger. At fordoble
+`MAX_CANDIDATES` fordobler den reelle beregningstid fra i forvejen et par
+millisekunder til stadig kun et par millisekunder — usynligt i forhold til det
+7-sekunders scriptede forløb, som **ikke ændres** (ingen rørelse ved `LOADING_MS`,
+`PHASES` eller animationslogikken).
+
+For at gøre dette til en *garanti*, ikke en antagelse, tilføjes en performance-test i
+`engine.test.ts`, der fejler, hvis nogen (nu eller senere) introducerer en reel
+regression:
+
+```ts
+it('bygger 100 workouts på under 1500 ms i alt — MAX_CANDIDATES-forhøjelsen må ikke mærkes', () => {
+  const start = performance.now();
+  for (let i = 0; i < 100; i++) build({ minutes: 30, men: 1, level: 3, seed: 20000 + i });
+  const elapsed = performance.now() - start;
+  expect(elapsed).toBeLessThan(1500);
+});
+```
+
+1500 ms for 100 fulde genereringer (inkl. 128 kandidater hver) er en rummelig
+tærskel — i praksis forventes det at lande markant under, men grænsen er sat, så
+testen ikke bliver flaky på en langsom CI-maskine, samtidig med at den fanger en
+reel, alvorlig regression (fx en utilsigtet uendelig løkke eller kvadratisk
+kompleksitet indført ved et uheld).
+
+## Del Q — Hjem-skærmens hurtigvalg matcher Generér workout
+
+`QUICK_TIMES = [20, 30, 45, 60]` ([Home.tsx:7](../../../src/screens/Home.tsx)) udvides
+til at matche `TIME_OPTIONS` i generatoren ([Generator.tsx:8](../../../src/screens/Generator.tsx)
+— `[10, 15, 20, 25, 30, 40, 45, 60, 75, 90]`), så brugeren møder de samme valg begge
+steder:
+
+```ts
+const QUICK_TIMES = [10, 15, 20, 25, 30, 40, 45, 60, 75, 90];
+```
+
+`.ww-wrap` ([Home.tsx:58](../../../src/screens/Home.tsx)) er allerede en `flex-wrap`-
+container, så de ekstra chips bryder pænt om på flere linjer på smalle skærme uden
+yderligere layoutændring — samme mønster, `Generator.tsx`s eget tidstrin allerede
+bruger med den fulde liste.
+
+## Del R — Tydeligere DNA-akse-navne
+
+`engine`/`hinge`-aksernes visningsnavne ([validate.ts:10](../../../src/engine/validate.ts))
+er i dag de engelske fagudtryk "Engine" og "Posterior" — uigennemskuelige for en
+bruger uden trænerbaggrund. Da DNA-rækken i UI'et har en fast label-bredde
+(`width: 88`, [Result.tsx:154](../../../src/screens/Result.tsx)), vælges korte,
+almindelige danske ord frem for en parentetisk uddybning, som ville kræve mere plads
+og risikere at knække:
+
+```ts
+export const DNA_AXES: DnaAxis[] = [
+  { id: 'engine', name: 'Kondition' },
+  { id: 'legs', name: 'Ben' },
+  { id: 'hinge', name: 'Baglår' },
+  { id: 'press', name: 'Pres' },
+  { id: 'pull', name: 'Træk' },
+  { id: 'core', name: 'Core' },
+  { id: 'grip', name: 'Greb' },
+  { id: 'cns', name: 'Intensitet' },
+];
+```
+
+`'Kondition'` er det almindelige danske ord for det, `engine`-aksen rent faktisk måler
+(puls/udholdenhedsbelastning). `'Baglår'` er en forenkling af hinge-mønstrets fulde
+muskelinvolvering (baglår, baller, lænd) til den mest genkendelige enkeltmuskelgruppe
+for en lægmand — samme afvejning, `'Ben'` og `'Pres'` allerede laver for deres akser.
+`DnaAxisId` (den interne værdi, `'engine'`/`'hinge'`) er uændret — kun `name`,
+visningsteksten, ændres, så intet andet sted i motoren (fatigue-vægte, `computeDNA`)
+påvirkes.
+
+**Test:** ingen automatiseret test nødvendig (ren tekst-/datatabel-ændring, allerede
+dækket indirekte af eksisterende DNA-relaterede tests, der ikke asserter på de
+konkrete navne).
+
+## Ikke i scope (Runde 2)
+
+- Fuld, automatiseret cross-device-testsuite (fx BrowserStack/Percy) — Del K
+  verificeres med manuel resize + screenshot ved seks repræsentative viewports, ikke
+  et permanent CI-gated visuelt regressionstjek.
+- Persistering af vægt-justeringer fra Del M på tværs af sessioner/historik — de er en
+  live "hvad hvis"-visning på Resultat-siden, nulstillet ved ny workout. At gemme en
+  brugerjusteret vægt tilbage i selve `Workout`-objektet (og dermed historikken) er en
+  selvstændig, større datamodel-ændring, som ikke er bedt om her.
+- Ændringer til selve loading-skærmens varighed eller faseanimation (`LOADING_MS`,
+  `PHASES`) — eksplicit udelukket af brugeren.
+- Forskning i eksterne kilder for Del I's rep-/hviletidstal — baseret på etableret
+  styrke-/konditionstræningspraksis (NSCA-niveau konsensus), ikke en specifik,
+  citeret undersøgelse.
