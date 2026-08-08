@@ -24,14 +24,19 @@ export function kindFor(current: SegmentKind, next: SegmentKind): ArrivalKind | 
 
 let ctx: AudioContext | null = null;
 
-function getCtx(): AudioContext {
-  if (!ctx) ctx = new AudioContext();
+/** `null` i miljøer uden Web Audio (fx testkørsel i jsdom, eller meget gamle browsere). */
+function getCtx(): AudioContext | null {
+  if (ctx) return ctx;
+  const Ctor = typeof AudioContext === 'undefined' ? undefined : AudioContext;
+  if (!Ctor) return null;
+  ctx = new Ctor();
   return ctx;
 }
 
 /** Én kort, blød tone. `startAt`/`durationSec` er i sekunder fra nu. */
 function tone(freq: number, startAt: number, durationSec: number, gainPeak = 0.2): void {
   const audio = getCtx();
+  if (!audio) return;
   const osc = audio.createOscillator();
   const gain = audio.createGain();
   osc.type = 'sine';

@@ -4,6 +4,8 @@ import type { Program, TimerPlan, TimerSegment, Workout, WorkoutRequest } from '
 import { requestAiPlan } from '../lib/aiMix.js';
 import { fmtTime } from '../lib/format.js';
 import { useHashRouter } from '../lib/router.js';
+import * as sound from '../lib/sound.js';
+import type { ArrivalKind } from '../lib/sound.js';
 import { clearState, loadState, saveState, STATE_VERSION, downloadJson } from '../lib/storage.js';
 import { applyTheme, readTheme } from '../lib/theme.js';
 import { buildExport, parseImport } from '../lib/transfer.js';
@@ -192,6 +194,7 @@ export function useWhatwork() {
   const [timer, setTimer] = useState<TimerState | null>(null);
   const [now, setNow] = useState(() => Date.now());
   const [confirmDialog, setConfirmDialog] = useState<'exit' | 'reset' | null>(null);
+  const [timerCallout, setTimerCallout] = useState<{ kind: ArrivalKind; ts: number } | null>(null);
   const [completion, setCompletion] = useState<Completion>({ status: 'done', rpe: 'ok', note: '' });
   const [completeFor, setCompleteFor] = useState<CompleteContext | null>(null);
   const [wipeArmed, setWipeArmed] = useState(false);
@@ -317,6 +320,47 @@ export function useWhatwork() {
     const id = window.setTimeout(() => advance(1), Math.max(0, remaining * 1000));
     return () => window.clearTimeout(id);
   }, [timer?.running, remaining, atLastSegment, advance]);
+
+  /*
+   * Nedtælling (3-2-1) og ankomst-lyd/-tekst ved segmentskift. Genbruger samme
+   * "planlæg en præcis timeout, lad effekten selv genberegne den ved hver render"-
+   * mønster som auto-advance ovenfor — for åbne, men tidscappede segmenter (For
+   * Time/Chipper/Ladder/You go, I go) bruges tiden til cappen i stedet for `remaining`.
+   */
+  const capLeft = view && view.segment.capSeconds !== undefined
+    ? view.segment.capSeconds - view.sessionElapsed
+    : null;
+  const soundRemaining = remaining !== null ? remaining : capLeft;
+
+  useEffect(() => {
+    if (!timer?.running || !settings.sound || soundRemaining === null || !view?.next) return;
+    const arrivalKind = sound.kindFor(view.segment.kind, view.next.kind);
+    const timeouts: number[] = [];
+    ([3, 2, 1] as const).forEach((stepsLeft) => {
+      const at = soundRemaining - stepsLeft;
+      if (at > 0) timeouts.push(window.setTimeout(() => sound.playTick(stepsLeft), at * 1000));
+    });
+    if (arrivalKind && soundRemaining > 0) {
+      timeouts.push(window.setTimeout(() => {
+        sound.playArrival(arrivalKind);
+        setTimerCallout({ kind: arrivalKind, ts: Date.now() });
+      }, soundRemaining * 1000));
+    }
+    return () => timeouts.forEach((id) => window.clearTimeout(id));
+  }, [timer?.running, settings.sound, soundRemaining, view?.segment.kind, view?.next]);
+
+  const prevSegmentKind = useRef<string | null>(null);
+  useEffect(() => {
+    const kind = view?.segment.kind;
+    if (!kind) return;
+    if (kind === 'done' && prevSegmentKind.current !== 'done' && settings.sound) {
+      sound.playArrival('complete');
+      const id = window.setTimeout(() => setTimerCallout({ kind: 'complete', ts: Date.now() }), 0);
+      prevSegmentKind.current = kind;
+      return () => window.clearTimeout(id);
+    }
+    prevSegmentKind.current = kind;
+  }, [view?.segment.kind, settings.sound]);
 
   const startTimer = useCallback(() => {
     if (!workout) return;
@@ -822,7 +866,7 @@ export function useWhatwork() {
     program, programDraft, setProgramDraft, buildProgram,
     dropProgram: () => setProgram(null), patchProgramDay, regenerateDay, moveProgramDay,
     timer, plan, view, startTimer, toggleTimer, resetTimer, addRound, advance,
-    confirmDialog, setConfirmDialog, openCompletion,
+    confirmDialog, setConfirmDialog, openCompletion, timerCallout,
     completion, setCompletion, completeFor, saveCompletion,
     fromProgram,
     wipeArmed, wipeData, exportData, stageImport, importPreview, importError, setImportPreview,
