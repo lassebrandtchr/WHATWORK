@@ -1,11 +1,20 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import type { TimerPlan, Workout } from '../engine/index.js';
-import { Dialog, Glyph } from '../components/ui.js';
+import { Dialog, Glyph, SoundToggle } from '../components/ui.js';
 import { fmtTime, groupByProfile } from '../lib/format.js';
+import type { ArrivalKind } from '../lib/sound.js';
 import type { TimerState, TimerView } from '../types.js';
 
 const KIND_LABEL: Record<string, string> = {
   prep: 'Gør klar', work: 'Arbejde', rest: 'Pause', transition: 'Skift', done: 'Færdig',
+};
+
+const CALLOUT_LABEL: Record<ArrivalKind, string> = {
+  start: 'START',
+  switch: 'SKIFT ØVELSE',
+  rest_start: 'PAUSE STARTER',
+  rest_end: 'ARBEJD IGEN',
+  complete: 'FÆRDIG',
 };
 
 /** Grøn for opvarmning, rød for alt andet (styrke/conditioning) — samme princip som Result. */
@@ -15,9 +24,9 @@ function accentFor(blockId: string, workout: Workout): string {
 }
 
 export function Timer({
-  timer, plan, view, workout, confirmDialog, keepAwake,
+  timer, plan, view, workout, confirmDialog, keepAwake, soundOn, timerCallout,
   onToggle, onNext, onPrev, onRound, onRequestExit, onRequestReset, onCancelDialog,
-  onConfirmExit, onConfirmReset, onFinish,
+  onConfirmExit, onConfirmReset, onFinish, onToggleSound,
 }: {
   timer: TimerState;
   plan: TimerPlan;
@@ -25,6 +34,8 @@ export function Timer({
   workout: Workout;
   confirmDialog: 'exit' | 'reset' | null;
   keepAwake: boolean;
+  soundOn: boolean;
+  timerCallout: { kind: ArrivalKind; ts: number } | null;
   onToggle: () => void;
   onNext: () => void;
   onPrev: () => void;
@@ -35,11 +46,23 @@ export function Timer({
   onConfirmExit: () => void;
   onConfirmReset: () => void;
   onFinish: () => void;
+  onToggleSound: () => void;
 }) {
   const { segment, next } = view;
   const isLast = view.index >= view.total - 1;
   const movements = segment.movements ?? (segment.movement ? [segment.movement] : []);
   const hasRounds = segment.kind === 'work' && segment.seconds === null;
+
+  const [calloutVisible, setCalloutVisible] = useState(false);
+  useEffect(() => {
+    if (!timerCallout) return;
+    const showId = window.setTimeout(() => setCalloutVisible(true), 0);
+    const hideId = window.setTimeout(() => setCalloutVisible(false), 900);
+    return () => {
+      window.clearTimeout(showId);
+      window.clearTimeout(hideId);
+    };
+  }, [timerCallout]);
 
   // Wake Lock er ikke tilgængelig alle steder. Fejler den, skal timeren bare køre videre.
   useEffect(() => {
@@ -69,6 +92,7 @@ export function Timer({
             {segment.blockTitle} · {KIND_LABEL[segment.kind] ?? segment.kind}
           </span>
         </div>
+        <SoundToggle on={soundOn} onToggle={onToggleSound} />
         <button type="button" className="ww-btn ww-btn--ghost" style={{ minHeight: 44, flex: 'none' }} onClick={onRequestReset}>
           Nulstil
         </button>
@@ -235,6 +259,12 @@ export function Timer({
             </button>
           </div>
         </Dialog>
+      ) : null}
+
+      {timerCallout && calloutVisible ? (
+        <div className={`ww-callout ww-callout--${timerCallout.kind}`} aria-hidden="true">
+          {CALLOUT_LABEL[timerCallout.kind]}
+        </div>
       ) : null}
     </div>
   );

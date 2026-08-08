@@ -75,6 +75,8 @@ export function App() {
         workout={ww.workout}
         confirmDialog={ww.confirmDialog}
         keepAwake={ww.settings.keepAwake}
+        soundOn={ww.settings.sound}
+        timerCallout={ww.timerCallout}
         onToggle={ww.toggleTimer}
         onNext={() => ww.advance(1)}
         onPrev={() => ww.advance(-1)}
@@ -85,6 +87,7 @@ export function App() {
         onConfirmExit={() => ww.openCompletion('stopped')}
         onConfirmReset={ww.resetTimer}
         onFinish={() => ww.openCompletion('done')}
+        onToggleSound={() => ww.setSettings((s) => ({ ...s, sound: !s.sound }))}
       />
     );
   }

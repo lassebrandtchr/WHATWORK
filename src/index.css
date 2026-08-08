@@ -873,6 +873,44 @@ a {
 .ww-timer__rail span.is-done { background: var(--ww-line-3); }
 .ww-timer__rail span.is-now { background: var(--ww-orange); }
 
+/* ---------- Timer-callout (start/skift/pause/færdig) ---------- */
+
+.ww-callout {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  z-index: 80;
+  padding: 14px 28px;
+  border-radius: var(--ww-r-lg);
+  font-family: var(--ww-sans);
+  font-weight: 800;
+  font-size: 28px;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  text-align: center;
+  pointer-events: none;
+  border: 1px solid;
+  animation: ww-callout-pop 0.9s var(--ww-ease) forwards;
+}
+
+@keyframes ww-callout-pop {
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(0.85); }
+  15% { opacity: 1; transform: translate(-50%, -50%) scale(1.04); }
+  30% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  75% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(1); }
+}
+
+.ww-callout--start, .ww-callout--rest_end, .ww-callout--complete {
+  background: var(--ww-green-dim); border-color: var(--ww-green-line); color: var(--ww-green);
+}
+.ww-callout--switch {
+  background: var(--ww-orange-dim); border-color: var(--ww-orange-line); color: var(--ww-orange);
+}
+.ww-callout--rest_start {
+  background: var(--ww-blue-dim); border-color: var(--ww-blue-line); color: var(--ww-blue);
+}
+
 .ww-round-btn {
   width: 52px;
   height: 52px;

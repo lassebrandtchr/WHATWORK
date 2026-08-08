@@ -238,7 +238,7 @@ export function Dialog({
   );
 }
 
-type GlyphName = 'back' | 'close' | 'menu' | 'bolt' | 'star' | 'star-filled' | 'check' | 'chevron' | 'sun' | 'moon' | 'gear';
+type GlyphName = 'back' | 'close' | 'menu' | 'bolt' | 'star' | 'star-filled' | 'check' | 'chevron' | 'sun' | 'moon' | 'gear' | 'sound-on' | 'sound-off';
 
 /** Appens egne glyffer. Ingen emoji, intet eksternt ikonbibliotek. */
 export function Glyph({ name, size = 20 }: { name: GlyphName; size?: number }) {
@@ -270,6 +270,18 @@ export function Glyph({ name, size = 20 }: { name: GlyphName; size?: number }) {
       </g>
     ),
     moon: <path d="M20 14.2A8.4 8.4 0 0 1 9.8 4 8.4 8.4 0 1 0 20 14.2z" {...common} />,
+    'sound-on': (
+      <g {...common}>
+        <path d="M4 10v4h3.6L13 18V6L7.6 10z" />
+        <path d="M16.2 9a4.2 4.2 0 0 1 0 6M18.6 6.6a7.8 7.8 0 0 1 0 10.8" />
+      </g>
+    ),
+    'sound-off': (
+      <g {...common}>
+        <path d="M4 10v4h3.6L13 18V6L7.6 10z" />
+        <path d="M16 10.4l4.4 4.4M20.4 10.4 16 14.8" />
+      </g>
+    ),
     gear: (
       <g {...common}>
         <circle cx="12" cy="12" r="3" />
@@ -296,6 +308,21 @@ export function ThemeToggle({ theme, onToggle }: { theme: 'dark' | 'light'; onTo
       onClick={onToggle}
     >
       <Glyph name={theme === 'dark' ? 'sun' : 'moon'} />
+    </button>
+  );
+}
+
+/** Lille, hurtig lyd-til/fra-knap — samme mønster som ThemeToggle, vises i timerens topbjælke. */
+export function SoundToggle({ on, onToggle }: { on: boolean; onToggle: () => void }) {
+  return (
+    <button
+      type="button"
+      className="ww-icon-btn"
+      aria-label={on ? 'Slå timerlyd fra' : 'Slå timerlyd til'}
+      aria-pressed={on}
+      onClick={onToggle}
+    >
+      <Glyph name={on ? 'sound-on' : 'sound-off'} />
     </button>
   );
 }
