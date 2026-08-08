@@ -204,6 +204,9 @@ export interface Block {
   everySec?: number;
   workSec?: number;
   restSec?: number;
+  /** Kun på almindelig EMOM: hvert `movements.length`. interval efterfølges af ét
+   * hvileminut, og `rounds` tæller fulde cyklusser (arbejde + hvile), ikke enkeltintervaller. */
+  restEveryCycle?: boolean;
   partner?: PartnerProtocol;
   /** Kun på opvarmning: "35 sekunders arbejde · 5 sekunders skift". */
   timing?: string;

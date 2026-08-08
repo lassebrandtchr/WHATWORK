@@ -75,20 +75,31 @@ export function buildConditioning(
   let everySec: number | undefined;
   let workSec: number | undefined;
   let restSec: number | undefined;
+  let restEveryCycle: boolean | undefined;
 
   const perRound = () => roundSeconds(movements);
 
   if (isEmomFamily(format)) {
     everySec = EVERY_SEC[format] ?? 60;
-    const slots = Math.max(2, Math.floor((min * 60) / everySec));
     movements = movements.slice(0, Math.min(4, movements.length));
     movements = movements.map((_m, i) => {
       const ex = exercises[i] as Exercise;
       return resize(ex, req, rnd, repsForInterval(ex, everySec ?? 60));
     });
-    title = `${FORMATS[format]?.name ?? format} ${min}`;
-    rounds = slots;
-    prescription = `${slots} intervaller à ${(everySec ?? 60) / 60} min · skiftevis: ${movements.map((m) => m.name).join(' → ')}`;
+    const wantsRestCycle = format === 'emom' && req.condition >= 7 && movements.length >= 2;
+    if (wantsRestCycle) {
+      restEveryCycle = true;
+      const cycleSec = everySec * (movements.length + 1);
+      rounds = Math.max(1, Math.floor((min * 60) / cycleSec));
+      title = `${FORMATS[format]?.name ?? format} ${min} · med hvile`;
+      prescription = `${rounds} runder à ${movements.length} arbejdsminutter + 1 hvileminut · `
+        + `skiftevis: ${movements.map((m) => m.name).join(' → ')}`;
+    } else {
+      const slots = Math.max(2, Math.floor((min * 60) / everySec));
+      title = `${FORMATS[format]?.name ?? format} ${min}`;
+      rounds = slots;
+      prescription = `${slots} intervaller à ${(everySec ?? 60) / 60} min · skiftevis: ${movements.map((m) => m.name).join(' → ')}`;
+    }
   } else if (format === 'amrap') {
     title = `${min} min AMRAP`;
     rounds = Math.max(2, Math.round((min * 60) / Math.max(45, perRound())));
@@ -186,6 +197,7 @@ export function buildConditioning(
     ...(everySec === undefined ? {} : { everySec }),
     ...(workSec === undefined ? {} : { workSec }),
     ...(restSec === undefined ? {} : { restSec }),
+    ...(restEveryCycle === undefined ? {} : { restEveryCycle }),
   };
 }
 

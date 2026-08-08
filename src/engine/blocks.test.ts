@@ -19,6 +19,8 @@ const backSquat = byId('back_squat');
 const cleanAndJerk = byId('clean_and_jerk');
 const pushPress = byId('push_press');
 const burpee = byId('burpee');
+const ski = byId('ski');
+const row = byId('row');
 
 describe('buildStrength — ramp til tung 5RM', () => {
   it('kan vælge ramp-skemaet ved niveau 5 for et kvalificerende løft', () => {
@@ -106,5 +108,43 @@ describe('buildConditioning — realistisk tempo på tungt udstyr', () => {
     });
     const m = block?.movements[0];
     expect(m?.cue).not.toContain('bryd det gerne op');
+  });
+});
+
+describe('buildConditioning — EMOM med hvileminut', () => {
+  it('indsætter intet hvileminut, når intensiteten er lav', () => {
+    const req = normalizeRequest({ minutes: 20, men: 1, level: 3, condition: 4, seed: 1 });
+    const block = buildConditioning(req, mulberry32(1), {
+      format: 'emom', exercises: [ski, row], minutes: 20,
+    });
+    expect(block?.restEveryCycle).toBeUndefined();
+  });
+
+  it('indsætter et hvileminut for hver fulde rotation, når intensiteten er høj', () => {
+    const req = normalizeRequest({ minutes: 25, men: 1, level: 3, condition: 9, seed: 1 });
+    const block = buildConditioning(req, mulberry32(1), {
+      format: 'emom', exercises: [ski, row], minutes: 25,
+    });
+    expect(block?.restEveryCycle).toBe(true);
+    // 2 øvelser + 1 hvile = 3 min pr. cyklus → floor(25/3) = 8 cyklusser.
+    expect(block?.rounds).toBe(8);
+    expect(block?.title).toContain('med hvile');
+    expect(block?.prescription).toContain('hvileminut');
+  });
+
+  it('kræver mindst 2 øvelser for at aktivere hvile-cyklussen', () => {
+    const req = normalizeRequest({ minutes: 20, men: 1, level: 3, condition: 9, seed: 1 });
+    const block = buildConditioning(req, mulberry32(1), {
+      format: 'emom', exercises: [ski], minutes: 20,
+    });
+    expect(block?.restEveryCycle).toBeUndefined();
+  });
+
+  it('rører ikke E2MOM — kun almindelig EMOM får hvile-cyklussen', () => {
+    const req = normalizeRequest({ minutes: 25, men: 1, level: 3, condition: 9, seed: 1 });
+    const block = buildConditioning(req, mulberry32(1), {
+      format: 'e2mom', exercises: [ski, row], minutes: 25,
+    });
+    expect(block?.restEveryCycle).toBeUndefined();
   });
 });
