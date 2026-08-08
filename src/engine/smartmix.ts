@@ -14,11 +14,17 @@ import type {
 } from './types.js';
 
 /**
- * Smart Mix bygger op til 64 gyldige kandidater pr. generering og vælger den, der
+ * Smart Mix bygger op til 128 gyldige kandidater pr. generering og vælger den, der
  * matcher bedst. Alle kandidater går gennem den samme hard validator — en ugyldig
  * workout bliver aldrig vist, heller ikke som "næstbedste".
+ *
+ * Selve genereringen tager kun et par millisekunder (se performance-testen i
+ * engine.test.ts) — det er den faste, scriptede loading-animation
+ * (`LOADING_MS` i useWhatwork.ts), der styrer, hvor længe brugeren venter, ikke
+ * denne konstant. At fordoble den giver derfor markant mere variation uden at
+ * appen føles langsommere.
  */
-export const MAX_CANDIDATES = 64;
+export const MAX_CANDIDATES = 128;
 
 /* ---------- Tidsbudget ---------- */
 
@@ -67,6 +73,7 @@ function formatPool(req: NormalizedRequest): FormatId[] {
   if (focus === 'engine' || focus === 'long' || c >= 8) pool.push('amrap', 'interval', 'e2mom');
   if (focus === 'fast') pool.push('fortime', 'amrap', 'ladder');
   pool.push('amrap', 'emom', 'fortime', 'interval', 'ladder');
+  if (t >= 20) pool.push('e4mom');
   if (t >= 25) pool.push('e2mom', 'e3mom');
   if (t >= 35) pool.push('chipper', 'e4mom');
   if (t >= 45) pool.push('e5mom');
@@ -130,9 +137,12 @@ export function movementCount(minutes: number, format: FormatId, rnd: Rng): numb
 
 /**
  * Dæmper vægtningen, så øvelser med lav `weight` også reelt dukker op over mange
- * genereringer, i stedet for at de tungest vægtede altid dominerer poolen.
+ * genereringer, i stedet for at de tungest vægtede altid dominerer poolen. En lavere
+ * eksponent end kvadratrod (0,35 i stedet for 0,5) flader kurven yderligere ud —
+ * flere reelt forskellige øvelser cirkulerer, uden at de bedst vægtede holder op med
+ * at være de hyppigste.
  */
-const spreadWeight = (e: Exercise): number => Math.sqrt(e.weight ?? 1);
+const spreadWeight = (e: Exercise): number => Math.pow(e.weight ?? 1, 0.35);
 
 /** Overkrop og underkrop — de mønstre, en bred session bør ramme begge sider af. */
 const CORE_PATTERNS: MovementPattern[] = ['press', 'pull', 'squat', 'hinge'];

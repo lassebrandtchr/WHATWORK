@@ -509,3 +509,12 @@ describe('program', () => {
     expect(p.daysPerWeek).toBe(6);
   });
 });
+
+describe('performance (Del P)', () => {
+  it('bygger 100 workouts på under 1500 ms i alt — MAX_CANDIDATES-forhøjelsen må ikke mærkes', () => {
+    const start = performance.now();
+    for (let i = 0; i < 100; i++) build({ minutes: 30, men: 1, level: 3, seed: 20000 + i });
+    const elapsed = performance.now() - start;
+    expect(elapsed).toBeLessThan(1500);
+  });
+});

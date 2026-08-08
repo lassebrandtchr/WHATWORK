@@ -82,3 +82,13 @@ describe('muskelgrupper på øvelserne', () => {
     });
   });
 });
+
+describe('Burpee Broad Jump (Del P)', () => {
+  it('findes i kataloget som en fuldgyldig hoveddels-øvelse', () => {
+    const ex = BY_ID.burpee_broad_jump;
+    expect(ex).toBeDefined();
+    expect(ex?.accessory).toBeUndefined();
+    expect(ex?.elig).not.toBe('disabled');
+    expect(ex?.elig).not.toBe('coach-only');
+  });
+});
