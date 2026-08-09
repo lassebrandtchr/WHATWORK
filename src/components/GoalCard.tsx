@@ -1,5 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import { EquipmentIcon } from './EquipmentIcon.js';
+import { Glyph } from './ui.js';
+
+/** Varigheden af spring-transitionen på ikonerne — CSS'ens transition/animation-tid
+ * skal matche præcis, ellers venter timeouten enten for kort eller for længe. */
+const SHUFFLE_MS = 460;
 
 /**
  * Hvert mål har sin egen farve og sit eget udstyrssæt — seks stykker, der
@@ -33,7 +38,7 @@ export function GoalCard({
   useEffect(() => {
     if (on && !wasOn.current) {
       setShuffling(true);
-      const t = setTimeout(() => setShuffling(false), 700);
+      const t = setTimeout(() => setShuffling(false), SHUFFLE_MS);
       wasOn.current = on;
       return () => clearTimeout(t);
     }
@@ -51,7 +56,9 @@ export function GoalCard({
       <span className="ww-goal-card__icons" aria-hidden="true">
         {visual.icons.map((iconId, i) => (
           <span className="ww-goal-card__icon" key={iconId}>
-            <EquipmentIcon id={iconId} size={i % 2 === 0 ? 30 : 24} />
+            <span className="ww-goal-card__icon-drift">
+              <EquipmentIcon id={iconId} size={i % 2 === 0 ? 30 : 24} />
+            </span>
           </span>
         ))}
       </span>
@@ -60,6 +67,11 @@ export function GoalCard({
         <span className="ww-goal-card__name">{name}</span>
         <span className="ww-goal-card__desc">{desc}</span>
       </span>
+      {on ? (
+        <span className="ww-goal-card__check" aria-hidden="true">
+          <Glyph name="check" size={14} />
+        </span>
+      ) : null}
     </button>
   );
 }

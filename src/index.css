@@ -71,29 +71,31 @@
   --ww-red-hot: #ff4438;
 
   /* Målkort — ét signaturfarve pr. programmål, dybt og mættet frem for pastel.
-     Allround genbruger appens orange, da det er flagskibsmålet. */
+     Allround genbruger appens orange, da det er flagskibsmålet. -spark er den
+     lyse tone, ikoner, tekst og kant tegnes med oven på den mættede gradient —
+     samme greb som --ww-navy-spark på "Overrask mig". */
   --ww-goal-strength: #e0303f;
   --ww-goal-strength-hi: #ff5061;
-  --ww-goal-strength-dim: rgb(224 48 63 / 14%);
-  --ww-goal-strength-line: rgb(224 48 63 / 42%);
+  --ww-goal-strength-deep: #6b0f1a;
+  --ww-goal-strength-spark: 255 214 218;
   --ww-goal-strength-glow: 224 48 63;
 
   --ww-goal-engine: #14b8ad;
   --ww-goal-engine-hi: #2dd4c9;
-  --ww-goal-engine-dim: rgb(20 184 173 / 14%);
-  --ww-goal-engine-line: rgb(20 184 173 / 42%);
+  --ww-goal-engine-deep: #0a5850;
+  --ww-goal-engine-spark: 196 255 248;
   --ww-goal-engine-glow: 20 184 173;
 
   --ww-goal-legs: #8b5cf6;
   --ww-goal-legs-hi: #a78bfa;
-  --ww-goal-legs-dim: rgb(139 92 246 / 14%);
-  --ww-goal-legs-line: rgb(139 92 246 / 42%);
+  --ww-goal-legs-deep: #4c1d95;
+  --ww-goal-legs-spark: 224 208 255;
   --ww-goal-legs-glow: 139 92 246;
 
   --ww-goal-upper: #4f6fe5;
   --ww-goal-upper-hi: #6c89ee;
-  --ww-goal-upper-dim: rgb(79 111 229 / 14%);
-  --ww-goal-upper-line: rgb(79 111 229 / 42%);
+  --ww-goal-upper-deep: #26307d;
+  --ww-goal-upper-spark: 205 214 255;
   --ww-goal-upper-glow: 79 111 229;
 
   /* Liquid glass — diskret, kun på navigation, sheets og faste action-områder. */
@@ -177,29 +179,30 @@
   --ww-red-soft: #b91c1c;
   --ww-red-hot: #b91c1c;
 
-  /* Lys baggrund æder mættethed, så kernerne går et par trin dybere end i mørk. */
+  /* Lys baggrund æder mættethed, så kernerne går et par trin dybere end i mørk.
+     -spark og -deep holdes tæt på de mørke tilstande, ligesom navy-deep gør. */
   --ww-goal-strength: #c81e35;
   --ww-goal-strength-hi: #e0304a;
-  --ww-goal-strength-dim: rgb(200 30 53 / 10%);
-  --ww-goal-strength-line: rgb(200 30 53 / 38%);
+  --ww-goal-strength-deep: #5c0c16;
+  --ww-goal-strength-spark: 255 214 218;
   --ww-goal-strength-glow: 200 30 53;
 
   --ww-goal-engine: #0d8f86;
   --ww-goal-engine-hi: #12b3a8;
-  --ww-goal-engine-dim: rgb(13 143 134 / 10%);
-  --ww-goal-engine-line: rgb(13 143 134 / 38%);
+  --ww-goal-engine-deep: #073f3a;
+  --ww-goal-engine-spark: 196 255 248;
   --ww-goal-engine-glow: 13 143 134;
 
   --ww-goal-legs: #6d28d9;
   --ww-goal-legs-hi: #7c3aed;
-  --ww-goal-legs-dim: rgb(109 40 217 / 10%);
-  --ww-goal-legs-line: rgb(109 40 217 / 38%);
+  --ww-goal-legs-deep: #3b1678;
+  --ww-goal-legs-spark: 224 208 255;
   --ww-goal-legs-glow: 109 40 217;
 
   --ww-goal-upper: #3752c9;
   --ww-goal-upper-hi: #4f6fe5;
-  --ww-goal-upper-dim: rgb(55 82 201 / 10%);
-  --ww-goal-upper-line: rgb(55 82 201 / 38%);
+  --ww-goal-upper-deep: #1f296b;
+  --ww-goal-upper-spark: 205 214 255;
   --ww-goal-upper-glow: 55 82 201;
 
   --ww-glass: rgb(246 245 243 / 78%);
@@ -2480,9 +2483,16 @@ a {
 /* ---------------------------------------------------------------------------
    Målkort på Program
 
-   Hvert mål har sin egen farve (sat via --goal-* på modifier-klassen) og seks
-   flydende udstyrsikoner, der driver stille i baggrunden. Et scrim sikrer, at
-   navn og beskrivelse altid kan læses, uanset hvor ikonerne lander.
+   Hvert mål er gennemfarvet i sin egen dybe gradient — samme opskrift som
+   "Overrask mig" (lys top, mættet midte, mørk bund + et strejf af highlight).
+   Seks udstyrsikoner spreder sig ud over hele kortet, ikke kun ét hjørne.
+
+   Ikonets flytning ved valg er delt i to lag, så de aldrig deler samme
+   animerede egenskab: den ydre .ww-goal-card__icon flytter sig med en
+   transform-transition (GPU-komponeret, aldrig layout — det er det, der
+   holder det flydende), mens den indre __icon-drift kører sin egen uendelige
+   sitre-animation. To transforms på to elementer i stedet for ét element,
+   der konstant skal forlige to konkurrerende animationer på samme egenskab.
 --------------------------------------------------------------------------- */
 
 .ww-goal-list { display: flex; flex-direction: column; gap: 12px; }
@@ -2492,34 +2502,47 @@ a {
   display: flex;
   align-items: center;
   width: 100%;
-  min-height: 128px;
+  min-height: 132px;
   padding: 18px 20px;
-  border: 1px solid var(--goal-line, var(--ww-line-2));
+  border: 1px solid rgb(var(--goal-spark) / 30%);
   border-radius: var(--ww-r-lg);
+  isolation: isolate;
   background:
-    radial-gradient(140% 130% at 100% 0%, var(--goal-dim, var(--ww-raised)) 0%, transparent 60%),
-    var(--ww-surface);
-  color: var(--ww-text);
+    radial-gradient(120% 140% at 14% -10%, rgb(var(--goal-spark) / 24%) 0%, rgb(var(--goal-spark) / 0%) 52%),
+    linear-gradient(148deg, var(--goal-hi) 0%, var(--goal) 46%, var(--goal-deep) 100%);
+  color: var(--goal-on);
   text-align: left;
   cursor: pointer;
   overflow: hidden;
-  isolation: isolate;
-  transition: border-color 0.2s, box-shadow 0.2s, transform 0.16s var(--ww-ease);
+  user-select: none;
+  box-shadow:
+    inset 0 1px 0 rgb(var(--goal-spark) / 30%),
+    inset 0 -1px 0 rgb(0 0 0 / 32%),
+    0 16px 40px -26px rgb(var(--goal-glow) / 85%);
+  transition: border-color 0.2s, box-shadow 0.22s, transform 0.16s var(--ww-ease), filter 0.18s;
 }
 
-.ww-goal-card:hover { transform: translateY(-2px); border-color: var(--goal); }
-.ww-goal-card:active { transform: translateY(1px) scale(0.99); }
+.ww-goal-card:hover {
+  filter: brightness(1.08);
+  transform: translateY(-2px);
+}
+
+.ww-goal-card:active { transform: translateY(1px) scale(0.99); filter: brightness(1.02); }
 
 .ww-goal-card.is-on {
-  border-color: var(--goal);
-  box-shadow: 0 18px 44px -28px rgb(var(--goal-glow) / 60%);
+  border-color: rgb(var(--goal-spark) / 72%);
+  box-shadow:
+    inset 0 1px 0 rgb(var(--goal-spark) / 46%),
+    inset 0 -1px 0 rgb(0 0 0 / 32%),
+    0 0 0 2px rgb(var(--goal-spark) / 30%),
+    0 20px 48px -24px rgb(var(--goal-glow) / 100%);
 }
 
-.ww-goal-card--orange { --goal: var(--ww-orange); --goal-hi: var(--ww-orange-hi); --goal-dim: var(--ww-orange-dim); --goal-line: var(--ww-orange-line); --goal-glow: var(--ww-glow-core); }
-.ww-goal-card--strength { --goal: var(--ww-goal-strength); --goal-hi: var(--ww-goal-strength-hi); --goal-dim: var(--ww-goal-strength-dim); --goal-line: var(--ww-goal-strength-line); --goal-glow: var(--ww-goal-strength-glow); }
-.ww-goal-card--engine { --goal: var(--ww-goal-engine); --goal-hi: var(--ww-goal-engine-hi); --goal-dim: var(--ww-goal-engine-dim); --goal-line: var(--ww-goal-engine-line); --goal-glow: var(--ww-goal-engine-glow); }
-.ww-goal-card--legs { --goal: var(--ww-goal-legs); --goal-hi: var(--ww-goal-legs-hi); --goal-dim: var(--ww-goal-legs-dim); --goal-line: var(--ww-goal-legs-line); --goal-glow: var(--ww-goal-legs-glow); }
-.ww-goal-card--upper { --goal: var(--ww-goal-upper); --goal-hi: var(--ww-goal-upper-hi); --goal-dim: var(--ww-goal-upper-dim); --goal-line: var(--ww-goal-upper-line); --goal-glow: var(--ww-goal-upper-glow); }
+.ww-goal-card--orange { --goal: var(--ww-orange); --goal-hi: var(--ww-orange-hi); --goal-deep: var(--ww-orange-deep); --goal-spark: var(--ww-glow-sheen); --goal-glow: var(--ww-glow-core); --goal-on: var(--ww-on-orange); }
+.ww-goal-card--strength { --goal: var(--ww-goal-strength); --goal-hi: var(--ww-goal-strength-hi); --goal-deep: var(--ww-goal-strength-deep); --goal-spark: var(--ww-goal-strength-spark); --goal-glow: var(--ww-goal-strength-glow); --goal-on: rgb(var(--goal-spark)); }
+.ww-goal-card--engine { --goal: var(--ww-goal-engine); --goal-hi: var(--ww-goal-engine-hi); --goal-deep: var(--ww-goal-engine-deep); --goal-spark: var(--ww-goal-engine-spark); --goal-glow: var(--ww-goal-engine-glow); --goal-on: rgb(var(--goal-spark)); }
+.ww-goal-card--legs { --goal: var(--ww-goal-legs); --goal-hi: var(--ww-goal-legs-hi); --goal-deep: var(--ww-goal-legs-deep); --goal-spark: var(--ww-goal-legs-spark); --goal-glow: var(--ww-goal-legs-glow); --goal-on: rgb(var(--goal-spark)); }
+.ww-goal-card--upper { --goal: var(--ww-goal-upper); --goal-hi: var(--ww-goal-upper-hi); --goal-deep: var(--ww-goal-upper-deep); --goal-spark: var(--ww-goal-upper-spark); --goal-glow: var(--ww-goal-upper-glow); --goal-on: rgb(var(--goal-spark)); }
 
 .ww-goal-card__text {
   position: relative;
@@ -2527,56 +2550,81 @@ a {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  max-width: 60%;
+  max-width: 62%;
 }
 
-.ww-goal-card__name { font-size: 18px; font-weight: 700; letter-spacing: -0.01em; transition: color 0.2s; }
-.ww-goal-card.is-on .ww-goal-card__name { color: var(--goal-hi); }
-.ww-goal-card__desc { font-size: 13.5px; line-height: 1.5; color: var(--ww-text-2); }
+.ww-goal-card__name { font-size: 18px; font-weight: 750; letter-spacing: -0.01em; color: var(--goal-on); }
+.ww-goal-card__desc { font-size: 13.5px; line-height: 1.5; color: rgb(var(--goal-spark) / 82%); }
 
-/* Scrimet blegner fra kortets egen baggrund ud mod ikonlaget, så teksten aldrig
-   skal konkurrere med et ikon direkte bag sig selv. */
+.ww-goal-card--orange .ww-goal-card__desc { color: var(--goal-on); opacity: 0.72; }
+
+/* Sort vignet frem for en farvet flade — den dæmper altid teksten et hak ned,
+   uanset hvilken af de fem gradienter der ligger under. */
 .ww-goal-card__scrim {
   position: absolute;
   inset: 0;
   z-index: 1;
   pointer-events: none;
-  background: linear-gradient(100deg, var(--ww-surface) 0%, var(--ww-surface) 34%, transparent 68%);
+  background: linear-gradient(100deg, rgb(0 0 0 / 30%) 0%, rgb(0 0 0 / 12%) 42%, transparent 72%);
 }
 
 .ww-goal-card__icons { position: absolute; inset: 0; z-index: 0; pointer-events: none; }
 
+/* Ydre lag: fast plads på kortet + transform-baseret spring til den nye plads
+   ved valg. Ren transform (ingen top/left-transition) er det, der forhindrer
+   trægheden i halen — browseren komponerer det på GPU'en uden at skulle regne
+   layout om for hvert billede. */
 .ww-goal-card__icon {
   position: absolute;
-  color: var(--goal-hi);
-  opacity: 0.3;
-  filter: drop-shadow(0 0 8px rgb(var(--goal-glow) / 35%));
-  transition: top 0.65s cubic-bezier(0.34, 1.56, 0.64, 1), left 0.65s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transform: translate3d(var(--shuffle-x, 0px), var(--shuffle-y, 0px), 0) rotate(var(--shuffle-r, 0deg));
+  transition: transform 0.46s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.3s;
+  opacity: 0.22;
+}
+
+.ww-goal-card.is-on .ww-goal-card__icon { opacity: 0.4; }
+
+/* Indre lag: den uendelige sitre-animation, adskilt fra det ydre lags egen
+   transform, så de to aldrig kæmper om samme egenskab på samme element. */
+.ww-goal-card__icon-drift {
+  display: block;
+  color: rgb(var(--goal-spark));
+  filter: drop-shadow(0 0 8px rgb(var(--goal-spark) / 45%));
   animation: ww-goal-drift var(--drift-dur, 8s) ease-in-out infinite;
   animation-delay: var(--drift-delay, 0s);
 }
 
-.ww-goal-card.is-on .ww-goal-card__icon { opacity: 0.48; }
+.ww-goal-card.is-shuffling .ww-goal-card__icon-drift { animation: ww-goal-blur 0.46s ease-out; }
 
-.ww-goal-card.is-shuffling .ww-goal-card__icon {
-  animation: ww-goal-drift var(--drift-dur, 8s) ease-in-out infinite, ww-goal-blur 0.65s ease-out;
+/* Seks pladser spredt ud over hele kortet — også ind over tekstzonen, hvor
+   vignetten holder dem tilbage — plus det spring, kortet giver dem ved valg. */
+.ww-goal-card__icon:nth-child(1) { top: 10%; left: 6%; --drift-dur: 7.6s; --drift-delay: 0s; }
+.ww-goal-card__icon:nth-child(2) { top: 64%; left: 12%; --drift-dur: 9.2s; --drift-delay: -1.4s; }
+.ww-goal-card__icon:nth-child(3) { top: 16%; left: 46%; --drift-dur: 8.4s; --drift-delay: -3s; }
+.ww-goal-card__icon:nth-child(4) { top: 70%; left: 50%; --drift-dur: 10.1s; --drift-delay: -2.1s; }
+.ww-goal-card__icon:nth-child(5) { top: 12%; left: 80%; --drift-dur: 7.1s; --drift-delay: -4.4s; }
+.ww-goal-card__icon:nth-child(6) { top: 62%; left: 84%; --drift-dur: 8.9s; --drift-delay: -0.6s; }
+
+.ww-goal-card.is-on .ww-goal-card__icon:nth-child(1) { --shuffle-x: 10px; --shuffle-y: -8px; --shuffle-r: 8deg; }
+.ww-goal-card.is-on .ww-goal-card__icon:nth-child(2) { --shuffle-x: -8px; --shuffle-y: 10px; --shuffle-r: -6deg; }
+.ww-goal-card.is-on .ww-goal-card__icon:nth-child(3) { --shuffle-x: 12px; --shuffle-y: 6px; --shuffle-r: 5deg; }
+.ww-goal-card.is-on .ww-goal-card__icon:nth-child(4) { --shuffle-x: -10px; --shuffle-y: -10px; --shuffle-r: -8deg; }
+.ww-goal-card.is-on .ww-goal-card__icon:nth-child(5) { --shuffle-x: 8px; --shuffle-y: 12px; --shuffle-r: 6deg; }
+.ww-goal-card.is-on .ww-goal-card__icon:nth-child(6) { --shuffle-x: -12px; --shuffle-y: -6px; --shuffle-r: -5deg; }
+
+.ww-goal-card__check {
+  position: absolute;
+  z-index: 3;
+  top: 14px;
+  right: 14px;
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: rgb(var(--goal-spark) / 94%);
+  color: var(--goal-deep);
 }
-
-/* Seks faste pladser, spredt uden om tekstzonen til venstre — og et andet sæt
-   pladser, kortet glider til, når det bliver valgt. */
-.ww-goal-card__icon:nth-child(1) { top: 12%; left: 64%; --drift-dur: 7.6s; --drift-delay: 0s; }
-.ww-goal-card__icon:nth-child(2) { top: 56%; left: 78%; --drift-dur: 9.2s; --drift-delay: -1.4s; }
-.ww-goal-card__icon:nth-child(3) { top: 74%; left: 56%; --drift-dur: 8.4s; --drift-delay: -3s; }
-.ww-goal-card__icon:nth-child(4) { top: 10%; left: 84%; --drift-dur: 10.1s; --drift-delay: -2.1s; }
-.ww-goal-card__icon:nth-child(5) { top: 40%; left: 88%; --drift-dur: 7.1s; --drift-delay: -4.4s; }
-.ww-goal-card__icon:nth-child(6) { top: 80%; left: 80%; --drift-dur: 8.9s; --drift-delay: -0.6s; }
-
-.ww-goal-card.is-on .ww-goal-card__icon:nth-child(1) { top: 20%; left: 58%; }
-.ww-goal-card.is-on .ww-goal-card__icon:nth-child(2) { top: 64%; left: 86%; }
-.ww-goal-card.is-on .ww-goal-card__icon:nth-child(3) { top: 58%; left: 66%; }
-.ww-goal-card.is-on .ww-goal-card__icon:nth-child(4) { top: 16%; left: 76%; }
-.ww-goal-card.is-on .ww-goal-card__icon:nth-child(5) { top: 30%; left: 90%; }
-.ww-goal-card.is-on .ww-goal-card__icon:nth-child(6) { top: 74%; left: 88%; }
 
 @keyframes ww-goal-drift {
   0%, 100% { transform: translate3d(0, 0, 0) rotate(0deg); }
@@ -2586,12 +2634,12 @@ a {
 }
 
 @keyframes ww-goal-blur {
-  0% { filter: drop-shadow(0 0 8px rgb(var(--goal-glow) / 35%)) blur(0); }
-  30% { filter: drop-shadow(0 0 8px rgb(var(--goal-glow) / 35%)) blur(1.6px); }
-  100% { filter: drop-shadow(0 0 8px rgb(var(--goal-glow) / 35%)) blur(0); }
+  0% { filter: drop-shadow(0 0 8px rgb(var(--goal-spark) / 45%)) blur(0); }
+  30% { filter: drop-shadow(0 0 8px rgb(var(--goal-spark) / 45%)) blur(1.6px); }
+  100% { filter: drop-shadow(0 0 8px rgb(var(--goal-spark) / 45%)) blur(0); }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .ww-goal-card, .ww-goal-card__icon { transition: none; }
-  .ww-goal-card__icon, .ww-goal-card.is-shuffling .ww-goal-card__icon { animation: none; }
+  .ww-goal-card__icon-drift, .ww-goal-card.is-shuffling .ww-goal-card__icon-drift { animation: none; }
 }
