@@ -49,6 +49,14 @@
   --ww-on-navy: #eef4ff;
   --ww-navy-spark: 210 228 255;
 
+  /* Volt — kun "Kør igen". Elektrisk gul, så handlingen læses som strøm der
+     tændes igen, ikke som endnu en orange knap. */
+  --ww-volt: #e8ff2e;
+  --ww-volt-hi: #f4ff77;
+  --ww-on-volt: #14150a;
+  --ww-volt-glow-core: 214 255 46;
+  --ww-volt-glow-halo: 180 255 90;
+
   /* Status. */
   --ww-green: #34d399;
   --ww-green-dim: rgb(52 211 153 / 14%);
@@ -118,6 +126,14 @@
   --ww-navy-line: rgb(18 48 111 / 55%);
   --ww-on-navy: #f2f6ff;
   --ww-navy-spark: 219 233 255;
+
+  /* Ren elektrisk gul forsvinder på hvidt papir, så volt tager samme greb som
+     navy: dybere kerne, lys tekst ovenpå. */
+  --ww-volt: #6e7d00;
+  --ww-volt-hi: #869500;
+  --ww-on-volt: #fffef2;
+  --ww-volt-glow-core: 110 125 0;
+  --ww-volt-glow-halo: 150 165 20;
 
   --ww-green: #047857;
   --ww-green-dim: rgb(4 120 87 / 10%);
@@ -1066,6 +1082,9 @@ a {
   gap: 10px;
   padding: 0 16px;
   border-radius: var(--ww-r);
+  /* Fritstående kompakt udgave uden makker ved siden af — her skal indholdet
+     centreres i knappen i stedet for at hænge i venstre kant. */
+  justify-content: center;
 }
 
 .ww-sparkle--sm .ww-sparkle__label { font-size: 16px; font-weight: 700; }
@@ -1125,6 +1144,192 @@ a {
   .ww-sparkle::before { animation: none; transform: none; opacity: 0.35; }
   .ww-sparkle__dust { animation: none; opacity: 0.8; }
   .ww-sparkle__icon { animation: none; }
+}
+
+/* ---------------------------------------------------------------------------
+   "Kør igen" — elektrisk gul
+
+   Handlingen er en genstart, ikke et primærvalg, så farven skal læse som strøm
+   frem for som endnu en orange CTA. Etiketten ligger i sit eget lag med
+   z-index over gnister og stød og er den eneste del, der står i normal
+   flex-flow — alt andet er absolut positioneret og kan derfor aldrig skubbe
+   til teksten, uanset tilstand eller knapbredde.
+--------------------------------------------------------------------------- */
+
+@property --ww-volt-glow {
+  syntax: '<number>';
+  inherits: false;
+  initial-value: 0;
+}
+
+@property --ww-volt-lift {
+  syntax: '<number>';
+  inherits: false;
+  initial-value: 0;
+}
+
+@property --ww-volt-shake {
+  syntax: '<number>';
+  inherits: false;
+  initial-value: 0;
+}
+
+.ww-btn--rerun {
+  --ww-volt-glow: 0;
+  --ww-volt-lift: 0;
+  --ww-volt-shake: 0;
+  --ww-volt-g: calc(var(--ww-volt-glow) + var(--ww-volt-lift));
+
+  position: relative;
+  isolation: isolate;
+  border-color: var(--ww-volt);
+  background: var(--ww-volt);
+  color: var(--ww-on-volt);
+  font-weight: 700;
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / calc(18% + var(--ww-volt-g) * 14%)),
+    0 0 calc(12px + var(--ww-volt-g) * 20px) calc(-2px + var(--ww-volt-g) * 2px)
+      rgb(var(--ww-volt-glow-core) / calc(35% + var(--ww-volt-g) * 40%)),
+    0 0 calc(30px + var(--ww-volt-g) * 34px)
+      rgb(var(--ww-volt-glow-halo) / calc(16% + var(--ww-volt-g) * 30%));
+  animation: ww-volt-breathe 3.6s cubic-bezier(0.42, 0, 0.58, 1) infinite;
+  transition: --ww-volt-lift 0.2s ease-out, color 0.14s;
+  transform: translate(calc(var(--ww-volt-shake) * 1px), calc(var(--ww-volt-shake) * -0.6px));
+}
+
+.ww-btn--rerun:hover,
+.ww-btn--rerun:focus-visible,
+.ww-btn--rerun.is-charging {
+  --ww-volt-lift: 1;
+}
+
+.ww-btn--rerun:active { --ww-volt-lift: 1.3; }
+
+@media (hover: hover) {
+  .ww-btn--rerun:hover {
+    animation: ww-volt-breathe 3.6s cubic-bezier(0.42, 0, 0.58, 1) infinite,
+      ww-volt-jitter 140ms steps(2) infinite;
+  }
+}
+
+.ww-btn--rerun.is-charging {
+  animation: ww-volt-breathe 3.6s cubic-bezier(0.42, 0, 0.58, 1) infinite,
+    ww-volt-jitter 140ms steps(2) infinite;
+}
+
+@keyframes ww-volt-breathe {
+  0%, 44%, 100% { --ww-volt-glow: 0; }
+  10% { --ww-volt-glow: 1; }
+}
+
+@keyframes ww-volt-jitter {
+  0% { --ww-volt-shake: 0; }
+  25% { --ww-volt-shake: 1; }
+  50% { --ww-volt-shake: -1; }
+  75% { --ww-volt-shake: 0.6; }
+  100% { --ww-volt-shake: 0; }
+}
+
+.ww-rerun__label {
+  position: relative;
+  z-index: 3;
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+}
+
+/* Rolige gnister, der blinker enkeltvis langs kanten, mens knappen står stille. */
+.ww-rerun__spark {
+  position: absolute;
+  z-index: 1;
+  pointer-events: none;
+  width: 11px;
+  height: 11px;
+  color: #fff;
+  filter: drop-shadow(0 0 3px rgb(var(--ww-volt-glow-core) / 85%));
+  opacity: 0;
+  animation: ww-spark-flicker 4.4s ease-in-out infinite, ww-spark-drift 4.4s ease-in-out infinite;
+}
+
+.ww-rerun__spark svg { width: 100%; height: 100%; }
+
+.ww-rerun__spark--a { top: -6px; left: 14%; animation-delay: 0.2s; }
+.ww-rerun__spark--b { top: 40%; right: -7px; animation-delay: 1.4s; }
+.ww-rerun__spark--c { bottom: -6px; left: 38%; animation-delay: 2.6s; }
+.ww-rerun__spark--d { top: 20%; left: -7px; animation-delay: 3.3s; }
+.ww-rerun__spark--e { bottom: 10%; right: 18%; animation-delay: 0.9s; }
+
+@keyframes ww-spark-flicker {
+  0%, 100% { opacity: 0; }
+  41% { opacity: 0; }
+  46% { opacity: 1; }
+  52% { opacity: 0.25; }
+  58% { opacity: 0.8; }
+  64% { opacity: 0; }
+}
+
+@keyframes ww-spark-drift {
+  0%, 100% { transform: scale(0.85) rotate(0deg); }
+  50% { transform: scale(1.05) rotate(-6deg); }
+}
+
+/* Stød: skyder ud i en tilfældig retning pr. cyklus. Retning, afstand og
+   rotation sættes af RerunButton som inline custom properties og gentrækkes,
+   så mønstret aldrig gentager sig identisk — CSS alene kan ikke tilfældiggøre
+   pr. gennemløb, så det er den ene bevidste undtagelse fra "ingen JS". */
+.ww-rerun__bolt {
+  position: absolute;
+  z-index: 2;
+  pointer-events: none;
+  width: 15px;
+  height: 15px;
+  color: #fff;
+  opacity: 0;
+  animation: none;
+}
+
+.ww-btn--rerun.is-charging .ww-rerun__bolt {
+  animation: ww-bolt-shoot var(--ww-bolt-dur, 0.4s) ease-out var(--ww-bolt-delay, 0s) infinite;
+}
+
+.ww-rerun__bolt--n  { top: -5px;   left: 18%; }
+.ww-rerun__bolt--ne { top: 4%;     right: -6px; }
+.ww-rerun__bolt--e  { top: 44%;    right: -8px; }
+.ww-rerun__bolt--se { bottom: 6%;  right: -5px; }
+.ww-rerun__bolt--s  { bottom: -5px; left: 52%; }
+.ww-rerun__bolt--sw { bottom: 8%;  left: -6px; }
+.ww-rerun__bolt--w  { top: 38%;    left: -8px; }
+
+@keyframes ww-bolt-shoot {
+  0% {
+    opacity: 0;
+    transform: translate(0, 0) scale(0.45) rotate(0deg);
+    filter: drop-shadow(0 0 4px rgb(var(--ww-volt-glow-core) / 95%)) blur(0px);
+  }
+  14% { opacity: 1; }
+  55% {
+    opacity: 1;
+    transform: translate(var(--ww-bolt-mx, 10px), var(--ww-bolt-my, 10px)) scale(1) rotate(var(--ww-bolt-rot, 0deg));
+    filter: drop-shadow(0 0 4px rgb(var(--ww-volt-glow-core) / 95%)) blur(1.4px);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--ww-bolt-tx, 20px), var(--ww-bolt-ty, 20px)) scale(0.8) rotate(var(--ww-bolt-rot, 0deg));
+    filter: drop-shadow(0 0 4px rgb(var(--ww-volt-glow-core) / 95%)) blur(0px);
+  }
+}
+
+/* Uden bevægelse holder knappen en fast, tydelig glød i stedet for at pulse. */
+@media (prefers-reduced-motion: reduce) {
+  .ww-btn--rerun {
+    animation: none;
+    --ww-volt-glow: 0.5;
+    transform: none;
+  }
+  .ww-btn--rerun:hover,
+  .ww-btn--rerun.is-charging { animation: none; }
+  .ww-rerun__spark { animation: none; opacity: 0.5; }
+  .ww-rerun__bolt { display: none; }
 }
 
 /* ---------------------------------------------------------------------------

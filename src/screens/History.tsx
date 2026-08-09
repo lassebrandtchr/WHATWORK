@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Photo } from '../components/Photo.js';
+import { RerunButton } from '../components/RerunButton.js';
 import { EmptyState, Glyph, PageHeader } from '../components/ui.js';
 import { fmtDuration, relDate } from '../lib/format.js';
 import type { HistoryEntry, HistoryStatus } from '../types.js';
@@ -156,10 +157,7 @@ export function History({
                         </button>
                       ) : null}
                       <button type="button" className="ww-btn" onClick={() => onOpen(entry)}>Åbn</button>
-                      <button type="button" className="ww-btn" onClick={() => onRun(entry)}>
-                        <Glyph name="bolt" size={16} />
-                        Kør igen
-                      </button>
+                      <RerunButton onClick={() => onRun(entry)} />
                       <button type="button" className="ww-btn ww-btn--danger" onClick={() => onRemove(entry.id)}>
                         Fjern
                       </button>

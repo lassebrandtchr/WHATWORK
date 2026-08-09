@@ -1,5 +1,6 @@
 import { Photo } from '../components/Photo.js';
-import { EmptyState, Glyph, PageHeader } from '../components/ui.js';
+import { RerunButton } from '../components/RerunButton.js';
+import { EmptyState, PageHeader } from '../components/ui.js';
 import { relDate } from '../lib/format.js';
 import type { HistoryEntry } from '../types.js';
 
@@ -48,10 +49,7 @@ export function Favorites({
               </div>
               <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                 <button type="button" className="ww-btn" style={{ minHeight: 44 }} onClick={() => onOpen(entry)}>Åbn</button>
-                <button type="button" className="ww-btn" style={{ minHeight: 44 }} onClick={() => onRun(entry)}>
-                  <Glyph name="bolt" size={16} />
-                  Kør igen
-                </button>
+                <RerunButton style={{ minHeight: 44 }} onClick={() => onRun(entry)} />
                 <button type="button" className="ww-btn ww-btn--danger" style={{ minHeight: 44 }} onClick={() => onRemove(entry)}>
                   Fjern
                 </button>
