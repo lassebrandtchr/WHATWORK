@@ -75,6 +75,10 @@
   --ww-glass-line: rgb(255 255 255 / 8%);
   --ww-scrim: rgb(8 9 11 / 78%);
   --ww-shadow: 0 24px 60px -32px rgb(0 0 0 / 90%);
+  /* Tabbaren nederst kan stå oven på alt fra billeder til lyse flader — den aktive
+     fane skal læses uanset hvad der skinner igennem, så dens glas er mere uigennemsigtigt
+     end appens øvrige, mere diskrete glaslag. */
+  --ww-tabbar-glass: rgb(10 11 13 / 94%);
 
   --ww-sans: 'Archivo', system-ui, -apple-system, 'Segoe UI', sans-serif;
 
@@ -151,6 +155,7 @@
   --ww-glass-line: rgb(0 0 0 / 8%);
   --ww-scrim: rgb(20 22 26 / 42%);
   --ww-shadow: 0 24px 60px -34px rgb(20 22 26 / 40%);
+  --ww-tabbar-glass: rgb(255 255 255 / 94%);
 
   color-scheme: light;
 }
@@ -810,13 +815,18 @@ a {
   right: 0;
   bottom: 0;
   z-index: 45;
+  /* Billeder og andet farverigt indhold kan scrolle direkte under baren, så den
+     bruger sit eget mere uigennemsigtige glas frem for appens generelle --ww-glass,
+     ellers skinner farverne igennem og æder kontrasten på den aktive fane. */
+  background: var(--ww-tabbar-glass);
   border-top: 1px solid var(--ww-line);
   padding-bottom: env(safe-area-inset-bottom);
 }
 
 /* "Liquid glass"-highlight, der glider hen over den aktive fane. Positionen sættes
-   af MobileNav via --ww-tab-x/--ww-tab-w (målt med getBoundingClientRect), selve
-   glasset genbruger appens eksisterende --ww-glass-tokens. */
+   af MobileNav via --ww-tab-x/--ww-tab-w (målt med getBoundingClientRect). Egen,
+   næsten uigennemsigtig baggrund, så etiketten altid kan læses — heller ikke oven
+   på baren allerede-blandede farver. */
 .ww-tab-highlight {
   position: absolute;
   top: 6px;
@@ -825,9 +835,9 @@ a {
   height: 46px;
   transform: translateX(var(--ww-tab-x, 0px));
   border-radius: 14px;
-  background: var(--ww-glass);
-  backdrop-filter: blur(14px) saturate(140%);
-  -webkit-backdrop-filter: blur(14px) saturate(140%);
+  background: var(--ww-tabbar-glass);
+  backdrop-filter: blur(14px) saturate(100%);
+  -webkit-backdrop-filter: blur(14px) saturate(100%);
   border: 1px solid var(--ww-glass-line);
   pointer-events: none;
   /* Kun transform animeres — bredden sættes stadig af --ww-tab-w, men de fire faner
@@ -857,7 +867,12 @@ a {
   transition: color 0.14s;
 }
 
-.ww-tab[aria-current='page'] { color: var(--ww-orange); font-weight: 650; }
+.ww-tab[aria-current='page'] {
+  color: var(--ww-orange);
+  font-weight: 650;
+  /* Diskret glød sikrer læsbarhed, uanset hvad glasset skimter af farve igennem. */
+  text-shadow: 0 0 14px rgb(255 106 31 / 45%);
+}
 
 .ww-tab__dot {
   width: 4px;
@@ -919,6 +934,35 @@ a {
 
 .ww-drawer__link:hover { background: var(--ww-raised); }
 .ww-drawer__link[aria-current='page'] { color: var(--ww-orange); background: var(--ww-orange-dim); }
+
+/* Ikonet foran hvert menupunkt — altid orange, uanset om rækken selv er aktiv,
+   og fast bredde så alle rækker linjer op ens uanset ikonets egen form. */
+.ww-drawer__icon {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  color: var(--ww-orange);
+  transition: transform 0.18s ease, filter 0.18s ease;
+}
+
+.ww-drawer__link:active .ww-drawer__icon {
+  transform: scale(1.07);
+  filter: drop-shadow(0 0 6px rgb(255 106 31 / 55%));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ww-drawer__link:active .ww-drawer__icon { transform: none; }
+}
+
+/* Samme orange ikon gentaget i underpunktets eget sidehoved. */
+.ww-page-icon {
+  display: flex;
+  flex: none;
+  color: var(--ww-orange);
+}
 
 /* ---------- Redaktionelle byggeklodser ---------- */
 

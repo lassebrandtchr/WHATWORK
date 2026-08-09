@@ -139,19 +139,24 @@ export function Kicker({ children, accent, style }: { children: ReactNode; accen
 
 /** Sideoverskrift med kicker og valgfri handling til højre. */
 export function PageHeader({
-  kicker, title, lede, action,
+  kicker, title, lede, action, icon,
 }: {
   kicker?: string;
   title: string;
   lede?: string;
   action?: ReactNode;
+  /** Samme orange ikon som underpunktet har i menuen — genkendelse på tværs af de to. */
+  icon?: ReactNode;
 }) {
   return (
     <header style={{ marginBottom: 26 }}>
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
         <div style={{ minWidth: 0 }}>
           {kicker ? <Kicker style={{ marginBottom: 10 }}>{kicker}</Kicker> : null}
-          <h1 className="ww-h1">{title}</h1>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            {icon ? <span className="ww-page-icon" aria-hidden="true">{icon}</span> : null}
+            <h1 className="ww-h1">{title}</h1>
+          </div>
         </div>
         {action}
       </div>
@@ -251,7 +256,7 @@ export function Dialog({
   );
 }
 
-type GlyphName = 'back' | 'close' | 'menu' | 'bolt' | 'star' | 'star-filled' | 'check' | 'chevron' | 'sun' | 'moon' | 'gear' | 'sound-on' | 'sound-off' | 'search' | 'sparkle' | 'trash' | 'refresh';
+export type GlyphName = 'back' | 'close' | 'menu' | 'bolt' | 'star' | 'star-filled' | 'check' | 'chevron' | 'sun' | 'moon' | 'gear' | 'sound-on' | 'sound-off' | 'search' | 'sparkle' | 'trash' | 'refresh' | 'stats' | 'kit' | 'transfer' | 'help' | 'info';
 
 /** Appens egne glyffer. Ingen emoji, intet eksternt ikonbibliotek. */
 export function Glyph({ name, size = 20 }: { name: GlyphName; size?: number }) {
@@ -330,6 +335,50 @@ export function Glyph({ name, size = 20 }: { name: GlyphName; size?: number }) {
       <g {...common}>
         <path d="M12 5a7 7 0 1 1-4.95 2.05" />
         <path d="M4.5 4.5v3.5h3.5" />
+      </g>
+    ),
+    /* Statistik: tre stigende søjler på en grundlinje. */
+    stats: (
+      <g {...common}>
+        <path d="M4 20h16" />
+        <rect x="6" y="13" width="3" height="6" rx="0.8" />
+        <rect x="10.5" y="9" width="3" height="10" rx="0.8" />
+        <rect x="15" y="5" width="3" height="14" rx="0.8" />
+      </g>
+    ),
+    /* Udstyr: kedelklokke med hank, plus en vægtskive ved siden af. */
+    kit: (
+      <g {...common}>
+        <path d="M8.3 9.3V7.6a1.8 1.8 0 0 1 3.6 0v1.7" />
+        <path d="M8.1 9.3h3.9" />
+        <circle cx="10" cy="13.1" r="3.4" />
+        <circle cx="18.3" cy="14.3" r="3" />
+        <path d="M18.3 14.3h.01" strokeWidth={2.2} />
+      </g>
+    ),
+    /* Import/eksport: data ind fra venstre, ud til højre — en boks imellem. */
+    transfer: (
+      <g {...common}>
+        <rect x="8.6" y="3.6" width="7.6" height="11" rx="1.3" />
+        <path d="M10.4 7.4h4M10.4 10.2h4" />
+        <path d="M2.4 9h4.6M4.6 6.6 7 9l-2.4 2.4" />
+        <path d="M21.6 17.4h-4.6M19.4 15l2.4 2.4-2.4 2.4" />
+      </g>
+    ),
+    /* Hjælp: rundt spørgsmålstegn — venligt frem for teknisk. */
+    help: (
+      <g {...common}>
+        <circle cx="12" cy="12" r="9" />
+        <path d="M9.4 9.6a2.6 2.6 0 1 1 3.6 2.4c-1 .5-1.4 1.1-1.4 2.2" />
+        <path d="M12 17.4h.01" />
+      </g>
+    ),
+    /* Om WHATWORK?: rundt infotegn. */
+    info: (
+      <g {...common}>
+        <circle cx="12" cy="12" r="9" />
+        <path d="M12 11v5.4" />
+        <path d="M12 7.6h.01" />
       </g>
     ),
   };

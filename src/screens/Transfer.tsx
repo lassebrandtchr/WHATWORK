@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { Note, PageHeader } from '../components/ui.js';
+import { Glyph, Note, PageHeader } from '../components/ui.js';
 import { fullDate } from '../lib/format.js';
 import type { ImportPreview } from '../lib/transfer.js';
 
@@ -30,6 +30,7 @@ export function Transfer({
         lede="WHATWORK har ingen konto og synkroniserer ikke — alt ligger kun i denne browser. Brug
           denne side til at flytte dine data til en ny telefon eller browser, eller til at lave en
           sikkerhedskopi, før du rydder browserdata eller afinstallerer appen."
+        icon={<Glyph name="transfer" size={30} />}
       />
 
       <section aria-labelledby="ww-export" style={{ marginBottom: 34 }}>

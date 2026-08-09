@@ -1,6 +1,8 @@
 import * as eng from '../engine/index.js';
 import { Photo } from '../components/Photo.js';
-import { EmptyState, Meter, PageHeader } from '../components/ui.js';
+import {
+  EmptyState, Glyph, Meter, PageHeader,
+} from '../components/ui.js';
 import { fmtDuration, isoWeek } from '../lib/format.js';
 import type { HistoryEntry } from '../types.js';
 
@@ -35,7 +37,12 @@ export function Stats({ history, onGenerate }: { history: HistoryEntry[]; onGene
   if (!history.length) {
     return (
       <div style={{ paddingTop: 'calc(env(safe-area-inset-top) + 20px)', maxWidth: 860 }}>
-        <PageHeader kicker="Overblik" title="Statistik" lede="Statistikken bygger på din lokale historik." />
+        <PageHeader
+          kicker="Overblik"
+          title="Statistik"
+          lede="Statistikken bygger på din lokale historik."
+          icon={<Glyph name="stats" size={30} />}
+        />
         <Photo
           name="chalk-barbell"
           frame="portrait"
@@ -100,6 +107,7 @@ export function Stats({ history, onGenerate }: { history: HistoryEntry[]; onGene
         kicker="Overblik"
         title="Statistik"
         lede="Alt er regnet ud af din lokale historik. Der sendes ingenting nogen steder hen."
+        icon={<Glyph name="stats" size={30} />}
       />
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(140px,1fr))', gap: 8, marginBottom: 26 }}>

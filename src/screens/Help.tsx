@@ -1,7 +1,7 @@
 import * as eng from '../engine/index.js';
 import { formatPhoto } from '../assets/images/index.js';
 import { Photo } from '../components/Photo.js';
-import { Note, PageHeader } from '../components/ui.js';
+import { Glyph, Note, PageHeader } from '../components/ui.js';
 
 const SECTIONS: { title: string; body: string[] }[] = [
   {
@@ -71,6 +71,7 @@ export function Help() {
         kicker="Vejledning"
         title="Hjælp"
         lede="Hvordan WHATWORK vælger, regner og afvikler — og hvad de internationale formatnavne betyder."
+        icon={<Glyph name="help" size={30} />}
       />
 
       <Photo

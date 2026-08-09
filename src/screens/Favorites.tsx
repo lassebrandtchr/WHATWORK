@@ -1,6 +1,6 @@
 import { Photo } from '../components/Photo.js';
 import { RerunButton } from '../components/RerunButton.js';
-import { EmptyState, PageHeader } from '../components/ui.js';
+import { EmptyState, Glyph, PageHeader } from '../components/ui.js';
 import { relDate } from '../lib/format.js';
 import type { HistoryEntry } from '../types.js';
 
@@ -19,6 +19,7 @@ export function Favorites({
         kicker="Gemt"
         title="Favoritter"
         lede="De workouts, du vil kunne finde igen. De ligger lokalt sammen med resten af dine data."
+        icon={<Glyph name="star" size={30} />}
       />
 
       {favorites.length === 0 ? (

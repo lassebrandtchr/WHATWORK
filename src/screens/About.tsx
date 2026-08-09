@@ -1,6 +1,6 @@
 import * as eng from '../engine/index.js';
 import { Photo } from '../components/Photo.js';
-import { Note, PageHeader } from '../components/ui.js';
+import { Glyph, Note, PageHeader } from '../components/ui.js';
 
 export function About() {
   const versions = [
@@ -18,6 +18,7 @@ export function About() {
         kicker="Om appen"
         title="Om WHATWORK?"
         lede="En dansk, local-first træningsapp til funktionel fitness, partnerworkouts og holdtræning."
+        icon={<Glyph name="info" size={30} />}
       />
 
       <Photo

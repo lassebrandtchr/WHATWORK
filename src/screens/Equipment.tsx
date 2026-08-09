@@ -1,7 +1,9 @@
 import * as eng from '../engine/index.js';
 import { EquipmentIcon } from '../components/EquipmentIcon.js';
 import { Photo } from '../components/Photo.js';
-import { Chip, Counter, Note, PageHeader } from '../components/ui.js';
+import {
+  Chip, Counter, Glyph, Note, PageHeader,
+} from '../components/ui.js';
 import type { UserProfile } from '../types.js';
 
 export function Equipment({
@@ -39,6 +41,7 @@ export function Equipment({
         kicker="Salen"
         title="Udstyr"
         lede="Det, du sætter her, er udgangspunktet hver gang du åbner generatoren. Alt relevant er slået til — fravælg det, du ikke har."
+        icon={<Glyph name="kit" size={30} />}
       />
 
       <Photo

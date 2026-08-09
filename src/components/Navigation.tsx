@@ -2,6 +2,7 @@ import { useEffect, useLayoutEffect, useRef } from 'react';
 import type { ReactNode } from 'react';
 import { initialsOf } from '../lib/format.js';
 import { Glyph, ThemeToggle } from './ui.js';
+import type { GlyphName } from './ui.js';
 import { Wordmark } from './Wordmark.js';
 import { WwMark } from './WwMark.js';
 import type { Screen } from '../types.js';
@@ -20,15 +21,16 @@ const TABS: NavItem[] = [
   { id: 'profile', label: 'Profil', path: 'M12 4.4a3.4 3.4 0 1 1 0 6.8 3.4 3.4 0 0 1 0-6.8M4.8 19.6a7.2 7.2 0 0 1 14.4 0' },
 ];
 
-/** De sekundære ruter, der åbnes fra menuen på mobil og fra headeren på desktop. */
-export const SECONDARY: { id: Screen; label: string; hint: string }[] = [
-  { id: 'stats', label: 'Statistik', hint: 'Volumen, fordeling og streak' },
-  { id: 'favorites', label: 'Favoritter', hint: 'Workouts du har gemt som favorit' },
-  { id: 'equipment', label: 'Udstyr', hint: 'Redskaber, antal og skiver' },
-  { id: 'settings', label: 'Indstillinger', hint: 'Tema, AI Mix, lyd og haptik' },
-  { id: 'transfer', label: 'Import og eksport', hint: 'Tag dine data med dig' },
-  { id: 'help', label: 'Hjælp', hint: 'Formater og timeren' },
-  { id: 'about', label: 'Om WHATWORK?', hint: 'Hvad appen er — og ikke er' },
+/** De sekundære ruter, der åbnes fra menuen på mobil og fra headeren på desktop.
+ * `icon` går igen i underpunktets egen sidehoved, så de to genkendes som ét sted. */
+export const SECONDARY: { id: Screen; label: string; hint: string; icon: GlyphName }[] = [
+  { id: 'stats', label: 'Statistik', hint: 'Volumen, fordeling og streak', icon: 'stats' },
+  { id: 'favorites', label: 'Favoritter', hint: 'Workouts du har gemt som favorit', icon: 'star' },
+  { id: 'equipment', label: 'Udstyr', hint: 'Redskaber, antal og skiver', icon: 'kit' },
+  { id: 'settings', label: 'Indstillinger', hint: 'Tema, AI Mix, lyd og haptik', icon: 'gear' },
+  { id: 'transfer', label: 'Import og eksport', hint: 'Tag dine data med dig', icon: 'transfer' },
+  { id: 'help', label: 'Hjælp', hint: 'Formater og timeren', icon: 'help' },
+  { id: 'about', label: 'Om WHATWORK?', hint: 'Hvad appen er — og ikke er', icon: 'info' },
 ];
 
 export function MobileNav({ screen, onGo }: { screen: Screen; onGo: (s: Screen) => void }) {
@@ -51,7 +53,10 @@ export function MobileNav({ screen, onGo }: { screen: Screen; onGo: (s: Screen) 
   return (
     <nav className="ww-tabbar ww-glass" aria-label="Hovedmenu" ref={barRef}>
       <span className="ww-tab-highlight" aria-hidden="true" />
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)' }}>
+      {/* position+z-index løfter fanerne over highlight-pillen — ellers vinder pillen
+          male-rækkefølgen (positionerede elementer males efter ikke-positionerede,
+          uanset DOM-rækkefølge) og dækker for etiketten. */}
+      <div style={{ position: 'relative', zIndex: 1, display: 'grid', gridTemplateColumns: 'repeat(4,1fr)' }}>
         {TABS.map((tab) => (
           <button
             key={tab.id}
@@ -267,7 +272,10 @@ export function Drawer({
             aria-current={screen === item.id ? 'page' : undefined}
             onClick={() => { onGo(item.id); onClose(); }}
           >
-            <span style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <span className="ww-drawer__icon" aria-hidden="true">
+              <Glyph name={item.icon} size={22} />
+            </span>
+            <span style={{ display: 'flex', flexDirection: 'column', gap: 2, flex: 1, minWidth: 0 }}>
               <span>{item.label}</span>
               <span style={{ fontSize: 12.5, color: 'var(--ww-text-3)', fontWeight: 400 }}>{item.hint}</span>
             </span>

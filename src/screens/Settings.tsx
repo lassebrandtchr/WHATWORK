@@ -37,7 +37,7 @@ export function Settings({
 }) {
   return (
     <div style={{ paddingTop: 'calc(env(safe-area-inset-top) + 20px)', maxWidth: 760 }}>
-      <PageHeader kicker="Opsætning" title="Indstillinger" />
+      <PageHeader kicker="Opsætning" title="Indstillinger" icon={<Glyph name="gear" size={30} />} />
 
       <section aria-labelledby="ww-theme" style={{ marginBottom: 30 }}>
         <h2 id="ww-theme" className="ww-kicker" style={{ marginBottom: 12 }}>Udseende</h2>
