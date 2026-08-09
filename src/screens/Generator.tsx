@@ -25,7 +25,7 @@ const STEP_COPY: Record<GenStep, [string, string]> = {
   time: ['Hvor lang tid har I?', 'Tiden dækker hele sessionen — opvarmning, hoveddel og skiftetid.'],
   people: ['Hvem træner?', 'Fordelingen bestemmer deltagerantallet og de vægte, hver enkelt får foreslået.'],
   weight: ['Kropsvægt', 'Valgfrit. Gennemsnit pr. profil er nok — det styrer skaleringen af belastning.'],
-  level: ['Niveau og retning', 'Skru på conditioning og styrke, hvis dagen kalder på noget bestemt.'],
+  level: ['Niveau og retning', 'Skru på kondition og styrke, hvis dagen kalder på noget bestemt.'],
   direction: ['Ønsker og hensyn', 'Vælg det, I gerne vil have med, og det kroppen skal skånes for.'],
   equip: ['Hvad har I at arbejde med?', 'Alt er slået til. Slå fra, hvad salen ikke har — så holder generatoren sig til resten.'],
   summary: ['Klar?', 'Sådan ser sessionen ud, før Smart Mix bygger den.'],
@@ -50,7 +50,7 @@ export function summaryRows(g: GenDraft): SummaryRow[] {
     { k: 'Deltagere', v: n === 1 ? 'Solo' : `${n} i alt — ${mix}` },
     { k: 'Afvikling', v: n === 1 ? 'Alt arbejde er dit' : n === 2 ? 'You go, I go foretrækkes' : 'Teamrotation med stationer' },
     { k: 'Niveau', v: levelName },
-    { k: 'Retning', v: `${focusName} · conditioning ${g.condition}, styrke ${g.strength}` },
+    { k: 'Retning', v: `${focusName} · kondition ${g.condition}, styrke ${g.strength}` },
     { k: 'Udstyr', v: `${g.equipment.filter((e) => e !== 'bodyweight').length} typer valgt` },
     {
       k: 'Hensyn',
@@ -365,7 +365,7 @@ function LevelStep({ gen, patch }: StepProps) {
         ))}
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-        <Scale label="Conditioning" value={gen.condition} onPick={(v) => patch({ condition: v })} />
+        <Scale label="Kondition" value={gen.condition} onPick={(v) => patch({ condition: v })} />
         <Scale label="Styrke" value={gen.strength} onPick={(v) => patch({ strength: v })} />
         <div>
           <h2 style={{ fontSize: 15, fontWeight: 650, margin: '0 0 10px' }}>Fokus</h2>

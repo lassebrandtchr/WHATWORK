@@ -60,7 +60,7 @@ export const FOCUS_TAGS: FocusTag[] = [
   { id: 'heavy', name: 'Tung', desc: 'Færre reps, mere vægt' },
   { id: 'legs', name: 'Ben', desc: 'Squat, lunges og hinge' },
   { id: 'upper', name: 'Overkrop', desc: 'Pres og træk' },
-  { id: 'engine', name: 'Engine', desc: 'Maskiner og jævnt tempo' },
+  { id: 'engine', name: 'Kondition', desc: 'Maskiner og jævnt tempo' },
   { id: 'fast', name: 'Hurtig & brutal', desc: 'Kort, tæt og hård' },
   { id: 'long', name: 'Lang & sej', desc: 'Længere arbejde, lavere intensitet' },
 ];

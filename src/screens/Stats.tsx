@@ -11,7 +11,7 @@ const CHART_HEIGHT = 120;
 
 const CAT_NAMES: Record<string, string> = {
   squat: 'Squat', hinge: 'Hinge', press: 'Pres', pull: 'Træk', fullbody: 'Hele kroppen',
-  oly: 'Olympisk', core: 'Core', carry: 'Bæring', cardio: 'Engine',
+  oly: 'Olympisk', core: 'Core', carry: 'Bæring', cardio: 'Kondition',
   warmup: 'Opvarmning', mobility: 'Mobilitet', ukendt: 'Andet',
 };
 

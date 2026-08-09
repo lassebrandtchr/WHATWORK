@@ -11,7 +11,7 @@ function blockLabel(block: Block, hasStrength: boolean): string {
   switch (block.kind) {
     case 'warmup': return 'Opvarmning';
     case 'strength': return 'Del 1 — Styrke';
-    case 'conditioning': return hasStrength ? 'Del 2 — Conditioning' : 'Hovedworkout';
+    case 'conditioning': return hasStrength ? 'Del 2 — Kondition' : 'Hovedworkout';
     default: return '';
   }
 }
@@ -213,7 +213,7 @@ export function Result({
 
       <div style={{ marginTop: 14 }}>
         <Note label="Hvad knapperne gør" tone="quiet" accent>
-          «Gør den lettere» skruer conditioning og styrke to trin ned, «Gør den værre» skruer op.
+          «Gør den lettere» skruer kondition og styrke to trin ned, «Gør den værre» skruer op.
           «Ny workout» henter en ny variation. Alle tre beholder dine valg af tid, deltagere,
           udstyr og hensyn, genberegner kilo og tid og kører workouten gennem den samme kontrol —
           et ugyldigt resultat bliver aldrig vist.

@@ -19,16 +19,16 @@ export const PROGRAM_PHASES: { to: number; text: string; label: string }[] = [
 export const PROGRAM_GOALS: ProgramGoal[] = [
   {
     id: 'allround', name: 'Funktionel allround',
-    desc: 'Bredt program med både styrke, engine og bevægelseskvalitet.',
+    desc: 'Bredt program med både styrke, kondition og bevægelseskvalitet.',
     mix: [{ s: 5, c: 7 }, { s: 3, c: 8 }, { s: 7, c: 5 }, { s: 4, c: 7 }, { s: 6, c: 6 }, { s: 2, c: 9 }],
   },
   {
-    id: 'strength_cond', name: 'Styrke + conditioning',
-    desc: 'Tungt hovedløft først, conditioning bagefter.',
+    id: 'strength_cond', name: 'Styrke + kondition',
+    desc: 'Tungt hovedløft først, kondition bagefter.',
     mix: [{ s: 8, c: 5 }, { s: 7, c: 6 }, { s: 6, c: 7 }, { s: 8, c: 4 }, { s: 5, c: 7 }, { s: 7, c: 5 }],
   },
   {
-    id: 'engine', name: 'Engine og kondition',
+    id: 'engine', name: 'Kondition',
     desc: 'Maskiner, intervaller og længere arbejde.',
     mix: [{ s: 3, c: 9 }, { s: 2, c: 10 }, { s: 4, c: 8 }, { s: 3, c: 9 }, { s: 2, c: 9 }, { s: 4, c: 8 }],
   },
@@ -39,7 +39,7 @@ export const PROGRAM_GOALS: ProgramGoal[] = [
   },
   {
     id: 'upper', name: 'Fokus overkrop',
-    desc: 'Pres og træk med conditioning imellem.',
+    desc: 'Pres og træk med kondition imellem.',
     mix: [{ s: 7, c: 5, f: 'upper' }, { s: 5, c: 7, f: 'upper' }, { s: 8, c: 4, f: 'upper' }, { s: 4, c: 8 }, { s: 6, c: 6, f: 'upper' }, { s: 5, c: 6 }],
   },
 ];
