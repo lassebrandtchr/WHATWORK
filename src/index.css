@@ -2515,6 +2515,9 @@ a {
   cursor: pointer;
   overflow: hidden;
   user-select: none;
+  /* Fjerner enhver risiko for browserens indbyggede dobbelttryk-forsinkelse
+     eller pan-gestus-forvirring på et så stort trykflade-element. */
+  touch-action: manipulation;
   box-shadow:
     inset 0 1px 0 rgb(var(--goal-spark) / 30%),
     inset 0 -1px 0 rgb(0 0 0 / 32%),
@@ -2522,9 +2525,13 @@ a {
   transition: border-color 0.2s, box-shadow 0.22s, transform 0.16s var(--ww-ease), filter 0.18s;
 }
 
-.ww-goal-card:hover {
-  filter: brightness(1.08);
-  transform: translateY(-2px);
+/* Kun ægte pegeenheder får hover — ellers sidder et tryk på mobil fast i den
+   løftede hover-tilstand, fordi touch-browsere ikke sender et "mouse out". */
+@media (hover: hover) and (pointer: fine) {
+  .ww-goal-card:hover {
+    filter: brightness(1.08);
+    transform: translateY(-2px);
+  }
 }
 
 .ww-goal-card:active { transform: translateY(1px) scale(0.99); filter: brightness(1.02); }
@@ -2582,11 +2589,14 @@ a {
 .ww-goal-card.is-on .ww-goal-card__icon { opacity: 0.34; }
 
 /* Indre lag: den uendelige sitre-animation, adskilt fra det ydre lags egen
-   transform, så de to aldrig kæmper om samme egenskab på samme element. */
+   transform, så de to aldrig kæmper om samme egenskab på samme element.
+   Ingen `filter` her — et statisk drop-shadow på et element, der samtidig
+   transformeres i det uendelige, tvinger browseren til at gentegne (ikke bare
+   komponere) det hver eneste frame. Med 60 ikoner ad gangen (12 × 5 kort) var
+   det nok til at gøre knapperne trege at trykke på, især på mobil. */
 .ww-goal-card__icon-drift {
   display: block;
   color: rgb(var(--goal-spark));
-  filter: drop-shadow(0 0 8px rgb(var(--goal-spark) / 45%));
   animation: ww-goal-drift var(--drift-dur, 8s) ease-in-out infinite;
   animation-delay: var(--drift-delay, 0s);
 }
