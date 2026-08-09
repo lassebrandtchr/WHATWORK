@@ -289,6 +289,37 @@ a {
   text-wrap: pretty;
 }
 
+/* Fremhævede ord i lede-tekst skifter kun vægt, aldrig størrelse. */
+.ww-lede strong { color: var(--ww-text); font-weight: 700; }
+
+/* Konceptsætningen på velkomstskærmen: "Du fortæller WHATWORK ... træningen." —
+   skal skille sig ud fra den øvrige brødtekst uden at blive en overskrift. */
+.ww-lede--strong { color: var(--ww-text); font-weight: 600; }
+
+/* Velkomstskærmens overskrift + brødtekst. Centreret på mobil, hvor spalten er
+   for smal til venstrestillet tekst til at føles tilsigtet; tilbage til
+   venstrestillet i den brede, faste spalte på desktop (se .ww-hero øvrigt). */
+.ww-hero-copy {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 44px 0 8px;
+  text-align: center;
+}
+
+.ww-hero-copy .ww-display,
+.ww-hero-copy .ww-lede { max-width: 34ch; }
+
+.ww-hero-copy .ww-display { margin-bottom: 4px; }
+
+@media (min-width: 1024px) {
+  .ww-hero-copy {
+    align-items: flex-start;
+    text-align: left;
+  }
+}
+
 .ww-help {
   margin: 0 0 24px;
   color: var(--ww-text-2);

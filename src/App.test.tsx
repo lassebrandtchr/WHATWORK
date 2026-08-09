@@ -39,15 +39,15 @@ function surpriseFromHome(minutes = 30): void {
 describe('WHATWORK — kerneflow', () => {
   it('starter på velkomstskærmen for en ny bruger', async () => {
     render(<App />);
-    expect(await screen.findByText(/Bygget til/)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Fortsæt uden bruger' })).toBeInTheDocument();
+    expect(await screen.findByText(/Træning, bygget om dig/)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Fortsæt som gæstebruger' })).toBeInTheDocument();
   });
 
   it('fører fra velkomst gennem onboarding til hjem', async () => {
     const user = userEvent.setup();
     render(<App />);
 
-    await user.click(await screen.findByRole('button', { name: 'Fortsæt uden bruger' }));
+    await user.click(await screen.findByRole('button', { name: 'Fortsæt som gæstebruger' }));
     expect(screen.getByRole('heading', { name: 'Hvilket niveau?' })).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: /Øvet/ }));
@@ -66,7 +66,7 @@ describe('WHATWORK — kerneflow', () => {
     const user = userEvent.setup();
     render(<App />);
 
-    await user.click(await screen.findByRole('button', { name: 'Fortsæt uden bruger' }));
+    await user.click(await screen.findByRole('button', { name: 'Fortsæt som gæstebruger' }));
     await user.click(screen.getByRole('button', { name: /Avanceret/ }));
     for (const label of ['Videre', 'Videre', 'Videre', 'Start WHATWORK?']) {
       await user.click(screen.getByRole('button', { name: label }));
