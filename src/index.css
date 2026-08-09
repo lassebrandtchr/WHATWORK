@@ -70,6 +70,32 @@
   --ww-red-soft: #f87171;
   --ww-red-hot: #ff4438;
 
+  /* Målkort — ét signaturfarve pr. programmål, dybt og mættet frem for pastel.
+     Allround genbruger appens orange, da det er flagskibsmålet. */
+  --ww-goal-strength: #e0303f;
+  --ww-goal-strength-hi: #ff5061;
+  --ww-goal-strength-dim: rgb(224 48 63 / 14%);
+  --ww-goal-strength-line: rgb(224 48 63 / 42%);
+  --ww-goal-strength-glow: 224 48 63;
+
+  --ww-goal-engine: #14b8ad;
+  --ww-goal-engine-hi: #2dd4c9;
+  --ww-goal-engine-dim: rgb(20 184 173 / 14%);
+  --ww-goal-engine-line: rgb(20 184 173 / 42%);
+  --ww-goal-engine-glow: 20 184 173;
+
+  --ww-goal-legs: #8b5cf6;
+  --ww-goal-legs-hi: #a78bfa;
+  --ww-goal-legs-dim: rgb(139 92 246 / 14%);
+  --ww-goal-legs-line: rgb(139 92 246 / 42%);
+  --ww-goal-legs-glow: 139 92 246;
+
+  --ww-goal-upper: #4f6fe5;
+  --ww-goal-upper-hi: #6c89ee;
+  --ww-goal-upper-dim: rgb(79 111 229 / 14%);
+  --ww-goal-upper-line: rgb(79 111 229 / 42%);
+  --ww-goal-upper-glow: 79 111 229;
+
   /* Liquid glass — diskret, kun på navigation, sheets og faste action-områder. */
   --ww-glass: rgb(16 18 21 / 72%);
   --ww-glass-line: rgb(255 255 255 / 8%);
@@ -150,6 +176,31 @@
   --ww-red-line: rgb(185 28 28 / 40%);
   --ww-red-soft: #b91c1c;
   --ww-red-hot: #b91c1c;
+
+  /* Lys baggrund æder mættethed, så kernerne går et par trin dybere end i mørk. */
+  --ww-goal-strength: #c81e35;
+  --ww-goal-strength-hi: #e0304a;
+  --ww-goal-strength-dim: rgb(200 30 53 / 10%);
+  --ww-goal-strength-line: rgb(200 30 53 / 38%);
+  --ww-goal-strength-glow: 200 30 53;
+
+  --ww-goal-engine: #0d8f86;
+  --ww-goal-engine-hi: #12b3a8;
+  --ww-goal-engine-dim: rgb(13 143 134 / 10%);
+  --ww-goal-engine-line: rgb(13 143 134 / 38%);
+  --ww-goal-engine-glow: 13 143 134;
+
+  --ww-goal-legs: #6d28d9;
+  --ww-goal-legs-hi: #7c3aed;
+  --ww-goal-legs-dim: rgb(109 40 217 / 10%);
+  --ww-goal-legs-line: rgb(109 40 217 / 38%);
+  --ww-goal-legs-glow: 109 40 217;
+
+  --ww-goal-upper: #3752c9;
+  --ww-goal-upper-hi: #4f6fe5;
+  --ww-goal-upper-dim: rgb(55 82 201 / 10%);
+  --ww-goal-upper-line: rgb(55 82 201 / 38%);
+  --ww-goal-upper-glow: 55 82 201;
 
   --ww-glass: rgb(246 245 243 / 78%);
   --ww-glass-line: rgb(0 0 0 / 8%);
@@ -2424,4 +2475,123 @@ a {
 @media (min-width: 640px) {
   .ww-photo--thumb { width: 104px; }
   .ww-format-row { gap: 20px; }
+}
+
+/* ---------------------------------------------------------------------------
+   Målkort på Program
+
+   Hvert mål har sin egen farve (sat via --goal-* på modifier-klassen) og seks
+   flydende udstyrsikoner, der driver stille i baggrunden. Et scrim sikrer, at
+   navn og beskrivelse altid kan læses, uanset hvor ikonerne lander.
+--------------------------------------------------------------------------- */
+
+.ww-goal-list { display: flex; flex-direction: column; gap: 12px; }
+
+.ww-goal-card {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: 128px;
+  padding: 18px 20px;
+  border: 1px solid var(--goal-line, var(--ww-line-2));
+  border-radius: var(--ww-r-lg);
+  background:
+    radial-gradient(140% 130% at 100% 0%, var(--goal-dim, var(--ww-raised)) 0%, transparent 60%),
+    var(--ww-surface);
+  color: var(--ww-text);
+  text-align: left;
+  cursor: pointer;
+  overflow: hidden;
+  isolation: isolate;
+  transition: border-color 0.2s, box-shadow 0.2s, transform 0.16s var(--ww-ease);
+}
+
+.ww-goal-card:hover { transform: translateY(-2px); border-color: var(--goal); }
+.ww-goal-card:active { transform: translateY(1px) scale(0.99); }
+
+.ww-goal-card.is-on {
+  border-color: var(--goal);
+  box-shadow: 0 18px 44px -28px rgb(var(--goal-glow) / 60%);
+}
+
+.ww-goal-card--orange { --goal: var(--ww-orange); --goal-hi: var(--ww-orange-hi); --goal-dim: var(--ww-orange-dim); --goal-line: var(--ww-orange-line); --goal-glow: var(--ww-glow-core); }
+.ww-goal-card--strength { --goal: var(--ww-goal-strength); --goal-hi: var(--ww-goal-strength-hi); --goal-dim: var(--ww-goal-strength-dim); --goal-line: var(--ww-goal-strength-line); --goal-glow: var(--ww-goal-strength-glow); }
+.ww-goal-card--engine { --goal: var(--ww-goal-engine); --goal-hi: var(--ww-goal-engine-hi); --goal-dim: var(--ww-goal-engine-dim); --goal-line: var(--ww-goal-engine-line); --goal-glow: var(--ww-goal-engine-glow); }
+.ww-goal-card--legs { --goal: var(--ww-goal-legs); --goal-hi: var(--ww-goal-legs-hi); --goal-dim: var(--ww-goal-legs-dim); --goal-line: var(--ww-goal-legs-line); --goal-glow: var(--ww-goal-legs-glow); }
+.ww-goal-card--upper { --goal: var(--ww-goal-upper); --goal-hi: var(--ww-goal-upper-hi); --goal-dim: var(--ww-goal-upper-dim); --goal-line: var(--ww-goal-upper-line); --goal-glow: var(--ww-goal-upper-glow); }
+
+.ww-goal-card__text {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-width: 60%;
+}
+
+.ww-goal-card__name { font-size: 18px; font-weight: 700; letter-spacing: -0.01em; transition: color 0.2s; }
+.ww-goal-card.is-on .ww-goal-card__name { color: var(--goal-hi); }
+.ww-goal-card__desc { font-size: 13.5px; line-height: 1.5; color: var(--ww-text-2); }
+
+/* Scrimet blegner fra kortets egen baggrund ud mod ikonlaget, så teksten aldrig
+   skal konkurrere med et ikon direkte bag sig selv. */
+.ww-goal-card__scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: linear-gradient(100deg, var(--ww-surface) 0%, var(--ww-surface) 34%, transparent 68%);
+}
+
+.ww-goal-card__icons { position: absolute; inset: 0; z-index: 0; pointer-events: none; }
+
+.ww-goal-card__icon {
+  position: absolute;
+  color: var(--goal-hi);
+  opacity: 0.3;
+  filter: drop-shadow(0 0 8px rgb(var(--goal-glow) / 35%));
+  transition: top 0.65s cubic-bezier(0.34, 1.56, 0.64, 1), left 0.65s cubic-bezier(0.34, 1.56, 0.64, 1);
+  animation: ww-goal-drift var(--drift-dur, 8s) ease-in-out infinite;
+  animation-delay: var(--drift-delay, 0s);
+}
+
+.ww-goal-card.is-on .ww-goal-card__icon { opacity: 0.48; }
+
+.ww-goal-card.is-shuffling .ww-goal-card__icon {
+  animation: ww-goal-drift var(--drift-dur, 8s) ease-in-out infinite, ww-goal-blur 0.65s ease-out;
+}
+
+/* Seks faste pladser, spredt uden om tekstzonen til venstre — og et andet sæt
+   pladser, kortet glider til, når det bliver valgt. */
+.ww-goal-card__icon:nth-child(1) { top: 12%; left: 64%; --drift-dur: 7.6s; --drift-delay: 0s; }
+.ww-goal-card__icon:nth-child(2) { top: 56%; left: 78%; --drift-dur: 9.2s; --drift-delay: -1.4s; }
+.ww-goal-card__icon:nth-child(3) { top: 74%; left: 56%; --drift-dur: 8.4s; --drift-delay: -3s; }
+.ww-goal-card__icon:nth-child(4) { top: 10%; left: 84%; --drift-dur: 10.1s; --drift-delay: -2.1s; }
+.ww-goal-card__icon:nth-child(5) { top: 40%; left: 88%; --drift-dur: 7.1s; --drift-delay: -4.4s; }
+.ww-goal-card__icon:nth-child(6) { top: 80%; left: 80%; --drift-dur: 8.9s; --drift-delay: -0.6s; }
+
+.ww-goal-card.is-on .ww-goal-card__icon:nth-child(1) { top: 20%; left: 58%; }
+.ww-goal-card.is-on .ww-goal-card__icon:nth-child(2) { top: 64%; left: 86%; }
+.ww-goal-card.is-on .ww-goal-card__icon:nth-child(3) { top: 58%; left: 66%; }
+.ww-goal-card.is-on .ww-goal-card__icon:nth-child(4) { top: 16%; left: 76%; }
+.ww-goal-card.is-on .ww-goal-card__icon:nth-child(5) { top: 30%; left: 90%; }
+.ww-goal-card.is-on .ww-goal-card__icon:nth-child(6) { top: 74%; left: 88%; }
+
+@keyframes ww-goal-drift {
+  0%, 100% { transform: translate3d(0, 0, 0) rotate(0deg); }
+  25% { transform: translate3d(2px, -3px, 0) rotate(3deg); }
+  50% { transform: translate3d(-2px, 2px, 0) rotate(-2deg); }
+  75% { transform: translate3d(1px, 3px, 0) rotate(2deg); }
+}
+
+@keyframes ww-goal-blur {
+  0% { filter: drop-shadow(0 0 8px rgb(var(--goal-glow) / 35%)) blur(0); }
+  30% { filter: drop-shadow(0 0 8px rgb(var(--goal-glow) / 35%)) blur(1.6px); }
+  100% { filter: drop-shadow(0 0 8px rgb(var(--goal-glow) / 35%)) blur(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ww-goal-card, .ww-goal-card__icon { transition: none; }
+  .ww-goal-card__icon, .ww-goal-card.is-shuffling .ww-goal-card__icon { animation: none; }
 }

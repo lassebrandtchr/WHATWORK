@@ -176,6 +176,99 @@ const GLYPHS: Record<string, ReactElement> = {
       <path d="M12 7.4V14M7 10h10M9.4 20l2.6-6 2.6 6" />
     </g>
   ),
+  /* Vægtskiver: set fra siden, som på en bar. */
+  plates: (
+    <g {...S}>
+      <ellipse cx="12" cy="7.4" rx="5" ry="2" />
+      <ellipse cx="12" cy="12" rx="6.4" ry="2.2" />
+      <ellipse cx="12" cy="17" rx="7.6" ry="2.4" />
+    </g>
+  ),
+  /* Squat rack: to stolper med kroge og en bar imellem, på fødder. */
+  squatrack: (
+    <g {...S}>
+      <path d="M6 3v18M18 3v18" />
+      <path d="M4 21h4M16 21h4" />
+      <path d="M4.6 9.4h3.2M16.2 9.4h3.2" />
+      <path d="M6.6 8.4h10.8" />
+    </g>
+  ),
+  /* Stopur: hus, hoved og viser. */
+  stopwatch: (
+    <g {...S}>
+      <circle cx="12" cy="13.2" r="7.4" />
+      <path d="M12 13.2V8.6" />
+      <path d="M9.8 3.4h4.4" />
+      <path d="M12 3.4v2.2" />
+    </g>
+  ),
+  /* Løbebane set ovenfra: oval bane med indre felt. */
+  track: (
+    <g {...S}>
+      <rect x="3" y="7" width="18" height="10" rx="5" />
+      <rect x="6.2" y="9.2" width="11.6" height="5.6" rx="2.8" />
+    </g>
+  ),
+  /* Puls: hjerte med en EKG-linje igennem. */
+  heartrate: (
+    <g {...S}>
+      <path d="M12 20c-4.2-2.9-8.2-6.4-8.2-10.6A4.8 4.8 0 0 1 12 6.2a4.8 4.8 0 0 1 8.2 3.2C20.2 13.6 16.2 17.1 12 20z" />
+      <path d="M4.8 12.6h2.8l1.4-3 2 5.6 1.6-4.8 1.2 2.2h4.4" />
+    </g>
+  ),
+  /* Intervaltimer: skive med afmærkede segmenter. */
+  intervaltimer: (
+    <g {...S}>
+      <circle cx="12" cy="12" r="8.4" />
+      <path d="M12 3.6v2.4M19.7 8.2l-2.1 1.2M4.3 8.2l2.1 1.2M19.7 15.8l-2.1-1.2M4.3 15.8l2.1-1.2M12 20.4V18" />
+      <path d="M12 12h.01" strokeWidth={2.4} />
+    </g>
+  ),
+  /* Deadlift-platform: lav plint med en ladet bar hvilende ovenpå. */
+  platform: (
+    <g {...S}>
+      <path d="M3 19h18l-2-4H5z" />
+      <path d="M6.6 15v-3M17.4 15v-3" />
+      <circle cx="6.6" cy="9.6" r="2.4" />
+      <circle cx="17.4" cy="9.6" r="2.4" />
+      <path d="M9 9.6h6" />
+    </g>
+  ),
+  /* Lunge: figur med forreste ben bøjet, bagerste ben strakt bagud. */
+  lunge: (
+    <g {...S}>
+      <circle cx="15" cy="4.6" r="1.8" />
+      <path d="M14 6.4 12.6 12" />
+      <path d="M12.6 12 9.4 13.6 8 18" />
+      <path d="M12.6 12 15.8 14 17.4 18.4" />
+      <path d="M13.4 8 10.6 9.6" />
+    </g>
+  ),
+  /* Underkropsstyrke: stående ben med modstandsbånd om anklen. */
+  legstrength: (
+    <g {...S}>
+      <path d="M12.4 3.6c0 3-.4 5-1.6 6.8-1 1.6-1.4 3.4-1.2 5.4l-.4 4.6" />
+      <path d="M8.6 20.4h4.4" />
+      <path d="M8 12.4h3.4" />
+    </g>
+  ),
+  /* Dip bars: to parallelle barer på ben. */
+  dipbars: (
+    <g {...S}>
+      <path d="M3 9h8M13 7h8" />
+      <path d="M5 9v11M9 9v11M15 7v11M19 7v11" />
+    </g>
+  ),
+  /* Skulderpres: håndvægt hævet over to strakte arme. */
+  shoulderpress: (
+    <g {...S}>
+      <path d="M8.4 5.4h7.2" />
+      <circle cx="7.4" cy="5.4" r="1.6" />
+      <circle cx="16.6" cy="5.4" r="1.6" />
+      <path d="M9 18.4 8.4 8M15 18.4l.6-10.4" />
+      <path d="M8 18.4h8" />
+    </g>
+  ),
 };
 
 export function EquipmentIcon({ id, size = 28 }: { id: string; size?: number }) {

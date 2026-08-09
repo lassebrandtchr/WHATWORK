@@ -3,9 +3,10 @@ import * as eng from '../engine/index.js';
 import type {
   Movement, Program as ProgramData, ProgramDay, ProgramWeek, Workout,
 } from '../engine/index.js';
+import { GoalCard } from '../components/GoalCard.js';
 import { Photo } from '../components/Photo.js';
 import {
-  Chip, Counter, Dialog, Glyph, Kicker, Note, OptionRow, PageHeader,
+  Chip, Counter, Dialog, Glyph, Kicker, Note, PageHeader,
 } from '../components/ui.js';
 import { plural } from '../lib/format.js';
 import type { ProgramDraft, ProgramRef } from '../types.js';
@@ -103,10 +104,11 @@ function ProgramSetup({
     <div className="ww-program-setup">
       <div style={{ minWidth: 0 }}>
         <h2 className="ww-kicker" style={{ marginBottom: 10 }}>Mål</h2>
-        <div className="ww-stack" style={{ marginBottom: 26 }}>
+        <div className="ww-goal-list" style={{ marginBottom: 26 }}>
           {eng.PROGRAM_GOALS.map((goal) => (
-            <OptionRow
+            <GoalCard
               key={goal.id}
+              id={goal.id}
               name={goal.name}
               desc={goal.desc}
               on={draft.goal === goal.id}
