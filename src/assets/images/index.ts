@@ -87,8 +87,8 @@ const SPECS = {
     alt: 'Atlet med kridt på hænderne over vægtstangen lige før første løft',
   },
   'program-phone': {
-    widths: PORTRAIT, position: '50% 42%',
-    alt: 'Færdigt træningsprogram med uger og pas vist på telefonen',
+    widths: PORTRAIT, position: '50% 45%',
+    alt: 'En svævende iPhone i holdsalen viser programmets mål på skærmen',
   },
   'program-wide': {
     widths: LANDSCAPE, position: '55% 50%',
