@@ -41,6 +41,10 @@ const PEER_BODYWEIGHT = { m: 88, f: 66, x: 77 } as const;
  * det her er bevidst langsommere, så det ligner, at den tænker sig om. */
 const LOADING_MS = 7000;
 
+/** Programmet bygger flere dage ad gangen, så dets loading-skærm får sit eget, længere
+ * tempo — ca. 15 sekunder, jf. produktkravet til program-generation-skærmen. */
+const PROGRAM_LOADING_MS = 15000;
+
 export const ONB_STEPS = 4;
 
 /** Et frisk generatorudkast med brugerens profil som udgangspunkt. */
@@ -477,6 +481,11 @@ export function useWhatwork() {
     if (animation.current !== null) window.clearTimeout(animation.current);
   }, []);
 
+  const programAnimation = useRef<number | null>(null);
+  useEffect(() => () => {
+    if (programAnimation.current !== null) window.clearTimeout(programAnimation.current);
+  }, []);
+
   const runGenerate = useCallback(
     (draft: GenDraft = gen, extra?: Partial<WorkoutRequest>) => {
       const request = buildRequest(draft, extra);
@@ -709,8 +718,18 @@ export function useWhatwork() {
 
   /* ---------- program ---------- */
 
+  /**
+   * Bruges både til første bygning og til "Lav programmet om" — begge er samme
+   * handling: byg et program fra det aktuelle udkast. Går altid gennem
+   * program-loading-skærmen, samme mønster som runGenerate, men over PROGRAM_LOADING_MS.
+   */
   const buildProgram = useCallback(() => {
-    setProgram(eng.generateProgram({
+    if (programAnimation.current !== null) window.clearTimeout(programAnimation.current);
+    setProgress(0);
+    setPhaseText(eng.PROGRAM_PHASES[0]?.text ?? '');
+    go('programLoading');
+
+    const pending = Promise.resolve().then(() => eng.generateProgram({
       goal: programDraft.goal,
       weeks: programDraft.weeks,
       daysPerWeek: programDraft.days,
@@ -723,7 +742,45 @@ export function useWhatwork() {
       plates: profile.plates,
       care: [],
     }));
-  }, [programDraft, profile]);
+
+    let phase = 0;
+    let value = 0;
+
+    const step = (): void => {
+      const ph = eng.PROGRAM_PHASES[phase];
+      if (!ph) {
+        void pending.then((result) => {
+          setProgram(result);
+          programAnimation.current = window.setTimeout(() => go('program'), 200);
+        });
+        return;
+      }
+      setPhaseText(ph.text);
+      // Motoren er lokal og hurtig — uden animation ville skærmen blinke forbi.
+      // Faserne strækkes derfor ud over PROGRAM_LOADING_MS, samme princip som
+      // enkelt-workout-generatoren (se PHASES/LOADING_MS ovenfor).
+      const from = value;
+      const span = ph.to - from;
+      const phaseDurationMs = Math.max(400, Math.round((span / 100) * PROGRAM_LOADING_MS));
+      const startedAt = Date.now();
+      const tick = (): void => {
+        const t = Math.min(1, (Date.now() - startedAt) / phaseDurationMs);
+        value = Math.round(from + span * t);
+        setProgress(value);
+        if (t < 1) {
+          programAnimation.current = window.setTimeout(tick, 60);
+        } else {
+          value = ph.to;
+          setProgress(value);
+          phase += 1;
+          programAnimation.current = window.setTimeout(step, 40);
+        }
+      };
+      tick();
+    };
+
+    programAnimation.current = window.setTimeout(step, 30);
+  }, [programDraft, profile, go]);
 
   const patchProgramDay = useCallback((ref: ProgramRef, patch: Partial<Program['weeks'][number]['days'][number]>) => {
     setProgram((p) => {

@@ -2009,6 +2009,349 @@ a {
 }
 
 /* ---------------------------------------------------------------------------
+   Program — bygget program
+
+   Ugerne er et accordion (grid-template-rows 0fr → 1fr, ingen JS-højdemåling).
+   Dagene er mindre accordions inden i hver uge. Ugenavigatoren er sticky på
+   desktop (samme 88px-offset som .ww-program-preview ovenfor); på mobil er den
+   bevidst ikke sticky — to uafhængige sticky-lag oven på hinanden (topbjælken
+   og navigatoren) ville kunne overlappe på tværs af enheder med varierende
+   safe-area. Kompakt og letlæst vejer højere end sticky dér.
+--------------------------------------------------------------------------- */
+
+.ww-prog-hero {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding-bottom: 22px;
+  margin-bottom: 22px;
+  border-bottom: 1px solid var(--ww-line);
+}
+
+.ww-prog-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px 30px;
+}
+
+.ww-prog-stat { display: flex; flex-direction: column; gap: 4px; min-width: 60px; }
+
+.ww-prog-stat__label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--ww-text-3);
+}
+
+.ww-prog-stat__value {
+  font-size: 19px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums;
+}
+
+.ww-prog-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+
+/* ---------- Ugenavigator ---------- */
+
+.ww-prog-nav {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  scroll-snap-type: x proximity;
+  padding: 2px;
+  margin: -2px;
+}
+
+.ww-prog-nav::-webkit-scrollbar { display: none; }
+
+@media (min-width: 1024px) {
+  .ww-prog-nav--sticky {
+    position: sticky;
+    top: 88px;
+    z-index: 30;
+    background: var(--ww-bg);
+    padding-top: 12px;
+    padding-bottom: 12px;
+    margin-top: -12px;
+    margin-bottom: -6px;
+  }
+}
+
+.ww-prog-nav__seg {
+  flex: none;
+  scroll-snap-align: start;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--ww-r-sm);
+  border: 1px solid var(--ww-line-2);
+  background: var(--ww-surface);
+  color: var(--ww-text-2);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  cursor: pointer;
+  position: relative;
+  transition: border-color 0.16s, background 0.16s, color 0.16s, box-shadow 0.16s;
+}
+
+.ww-prog-nav__seg:hover { border-color: var(--ww-line-3); background: var(--ww-raised); }
+
+.ww-prog-nav__seg-n { font-size: 13px; font-weight: 700; font-variant-numeric: tabular-nums; }
+
+.ww-prog-nav__seg-dot { width: 4px; height: 4px; border-radius: 999px; background: currentColor; opacity: 0.55; }
+
+.ww-prog-nav__seg[data-state='done'] {
+  border-color: color-mix(in srgb, var(--ww-green) 45%, transparent);
+  background: var(--ww-green-dim);
+  color: var(--ww-green);
+}
+
+.ww-prog-nav__seg[data-state='current'] {
+  border-color: var(--ww-orange);
+  color: var(--ww-orange);
+  box-shadow: 0 0 0 3px var(--ww-orange-dim);
+}
+
+.ww-prog-nav__seg[data-deload='true']::after {
+  content: '';
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  width: 5px;
+  height: 5px;
+  border-radius: 999px;
+  background: var(--ww-orange-soft);
+}
+
+/* ---------- Uge-accordion ---------- */
+
+.ww-week { border-bottom: 1px solid var(--ww-line); }
+.ww-week:first-child { border-top: 1px solid var(--ww-line); }
+
+.ww-week__head {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 18px 4px;
+  background: none;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  color: var(--ww-text);
+  min-height: 44px;
+}
+
+.ww-week__head:hover .ww-week__title { color: var(--ww-orange); }
+
+.ww-week__chevron { flex: none; color: var(--ww-text-3); transition: transform 0.32s var(--ww-ease); display: flex; }
+.ww-week__head[aria-expanded='true'] .ww-week__chevron { transform: rotate(90deg); }
+
+.ww-week__main { flex: 1; min-width: 0; }
+
+.ww-week__title-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 3px; }
+
+.ww-week__title { font-size: 17px; font-weight: 700; letter-spacing: -0.01em; transition: color 0.16s; }
+
+.ww-week__rationale { margin: 0; font-size: 13.5px; color: var(--ww-text-2); line-height: 1.5; max-width: 62ch; }
+
+.ww-week__progress { flex: none; font-size: 13px; font-weight: 600; color: var(--ww-text-3); font-variant-numeric: tabular-nums; }
+
+.ww-week__body { display: grid; grid-template-rows: 0fr; transition: grid-template-rows 0.4s var(--ww-ease); }
+.ww-week__body[data-open='true'] { grid-template-rows: 1fr; }
+.ww-week__body-inner { overflow: hidden; min-height: 0; }
+
+.ww-week__days {
+  display: grid;
+  gap: 10px;
+  padding: 4px 4px 22px;
+  grid-template-columns: repeat(auto-fill, minmax(272px, 1fr));
+}
+
+/* ---------- Dagskort ---------- */
+
+.ww-day {
+  border-radius: var(--ww-r-lg);
+  border: 1px solid var(--ww-line);
+  background: var(--ww-surface);
+  overflow: hidden;
+  transition: border-color 0.16s;
+}
+
+.ww-day[data-status='done'] { border-color: color-mix(in srgb, var(--ww-green) 40%, var(--ww-line)); }
+
+.ww-day__head {
+  width: 100%;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 16px 16px 14px;
+  background: none;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  color: var(--ww-text);
+}
+
+.ww-day__head:hover { background: var(--ww-raised); }
+
+.ww-day__top { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
+
+.ww-day__title { font-size: 18px; font-weight: 700; letter-spacing: -0.01em; line-height: 1.25; margin-bottom: 4px; }
+
+.ww-day__meta { font-size: 13px; color: var(--ww-text-2); display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+
+.ww-day__chevron { flex: none; color: var(--ww-text-3); transition: transform 0.3s var(--ww-ease); margin-top: 2px; }
+.ww-day__head[aria-expanded='true'] .ww-day__chevron { transform: rotate(90deg); }
+
+.ww-day__body { display: grid; grid-template-rows: 0fr; transition: grid-template-rows 0.36s var(--ww-ease); }
+.ww-day__body[data-open='true'] { grid-template-rows: 1fr; }
+.ww-day__body-inner { overflow: hidden; min-height: 0; }
+
+.ww-day__blocks {
+  padding-top: 14px;
+  margin-top: 2px;
+  border-top: 1px solid var(--ww-line);
+  padding-left: 16px;
+  padding-right: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.ww-day__block-title { font-size: 11.5px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ww-text-3); margin-bottom: 6px; }
+
+.ww-day__movement { display: flex; flex-direction: column; gap: 3px; font-size: 14.5px; padding: 8px 0; border-top: 1px solid var(--ww-line); }
+.ww-day__movement:first-child { border-top: none; }
+.ww-day__movement-name { color: var(--ww-text); font-weight: 600; }
+.ww-day__movement-load { color: var(--ww-orange); font-weight: 600; font-size: 13px; font-variant-numeric: tabular-nums; }
+
+.ww-day__actions { display: flex; flex-wrap: wrap; gap: 6px; padding: 14px 16px 16px; border-top: 1px solid var(--ww-line); }
+.ww-day__move { display: flex; gap: 6px; margin-left: auto; }
+
+/* ---------- Slet program ---------- */
+
+.ww-prog-danger {
+  margin-top: 44px;
+  padding-top: 22px;
+  border-top: 1px solid var(--ww-line);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+@media (min-width: 640px) {
+  .ww-prog-danger { flex-direction: row; align-items: center; justify-content: space-between; gap: 20px; }
+}
+
+.ww-prog-danger p { margin: 0; font-size: 13.5px; color: var(--ww-text-3); line-height: 1.55; max-width: 46ch; }
+
+/* ---------------------------------------------------------------------------
+   Program-loading — animeret dokument
+
+   Egen animation til program-generatorens loading-skærm: et "dokument", der
+   får sine linjer tjekket af i takt med fremdriften. Erstatter det roterende
+   tandhjul fra den almindelige workout-loading med noget, der konkret
+   afspejler at et program med flere dele bliver bygget.
+--------------------------------------------------------------------------- */
+
+.ww-doc {
+  position: relative;
+  width: min(340px, 84vw);
+  border-radius: var(--ww-r-lg);
+  border: 1px solid var(--ww-line);
+  background: var(--ww-surface);
+  box-shadow: var(--ww-shadow);
+  padding: 20px 22px 14px;
+  overflow: hidden;
+  animation: ww-doc-float 5s ease-in-out infinite;
+}
+
+.ww-doc::before {
+  content: '';
+  position: absolute;
+  inset: -50% -70%;
+  background: linear-gradient(
+    75deg,
+    transparent 44%,
+    color-mix(in srgb, var(--ww-text) 10%, transparent) 50%,
+    transparent 56%
+  );
+  transform: translateX(-55%);
+  animation: ww-doc-sheen 4.8s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes ww-doc-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+
+@keyframes ww-doc-sheen {
+  0%, 26% { transform: translateX(-55%); }
+  74%, 100% { transform: translateX(55%); }
+}
+
+.ww-doc__head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 14px; }
+
+.ww-doc__count { font-size: 13px; font-weight: 700; color: var(--ww-text-3); }
+
+.ww-doc__rows { display: flex; flex-direction: column; }
+
+.ww-doc__row { display: flex; align-items: center; gap: 12px; padding: 8px 0; position: relative; }
+
+.ww-doc__label { font-size: 14.5px; font-weight: 600; color: var(--ww-text-3); text-align: left; transition: color 0.3s var(--ww-ease); }
+.ww-doc__label[data-state='active'] { color: var(--ww-text); }
+.ww-doc__label[data-state='done'] { color: var(--ww-text); }
+
+.ww-doc-dot { position: relative; flex: none; width: 22px; height: 22px; display: flex; }
+
+.ww-doc__row:not(:last-child) .ww-doc-dot::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  width: 2px;
+  height: 16px;
+  transform: translateX(-50%);
+  background: var(--ww-line-2);
+  transition: background 0.3s var(--ww-ease);
+}
+
+.ww-doc-dot[data-state='done']::after { background: var(--ww-green); }
+
+.ww-doc-dot__ring { stroke: var(--ww-line-3); transition: stroke 0.25s var(--ww-ease); }
+.ww-doc-dot__fill { fill: transparent; transition: fill 0.3s var(--ww-ease); }
+
+.ww-doc-dot__check {
+  stroke: var(--ww-bg);
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  transition: stroke-dashoffset 0.4s var(--ww-ease) 0.05s;
+}
+
+.ww-doc-dot[data-state='active'] .ww-doc-dot__ring { stroke: var(--ww-orange); }
+.ww-doc-dot[data-state='active'] { animation: ww-doc-dot-pulse 1.7s ease-in-out infinite; }
+
+.ww-doc-dot[data-state='done'] .ww-doc-dot__ring { stroke: var(--ww-green); }
+.ww-doc-dot[data-state='done'] .ww-doc-dot__fill { fill: var(--ww-green); }
+.ww-doc-dot[data-state='done'] .ww-doc-dot__check { stroke-dashoffset: 0; }
+
+@keyframes ww-doc-dot-pulse {
+  0%, 100% { filter: drop-shadow(0 0 0 rgb(var(--ww-glow-core) / 0%)); }
+  50% { filter: drop-shadow(0 0 4px rgb(var(--ww-glow-core) / 55%)); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ww-doc, .ww-doc::before, .ww-doc-dot[data-state='active'] { animation: none; }
+}
+
+/* ---------------------------------------------------------------------------
    Formatikonerne på Hjælp
 
    Et lille kvadratisk motiv ved siden af hver formatforklaring. Fast bredde, så

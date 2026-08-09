@@ -18,6 +18,7 @@ import { Loading } from './screens/Loading.js';
 import { Onboarding } from './screens/Onboarding.js';
 import { Profile } from './screens/Profile.js';
 import { Program } from './screens/Program.js';
+import { ProgramLoading } from './screens/ProgramLoading.js';
 import { Result, ResultError } from './screens/Result.js';
 import { Settings } from './screens/Settings.js';
 import { Stats } from './screens/Stats.js';
@@ -65,6 +66,10 @@ export function App() {
 
   if (ww.screen === 'loading') {
     return <Loading progress={ww.progress} phaseText={ww.phaseText} />;
+  }
+
+  if (ww.screen === 'programLoading') {
+    return <ProgramLoading progress={ww.progress} phaseText={ww.phaseText} />;
   }
 
   if (ww.screen === 'timer' && ww.timer && ww.plan && ww.view && ww.workout) {

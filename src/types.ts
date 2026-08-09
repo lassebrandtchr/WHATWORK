@@ -5,7 +5,7 @@ import type {
 /** Alle ruter i appen. Hver har en egen sti og kan åbnes direkte. */
 export type Screen =
   | 'welcome' | 'onboard' | 'home' | 'gen' | 'loading' | 'result' | 'timer'
-  | 'program' | 'history' | 'stats' | 'profile' | 'favorites' | 'equipment'
+  | 'program' | 'programLoading' | 'history' | 'stats' | 'profile' | 'favorites' | 'equipment'
   | 'settings' | 'help' | 'transfer' | 'about' | 'complete';
 
 /**

@@ -15,6 +15,7 @@ export const ROUTES: Record<Screen, string> = {
   result: '/workout',
   timer: '/timer',
   program: '/program',
+  programLoading: '/program/bygger',
   history: '/historik',
   stats: '/statistik',
   profile: '/profil',

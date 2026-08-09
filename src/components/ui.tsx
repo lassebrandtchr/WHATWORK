@@ -251,7 +251,7 @@ export function Dialog({
   );
 }
 
-type GlyphName = 'back' | 'close' | 'menu' | 'bolt' | 'star' | 'star-filled' | 'check' | 'chevron' | 'sun' | 'moon' | 'gear' | 'sound-on' | 'sound-off' | 'search' | 'sparkle';
+type GlyphName = 'back' | 'close' | 'menu' | 'bolt' | 'star' | 'star-filled' | 'check' | 'chevron' | 'sun' | 'moon' | 'gear' | 'sound-on' | 'sound-off' | 'search' | 'sparkle' | 'trash' | 'refresh';
 
 /** Appens egne glyffer. Ingen emoji, intet eksternt ikonbibliotek. */
 export function Glyph({ name, size = 20 }: { name: GlyphName; size?: number }) {
@@ -316,6 +316,20 @@ export function Glyph({ name, size = 20 }: { name: GlyphName; size?: number }) {
         <path
           d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"
         />
+      </g>
+    ),
+    trash: (
+      <g {...common}>
+        <path d="M5 7h14" />
+        <path d="M9.5 7V5a1 1 0 0 1 1-1h5a1 1 0 0 1 1 1v2" />
+        <path d="M7.5 7l1 12.1a1 1 0 0 0 1 .9h5a1 1 0 0 0 1-.9L16.5 7" />
+        <path d="M10.3 10.5v6M13.7 10.5v6" />
+      </g>
+    ),
+    refresh: (
+      <g {...common}>
+        <path d="M12 5a7 7 0 1 1-4.95 2.05" />
+        <path d="M4.5 4.5v3.5h3.5" />
       </g>
     ),
   };

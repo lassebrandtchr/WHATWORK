@@ -3,6 +3,19 @@ import { generateWorkout } from './smartmix.js';
 import { clamp, makeSeed } from './rng.js';
 import type { LevelId, Program, ProgramGoal, ProgramOptions, ProgramWeek } from './types.js';
 
+/**
+ * Faserne, program-loading-skærmen viser mens programmet bygges. Hvert trin svarer til
+ * én linje på det animerede dokument — når fremdriften krydser `to`, får linjen et flueben.
+ */
+export const PROGRAM_PHASES: { to: number; text: string; label: string }[] = [
+  { to: 8, label: 'Uger og mål', text: 'Lægger ugerne til rette efter dit mål og din tid.' },
+  { to: 28, label: 'Ugebalance', text: 'Fordeler styrke, engine og recovery ud over ugerne.' },
+  { to: 54, label: 'Træningsdage', text: 'Bygger hver træningsdag, uge for uge.' },
+  { to: 76, label: 'Kilo og tid', text: 'Regner kilo, skiver og tid ud for hver dag.' },
+  { to: 92, label: 'Roligere uger', text: 'Lægger roligere uger ind, hvor programmet har brug for dem.' },
+  { to: 100, label: 'Program klar', text: 'Sætter programmet sammen. Snart klar.' },
+];
+
 export const PROGRAM_GOALS: ProgramGoal[] = [
   {
     id: 'allround', name: 'Funktionel allround',
