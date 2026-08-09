@@ -11,13 +11,18 @@ import { Glyph } from './ui.js';
 const SPARKS = ['a', 'b', 'c', 'd', 'e'] as const;
 
 const BOLTS = [
+  { mod: 'nw', dur: 0.39, delay: 0.09 },
   { mod: 'n', dur: 0.36, delay: 0 },
+  { mod: 'nne', dur: 0.31, delay: 0.19 },
   { mod: 'ne', dur: 0.42, delay: 0.05 },
   { mod: 'e', dur: 0.33, delay: 0.11 },
+  { mod: 'ese', dur: 0.37, delay: 0.22 },
   { mod: 'se', dur: 0.45, delay: 0.02 },
   { mod: 's', dur: 0.38, delay: 0.16 },
+  { mod: 'ssw', dur: 0.34, delay: 0.06 },
   { mod: 'sw', dur: 0.4, delay: 0.08 },
   { mod: 'w', dur: 0.35, delay: 0.13 },
+  { mod: 'wnw', dur: 0.43, delay: 0.17 },
 ] as const;
 
 function rand(min: number, max: number): number {
@@ -27,7 +32,7 @@ function rand(min: number, max: number): number {
 /** Trækker en ny tilfældig retning, afstand og rotation til ét stød og genstarter dets keyframe-loop. */
 function randomizeBolt(el: HTMLSpanElement): void {
   const angle = rand(0, Math.PI * 2);
-  const dist = rand(16, 32);
+  const dist = rand(20, 42);
   const midDist = dist * rand(0.45, 0.7);
   el.style.setProperty('--ww-bolt-tx', `${(Math.cos(angle) * dist).toFixed(1)}px`);
   el.style.setProperty('--ww-bolt-ty', `${(Math.sin(angle) * dist).toFixed(1)}px`);

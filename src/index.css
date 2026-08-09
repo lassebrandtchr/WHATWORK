@@ -1299,6 +1299,8 @@ a {
 .ww-btn--rerun:focus-visible,
 .ww-btn--rerun.is-charging {
   --ww-volt-lift: 1;
+  background: var(--ww-volt-hi);
+  border-color: var(--ww-volt-hi);
 }
 
 .ww-btn--rerun:active { --ww-volt-lift: 1.3; }
@@ -1343,7 +1345,7 @@ a {
   pointer-events: none;
   width: 11px;
   height: 11px;
-  color: #fff;
+  color: var(--ww-on-volt);
   filter: drop-shadow(0 0 3px rgb(var(--ww-volt-glow-core) / 85%));
   opacity: 0;
   animation: ww-spark-flicker 4.4s ease-in-out infinite, ww-spark-drift 4.4s ease-in-out infinite;
@@ -1381,7 +1383,7 @@ a {
   pointer-events: none;
   width: 15px;
   height: 15px;
-  color: #fff;
+  color: var(--ww-on-volt);
   opacity: 0;
   animation: none;
 }
@@ -1390,13 +1392,18 @@ a {
   animation: ww-bolt-shoot var(--ww-bolt-dur, 0.4s) ease-out var(--ww-bolt-delay, 0s) infinite;
 }
 
-.ww-rerun__bolt--n  { top: -5px;   left: 18%; }
-.ww-rerun__bolt--ne { top: 4%;     right: -6px; }
-.ww-rerun__bolt--e  { top: 44%;    right: -8px; }
-.ww-rerun__bolt--se { bottom: 6%;  right: -5px; }
-.ww-rerun__bolt--s  { bottom: -5px; left: 52%; }
-.ww-rerun__bolt--sw { bottom: 8%;  left: -6px; }
-.ww-rerun__bolt--w  { top: 38%;    left: -8px; }
+.ww-rerun__bolt--nw  { top: -6px;   left: -6px; }
+.ww-rerun__bolt--n   { top: -5px;   left: 18%; }
+.ww-rerun__bolt--nne { top: -4px;   left: 40%; }
+.ww-rerun__bolt--ne  { top: 4%;     right: -6px; }
+.ww-rerun__bolt--e   { top: 30%;    right: -8px; }
+.ww-rerun__bolt--ese { bottom: 22%; right: -7px; }
+.ww-rerun__bolt--se  { bottom: 6%;  right: -5px; }
+.ww-rerun__bolt--s   { bottom: -5px; left: 52%; }
+.ww-rerun__bolt--ssw { bottom: -4px; left: 28%; }
+.ww-rerun__bolt--sw  { bottom: 8%;  left: -6px; }
+.ww-rerun__bolt--w   { top: 38%;    left: -8px; }
+.ww-rerun__bolt--wnw { top: 14%;    left: -7px; }
 
 @keyframes ww-bolt-shoot {
   0% {

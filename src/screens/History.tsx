@@ -88,7 +88,7 @@ export function History({
           <Photo
             name="moments-collage"
             sizes="(min-width: 1024px) 860px, 100vw"
-            style={{ marginBottom: 24 }}
+            style={{ marginBottom: 24, aspectRatio: '1600 / 1073' }}
           />
 
           <div style={{ display: 'flex', gap: 26, flexWrap: 'wrap', paddingBottom: 22, borderBottom: '1px solid var(--ww-line)', marginBottom: 18 }}>
