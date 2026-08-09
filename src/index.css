@@ -1512,6 +1512,51 @@ a {
 
 .ww-line-btn:hover { color: var(--ww-orange); }
 
+/* CTA'en på Hjem, der linker til Program — fotoet bærer det meste af
+   overtalelsen, så kortet selv holdes stille og roligt. */
+.ww-program-cta {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 14px;
+  border: 1px solid var(--ww-line);
+  border-radius: var(--ww-r-lg);
+  background: var(--ww-surface);
+  color: var(--ww-text);
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.16s, background 0.16s, transform 0.16s var(--ww-ease);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .ww-program-cta:hover { border-color: var(--ww-line-2); background: var(--ww-raised); }
+}
+
+.ww-program-cta:active { transform: translateY(1px); }
+
+.ww-program-cta__photo { width: 112px; flex: none; margin: 0; }
+
+.ww-program-cta__text {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+}
+
+.ww-program-cta__title { font-size: 17px; font-weight: 700; letter-spacing: -0.01em; }
+.ww-program-cta__sub { font-size: 13.5px; line-height: 1.5; color: var(--ww-text-2); }
+
+.ww-program-cta__link {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  margin-top: 2px;
+  font-size: 14px;
+  font-weight: 650;
+  color: var(--ww-orange);
+}
+
 .ww-list-item {
   width: 100%;
   display: flex;

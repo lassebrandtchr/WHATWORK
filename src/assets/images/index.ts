@@ -90,6 +90,10 @@ const SPECS = {
     widths: PORTRAIT, position: '50% 45%',
     alt: 'En svævende iPhone i holdsalen viser programmets mål på skærmen',
   },
+  'program-info': {
+    widths: PORTRAIT, position: '50% 55%',
+    alt: 'Vægtstænger med stigende antal skiver i holdsalen, som illustrerer et program der bygger volumen op uge for uge',
+  },
   'program-wide': {
     widths: LANDSCAPE, position: '55% 50%',
     alt: 'Færdigt træningsprogram gennemgået på telefonen i holdsalen',

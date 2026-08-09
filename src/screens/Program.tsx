@@ -160,8 +160,8 @@ function ProgramSetup({
       </div>
 
       <aside className="ww-program-preview">
-        <Photo name="program-phone" frame="portrait" sizes="(min-width: 1024px) 340px, min(100vw - 40px, 340px)" />
-        <p>Sådan ser programmet ud, når det er bygget: uge for uge, pas for pas, klar til at åbne.</p>
+        <Photo name="program-info" frame="portrait" sizes="(min-width: 1024px) 340px, min(100vw - 40px, 340px)" />
+        <p>Volumen bygges gradvist op, uge for uge — med en roligere uge lagt ind, når programmet kalder på den.</p>
       </aside>
     </div>
   );

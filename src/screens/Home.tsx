@@ -96,11 +96,29 @@ export function Home({
         eager
       />
 
-      <div style={{ marginTop: 26, borderTop: '1px solid var(--ww-line)' }}>
-        <button type="button" className="ww-line-btn" onClick={() => onGo('program')}>
-          <span style={{ fontSize: 17, fontWeight: 600 }}>Lav træningsprogram</span>
-          <span style={{ fontSize: 13, color: 'var(--ww-text-3)' }}>2–12 uger</span>
+      <section aria-labelledby="ww-program-cta" style={{ marginTop: 22 }}>
+        <h2 id="ww-program-cta" className="ww-sr-only">Træningsprogram</h2>
+        <button type="button" className="ww-program-cta" onClick={() => onGo('program')}>
+          <Photo
+            name="program-phone"
+            frame="portrait"
+            sizes="112px"
+            className="ww-program-cta__photo"
+          />
+          <span className="ww-program-cta__text">
+            <span className="ww-program-cta__title">Byg dit træningsprogram</span>
+            <span className="ww-program-cta__sub">
+              Vælg mål og længde — så sætter WHATWORK uger og pas op på forhånd, klar til at åbne.
+            </span>
+            <span className="ww-program-cta__link">
+              Kom i gang
+              <Glyph name="chevron" size={14} />
+            </span>
+          </span>
         </button>
+      </section>
+
+      <div style={{ marginTop: 26, borderTop: '1px solid var(--ww-line)' }}>
         <button type="button" className="ww-line-btn" onClick={() => onGo('favorites')}>
           <span style={{ fontSize: 17, fontWeight: 600 }}>Favoritter</span>
           <span style={{ fontSize: 13, color: 'var(--ww-text-3)' }}>Kør en igen</span>
