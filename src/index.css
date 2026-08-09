@@ -2538,7 +2538,7 @@ a {
     0 20px 48px -24px rgb(var(--goal-glow) / 100%);
 }
 
-.ww-goal-card--orange { --goal: var(--ww-orange); --goal-hi: var(--ww-orange-hi); --goal-deep: var(--ww-orange-deep); --goal-spark: var(--ww-glow-sheen); --goal-glow: var(--ww-glow-core); --goal-on: var(--ww-on-orange); }
+.ww-goal-card--orange { --goal: var(--ww-orange); --goal-hi: var(--ww-orange-hi); --goal-deep: var(--ww-orange-deep); --goal-spark: var(--ww-glow-sheen); --goal-glow: var(--ww-glow-core); --goal-on: rgb(var(--goal-spark)); }
 .ww-goal-card--strength { --goal: var(--ww-goal-strength); --goal-hi: var(--ww-goal-strength-hi); --goal-deep: var(--ww-goal-strength-deep); --goal-spark: var(--ww-goal-strength-spark); --goal-glow: var(--ww-goal-strength-glow); --goal-on: rgb(var(--goal-spark)); }
 .ww-goal-card--engine { --goal: var(--ww-goal-engine); --goal-hi: var(--ww-goal-engine-hi); --goal-deep: var(--ww-goal-engine-deep); --goal-spark: var(--ww-goal-engine-spark); --goal-glow: var(--ww-goal-engine-glow); --goal-on: rgb(var(--goal-spark)); }
 .ww-goal-card--legs { --goal: var(--ww-goal-legs); --goal-hi: var(--ww-goal-legs-hi); --goal-deep: var(--ww-goal-legs-deep); --goal-spark: var(--ww-goal-legs-spark); --goal-glow: var(--ww-goal-legs-glow); --goal-on: rgb(var(--goal-spark)); }
@@ -2555,8 +2555,6 @@ a {
 
 .ww-goal-card__name { font-size: 18px; font-weight: 750; letter-spacing: -0.01em; color: var(--goal-on); }
 .ww-goal-card__desc { font-size: 13.5px; line-height: 1.5; color: rgb(var(--goal-spark) / 82%); }
-
-.ww-goal-card--orange .ww-goal-card__desc { color: var(--goal-on); opacity: 0.72; }
 
 /* Sort vignet frem for en farvet flade — den dæmper altid teksten et hak ned,
    uanset hvilken af de fem gradienter der ligger under. */
@@ -2578,10 +2576,10 @@ a {
   position: absolute;
   transform: translate3d(var(--shuffle-x, 0px), var(--shuffle-y, 0px), 0) rotate(var(--shuffle-r, 0deg));
   transition: transform 0.46s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.3s;
-  opacity: 0.22;
+  opacity: 0.17;
 }
 
-.ww-goal-card.is-on .ww-goal-card__icon { opacity: 0.4; }
+.ww-goal-card.is-on .ww-goal-card__icon { opacity: 0.34; }
 
 /* Indre lag: den uendelige sitre-animation, adskilt fra det ydre lags egen
    transform, så de to aldrig kæmper om samme egenskab på samme element. */
@@ -2595,14 +2593,21 @@ a {
 
 .ww-goal-card.is-shuffling .ww-goal-card__icon-drift { animation: ww-goal-blur 0.46s ease-out; }
 
-/* Seks pladser spredt ud over hele kortet — også ind over tekstzonen, hvor
-   vignetten holder dem tilbage — plus det spring, kortet giver dem ved valg. */
-.ww-goal-card__icon:nth-child(1) { top: 10%; left: 6%; --drift-dur: 7.6s; --drift-delay: 0s; }
-.ww-goal-card__icon:nth-child(2) { top: 64%; left: 12%; --drift-dur: 9.2s; --drift-delay: -1.4s; }
-.ww-goal-card__icon:nth-child(3) { top: 16%; left: 46%; --drift-dur: 8.4s; --drift-delay: -3s; }
-.ww-goal-card__icon:nth-child(4) { top: 70%; left: 50%; --drift-dur: 10.1s; --drift-delay: -2.1s; }
-.ww-goal-card__icon:nth-child(5) { top: 12%; left: 80%; --drift-dur: 7.1s; --drift-delay: -4.4s; }
-.ww-goal-card__icon:nth-child(6) { top: 62%; left: 84%; --drift-dur: 8.9s; --drift-delay: -0.6s; }
+/* Tolv pladser spredt ud over hele kortet — de samme seks redskaber gentaget
+   i to lag, også ind over tekstzonen, hvor vignetten holder dem tilbage —
+   plus det spring, kortet giver dem ved valg. */
+.ww-goal-card__icon:nth-child(1) { top: 8%; left: 4%; --drift-dur: 7.6s; --drift-delay: 0s; }
+.ww-goal-card__icon:nth-child(2) { top: 60%; left: 6%; --drift-dur: 9.2s; --drift-delay: -1.4s; }
+.ww-goal-card__icon:nth-child(3) { top: 14%; left: 30%; --drift-dur: 8.4s; --drift-delay: -3s; }
+.ww-goal-card__icon:nth-child(4) { top: 68%; left: 32%; --drift-dur: 10.1s; --drift-delay: -2.1s; }
+.ww-goal-card__icon:nth-child(5) { top: 6%; left: 56%; --drift-dur: 7.1s; --drift-delay: -4.4s; }
+.ww-goal-card__icon:nth-child(6) { top: 62%; left: 54%; --drift-dur: 8.9s; --drift-delay: -0.6s; }
+.ww-goal-card__icon:nth-child(7) { top: 36%; left: 8%; --drift-dur: 8.1s; --drift-delay: -2.6s; }
+.ww-goal-card__icon:nth-child(8) { top: 84%; left: 22%; --drift-dur: 9.8s; --drift-delay: -0.9s; }
+.ww-goal-card__icon:nth-child(9) { top: 40%; left: 42%; --drift-dur: 7.4s; --drift-delay: -3.6s; }
+.ww-goal-card__icon:nth-child(10) { top: 18%; left: 78%; --drift-dur: 10.6s; --drift-delay: -1.1s; }
+.ww-goal-card__icon:nth-child(11) { top: 50%; left: 86%; --drift-dur: 8.7s; --drift-delay: -4.9s; }
+.ww-goal-card__icon:nth-child(12) { top: 80%; left: 74%; --drift-dur: 9.4s; --drift-delay: -2.9s; }
 
 .ww-goal-card.is-on .ww-goal-card__icon:nth-child(1) { --shuffle-x: 10px; --shuffle-y: -8px; --shuffle-r: 8deg; }
 .ww-goal-card.is-on .ww-goal-card__icon:nth-child(2) { --shuffle-x: -8px; --shuffle-y: 10px; --shuffle-r: -6deg; }
@@ -2610,6 +2615,12 @@ a {
 .ww-goal-card.is-on .ww-goal-card__icon:nth-child(4) { --shuffle-x: -10px; --shuffle-y: -10px; --shuffle-r: -8deg; }
 .ww-goal-card.is-on .ww-goal-card__icon:nth-child(5) { --shuffle-x: 8px; --shuffle-y: 12px; --shuffle-r: 6deg; }
 .ww-goal-card.is-on .ww-goal-card__icon:nth-child(6) { --shuffle-x: -12px; --shuffle-y: -6px; --shuffle-r: -5deg; }
+.ww-goal-card.is-on .ww-goal-card__icon:nth-child(7) { --shuffle-x: 9px; --shuffle-y: 7px; --shuffle-r: -7deg; }
+.ww-goal-card.is-on .ww-goal-card__icon:nth-child(8) { --shuffle-x: -7px; --shuffle-y: -9px; --shuffle-r: 6deg; }
+.ww-goal-card.is-on .ww-goal-card__icon:nth-child(9) { --shuffle-x: 11px; --shuffle-y: -6px; --shuffle-r: 9deg; }
+.ww-goal-card.is-on .ww-goal-card__icon:nth-child(10) { --shuffle-x: -9px; --shuffle-y: 8px; --shuffle-r: -5deg; }
+.ww-goal-card.is-on .ww-goal-card__icon:nth-child(11) { --shuffle-x: 7px; --shuffle-y: 11px; --shuffle-r: 7deg; }
+.ww-goal-card.is-on .ww-goal-card__icon:nth-child(12) { --shuffle-x: -11px; --shuffle-y: -7px; --shuffle-r: -6deg; }
 
 .ww-goal-card__check {
   position: absolute;

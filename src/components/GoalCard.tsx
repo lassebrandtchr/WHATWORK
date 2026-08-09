@@ -30,6 +30,9 @@ export function GoalCard({
   onClick: () => void;
 }) {
   const visual = GOAL_VISUALS[id] ?? ALLROUND_VISUAL;
+  // Samme seks redskaber gentaget i to lag ved forskellige størrelser — så kortet
+  // føles fyldt af symboler uden at skulle opfinde flere, mindre genkendelige ikoner.
+  const renderIcons = [...visual.icons, ...visual.icons];
   const [shuffling, setShuffling] = useState(false);
   const wasOn = useRef(on);
 
@@ -54,10 +57,10 @@ export function GoalCard({
       onClick={onClick}
     >
       <span className="ww-goal-card__icons" aria-hidden="true">
-        {visual.icons.map((iconId, i) => (
-          <span className="ww-goal-card__icon" key={iconId}>
+        {renderIcons.map((iconId, i) => (
+          <span className="ww-goal-card__icon" key={`${iconId}-${i}`}>
             <span className="ww-goal-card__icon-drift">
-              <EquipmentIcon id={iconId} size={i % 2 === 0 ? 30 : 24} />
+              <EquipmentIcon id={iconId} size={[30, 22, 16][i % 3]} />
             </span>
           </span>
         ))}
