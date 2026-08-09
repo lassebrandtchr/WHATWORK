@@ -106,7 +106,10 @@ export function Home({
             className="ww-program-cta__photo"
           />
           <span className="ww-program-cta__text">
-            <span className="ww-program-cta__title">Byg dit træningsprogram</span>
+            <span className="ww-program-cta__title-row">
+              <span className="ww-program-cta__title">Byg dit træningsprogram</span>
+              <span className="ww-badge ww-badge--accent">Beta</span>
+            </span>
             <span className="ww-program-cta__sub">
               Vælg mål og længde — så sætter WHATWORK uger og pas op på forhånd, klar til at åbne.
             </span>
