@@ -6,6 +6,8 @@ const profile: UserProfile = {
   name: 'Test', level: 3, sex: 'm', bodyweight: 82,
   equipment: null, counts: {}, plates: [25, 20, 15, 10, 5, 2.5, 1.25],
   bars: [20, 15], sandbags: [10, 20, 30], onboarded: true,
+  age: null, benchmarks: [], competence: [], weakPoints: [],
+  screening: { status: 'unknown', flags: [], pain: [], answeredAt: null },
 };
 
 describe('freshGen — individuel kropsvægt', () => {

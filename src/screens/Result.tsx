@@ -27,7 +27,7 @@ export function ResultError({ message, onAdjust }: { message: string; onAdjust: 
 }
 
 export function Result({
-  workout, profile, saved, isFavorite, aiNotice,
+  workout, profile, saved, isFavorite, aiNotice, scale,
   onBack, onEasier, onHarder, onRegenerate, onSave, onFavorite,
 }: {
   workout: Workout;
@@ -35,6 +35,13 @@ export function Result({
   saved: boolean;
   isFavorite: boolean;
   aiNotice: string | null;
+  /** Diffen fra seneste skalering. `null` når workouten ikke er justeret. */
+  scale: {
+    changes: eng.ScaleChange[];
+    atLimit: boolean;
+    preserved: string;
+    direction: 'easier' | 'harder';
+  } | null;
   onBack: () => void;
   onEasier: () => void;
   onHarder: () => void;
@@ -211,12 +218,40 @@ export function Result({
         </button>
       </div>
 
+      {scale ? (
+        <div style={{ marginTop: 14 }}>
+          <Note
+            label={scale.atLimit
+              ? 'Kunne ikke justeres mere'
+              : scale.direction === 'easier' ? 'Gjort lettere' : 'Gjort hårdere'}
+            tone={scale.atLimit ? 'quiet' : 'accent'}
+          >
+            {scale.atLimit ? (
+              <>
+                Workouten kan ikke skaleres yderligere, uden at den bliver en anden workout.
+                Vil du have noget andet, så tryk «Ny workout».
+              </>
+            ) : (
+              <>
+                {scale.preserved}
+                <ul style={{ margin: '10px 0 0', paddingLeft: 20 }}>
+                  {scale.changes.map((c) => (
+                    <li key={c.text} style={{ marginBottom: 4 }}>{c.text}</li>
+                  ))}
+                </ul>
+              </>
+            )}
+          </Note>
+        </div>
+      ) : null}
+
       <div style={{ marginTop: 14 }}>
         <Note label="Hvad knapperne gør" tone="quiet" accent>
-          «Gør den lettere» skruer kondition og styrke to trin ned, «Gør den værre» skruer op.
-          «Ny workout» henter en ny variation. Alle tre beholder dine valg af tid, deltagere,
-          udstyr og hensyn, genberegner kilo og tid og kører workouten gennem den samme kontrol —
-          et ugyldigt resultat bliver aldrig vist.
+          «Gør den lettere» og «Gør den værre» justerer den workout, du har foran dig: samme
+          format, samme øvelser og samme tidsramme, men færre eller flere gentagelser og
+          lettere eller tungere vægte. Du får vist præcis, hvad der blev ændret.
+          «Ny workout» er den eneste knap, der bygger noget nyt — den beholder dine valg af
+          tid, deltagere, udstyr og hensyn og kører resultatet gennem den samme kontrol.
         </Note>
       </div>
 

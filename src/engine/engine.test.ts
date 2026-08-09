@@ -494,21 +494,14 @@ describe('dansk microcopy', () => {
   });
 });
 
-describe('program', () => {
-  it('bygger uger, pas og roligere uger', () => {
-    const p = eng.generateProgram({ goal: 'allround', weeks: 8, daysPerWeek: 3, minutes: 45, seed: 5 });
-    expect(p.weeks).toHaveLength(8);
-    expect(p.weeks[0]?.days).toHaveLength(3);
-    expect(p.weeks.filter((w) => w.deload).length).toBeGreaterThan(0);
-    expect(p.weeks.flatMap((w) => w.days).every((d) => d.workout !== null || d.error !== null)).toBe(true);
-  });
-
-  it('holder sig inden for 2–12 uger og 2–6 pas', () => {
-    const p = eng.generateProgram({ goal: 'engine', weeks: 99, daysPerWeek: 99, seed: 1 });
-    expect(p.weeks).toHaveLength(12);
-    expect(p.daysPerWeek).toBe(6);
-  });
-});
+/*
+ * Flerugers programmer bygges ikke længere her.
+ *
+ * Den tidligere `generateProgram` kaldte Dagens WOD-generatoren én gang pr. dag og
+ * kaldte resultatet et program. Den er fjernet, fordi et program skal have
+ * obligatoriske ugentlige eksponeringer, blokke og progression — ikke en pose
+ * tilfældige workouts. Programmotoren og dens tests ligger i `src/program`.
+ */
 
 describe('performance (Del P)', () => {
   it('bygger 100 workouts på under 1500 ms i alt — MAX_CANDIDATES-forhøjelsen må ikke mærkes', () => {

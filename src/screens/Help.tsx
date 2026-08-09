@@ -1,7 +1,9 @@
 import * as eng from '../engine/index.js';
 import { formatPhoto } from '../assets/images/index.js';
 import { Photo } from '../components/Photo.js';
+import { GlossaryItem } from '../components/Term.js';
 import { Glyph, Note, PageHeader } from '../components/ui.js';
+import { CATEGORY_LABELS, CATEGORY_ORDER, glossaryInCategory } from '../domain/glossary.js';
 
 const SECTIONS: { title: string; body: string[] }[] = [
   {
@@ -130,6 +132,25 @@ export function Help() {
           </div>
         </section>
       ))}
+
+      <section aria-labelledby="ww-glossary-help" style={{ marginBottom: 32 }}>
+        <h2 id="ww-glossary-help" className="ww-h2" style={{ marginBottom: 14 }}>Ordliste</h2>
+        <p className="ww-lede" style={{ marginBottom: 20, maxWidth: '62ch' }}>
+          Træning er fuld af forkortelser, som ingen forklarer. Her står de alle sammen på
+          almindeligt dansk. Du behøver ikke kunne dem for at bruge appen — men slår du et ord
+          op her, kan du læse resten af appen uden at gætte.
+        </p>
+        {CATEGORY_ORDER.map((category) => (
+          <div key={category} style={{ marginBottom: 26 }}>
+            <h3 className="ww-kicker" style={{ marginBottom: 10 }}>{CATEGORY_LABELS[category]}</h3>
+            <dl className="ww-glossary">
+              {glossaryInCategory(category).map((entry) => (
+                <GlossaryItem key={entry.id} entry={entry} />
+              ))}
+            </dl>
+          </div>
+        ))}
+      </section>
 
       <Note label="Vigtigt" tone="danger">
         WHATWORK diagnosticerer ikke skader, behandler ikke skader og kender ikke din krop.

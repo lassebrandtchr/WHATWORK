@@ -151,8 +151,115 @@ export function validate(
     }
   }
 
+  issues.push(...validateWarmupPrep(blocks));
+  issues.push(...validateIntervalFeasibility(blocks, req));
+
   return issues;
 }
+
+/**
+ * Opvarmningen skal forberede netop de bevægelser, hoveddelen bruger.
+ *
+ * Reglen fra specifikationen: hver hovedbevægelse skal have mindst én relateret
+ * gennemspilning, og belastede tekniske løft skal have en stigende ramp. En
+ * opvarmning, der ikke peger på noget, er bare ekstra træthed.
+ */
+export function validateWarmupPrep(blocks: Block[]): Issue[] {
+  const issues: Issue[] = [];
+  const warm = blocks.find((b) => b.kind === 'warmup');
+  if (!warm) return issues;
+
+  const prepared = new Set(warm.movements.flatMap((m) => m.preparesMovementIds ?? []));
+  const ramped = new Set(
+    warm.movements.filter((m) => m.purpose === 'ramp').flatMap((m) => m.preparesMovementIds ?? []),
+  );
+
+  blocks.filter((b) => b.kind !== 'warmup').forEach((b) => b.movements.forEach((m) => {
+    const ex = BY_ID[m.exerciseId];
+    if (!ex) return;
+    if (!prepared.has(m.exerciseId)) {
+      issues.push({
+        code: 'WARMUP_PREP', sev: 'warning',
+        msg: `Opvarmningen forbereder ikke ${ex.name} direkte.`,
+      });
+    }
+    // Belastede tekniske løft skal have en ramp — ikke ét spring op til arbejdsvægten.
+    if (ex.load && ex.tech >= 4 && !ramped.has(m.exerciseId)) {
+      issues.push({
+        code: 'WARMUP_RAMP', sev: 'error',
+        msg: `${ex.name} er et teknisk løft med vægt, men opvarmningen har ingen stigende sæt op mod dagens vægt.`,
+      });
+    }
+  }));
+
+  // Opvarmningen må ikke være en skjult ekstra workout.
+  const overCap = warm.movements.filter((m) => (m.fatigueCapRpe ?? 4) > 6);
+  if (overCap.length) {
+    issues.push({
+      code: 'WARMUP_FATIGUE', sev: 'error',
+      msg: 'Et opvarmningstrin er sat hårdere, end en opvarmning må være.',
+    });
+  }
+
+  return issues;
+}
+
+/**
+ * Rep-feasibility i intervalformater.
+ *
+ * Et EMOM-vindue skal give en reel pause ved et konservativt øvre skøn — ellers er
+ * det ikke et EMOM, men en for tidligt planlagt nedtur. Estimatet bruger katalogets
+ * arbejdstempo som konservativ prior; motoren har ikke atletens splits her.
+ */
+export function validateIntervalFeasibility(blocks: Block[], req: NormalizedRequest): Issue[] {
+  const issues: Issue[] = [];
+
+  blocks.filter((b) => b.kind === 'conditioning').forEach((block) => {
+    const window = block.everySec;
+    if (!window || !block.movements.length) return;
+
+    block.movements.forEach((m) => {
+      const ex = BY_ID[m.exerciseId];
+      if (!ex) return;
+      // Den langsomste deltager bestemmer — ikke gennemsnittet.
+      const slowest = Math.max(...m.targets.map((t) => t.amount * ex.sec), m.workSec);
+      // Grind-tunge bevægelser falder fra hinanden over runderne.
+      const decay = ex.grind === 'high' ? 1.25 : ex.grind === 'medium' ? 1.15 : 1.05;
+      const worstCase = slowest * decay + m.transitionSec;
+      const rest = window - worstCase;
+
+      if (rest < MIN_INTERVAL_REST_SEC) {
+        issues.push({
+          code: 'REP_FEASIBILITY',
+          sev: rest < 0 ? 'error' : 'warning',
+          msg:
+            `${m.display} kan tage op til ${Math.round(worstCase)} sekunder af `
+            + `${window}-sekunders vinduet. Der er ikke ${MIN_INTERVAL_REST_SEC} sekunders reel pause tilbage.`,
+        });
+      }
+    });
+  });
+
+  // Gruppeworkouts: den langsomste skal nå rotationen.
+  if (req.participants > 1) {
+    blocks.filter((b) => b.kind === 'conditioning' && b.everySec).forEach((block) => {
+      const slowest = Math.max(...block.movements.map(
+        (m) => Math.max(...m.targets.map((t) => t.amount * (BY_ID[m.exerciseId]?.sec ?? 3))),
+      ));
+      if (slowest > (block.everySec ?? 60) * 0.9) {
+        issues.push({
+          code: 'GROUP_ROTATION', sev: 'warning',
+          msg: 'Den langsomste deltager når kun lige rotationen. Skalér den enkelte i stedet for at flytte klokken.',
+        });
+      }
+    });
+  }
+
+  return issues;
+}
+
+/** Mindste reelle pause i et intervalvindue, før det ikke længere er et interval. */
+export const MIN_INTERVAL_REST_SEC = 10;
 
 function variationScore(sig: WorkoutSignature, recent: WorkoutSignature[]): { score: number; note: string } {
   if (!recent.length) return { score: 100, note: 'Ingen nyere workouts at gentage.' };

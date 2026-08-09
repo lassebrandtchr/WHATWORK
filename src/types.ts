@@ -1,6 +1,9 @@
 import type {
   CareId, FocusId, LevelId, Profile, Program, TimerSegment, Workout, WorkoutSignature,
 } from './engine/index.js';
+import type { Benchmark, CompetenceEntry, Screening } from './domain/types.js';
+import type { SessionRecord } from './domain/history.js';
+import type { WeakPointId } from './program/assistance.js';
 
 /** Alle ruter i appen. Hver har en egen sti og kan åbnes direkte. */
 export type Screen =
@@ -31,6 +34,19 @@ export interface UserProfile {
   /** Sandbag-vægte brugeren faktisk har. */
   sandbags: number[];
   onboarded: boolean;
+  /** null = ikke oplyst. Appen skal kunne skelne "ved ikke" fra 0. */
+  age: number | null;
+  /**
+   * Målte tal om brugerens formåen. Alt, der bestemmer kilo eller tempo, skal kunne
+   * spores tilbage hertil — eller til et tydeligt markeret forsigtigt standardbud.
+   */
+  benchmarks: Benchmark[];
+  /** Helbredsscreening og registreret smerte. */
+  screening: Screening;
+  /** Teknisk niveau pr. øvelse. Et generelt niveau kan ikke stå i stedet. */
+  competence: CompetenceEntry[];
+  /** De steder i et løft, hvor det typisk går galt. Styrer valg af hjælpeøvelser. */
+  weakPoints: WeakPointId[];
 }
 
 export interface Settings {
@@ -93,7 +109,16 @@ export interface HistoryEntry {
   /** Bevægelseskategorier, så motoren kan undgå gentagelser. */
   patterns: string[];
   signature: WorkoutSignature;
+  /**
+   * Den planlagte workout. Den overskrives aldrig — retter man noget, lægges det i
+   * `session.actual` med en revision ved siden af.
+   */
   workout: Workout;
+  /**
+   * Sessionsposten med planlagt-vs-faktisk, motorversioner og revisionsspor.
+   * Valgfri, så poster gemt af en tidligere version stadig kan vises.
+   */
+  session?: SessionRecord;
 }
 
 /** Timeren gemmer, hvor den er, ikke hvor lang tid der er tilbage. */
@@ -128,11 +153,28 @@ export interface Completion {
 /** Hvilken programdag den viste workout kom fra, så status kan skrives tilbage. */
 export interface ProgramRef { w: number; d: number }
 
+/**
+ * Programbyggerens valg.
+ *
+ * Specifikationen sætter budgettet til omkring seks kernebeslutninger plus de
+ * sportsspecifikke spørgsmål, der først vises, når sporten er valgt. `goal` bærer
+ * sportens id, så den eksisterende målvælger kan genbruges uvisuelt ændret.
+ */
 export interface ProgramDraft {
+  /** Sportens id: strength4, powerlifting, crossfit, hyrox, strongman eller functional. */
   goal: string;
   weeks: number;
   days: number;
   minutes: number;
+  /**
+   * Hvordan udgangspunktet findes: brug tal du kender, mål dem i en indkøringsuge,
+   * eller start forsigtigt. "Ved ikke" er et gyldigt svar og fører til indkøring.
+   */
+  baseline: 'known' | 'assessment' | 'conservative';
+  /** ISO-dato for konkurrence eller race. Tom streng betyder ingen. */
+  eventDate: string;
+  /** Kun HYROX: hvilken division der stilles op i. */
+  division: string;
 }
 
 /** Det, der gemmes lokalt. `version` styrer migrering. */
@@ -143,6 +185,8 @@ export interface PersistedState {
   history: HistoryEntry[];
   favorites: HistoryEntry[];
   program: Program | null;
+  /** Gemmes, så programbyggeren ikke spørger om det samme igen ved næste besøg. */
+  programDraft?: ProgramDraft;
   timer: TimerState | null;
   /** Workouten der hører til en afbrudt timer, så den kan genoptages. */
   timerWorkout: Workout | null;

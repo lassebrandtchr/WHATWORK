@@ -1,12 +1,12 @@
-import * as eng from '../engine/index.js';
+import { PROGRAM_BUILD_PHASES } from '../program/index.js';
 import { ProgressBar } from '../components/ui.js';
 
 type RowState = 'pending' | 'active' | 'done';
 
 function rowState(progress: number, index: number): RowState {
-  const phase = eng.PROGRAM_PHASES[index];
+  const phase = PROGRAM_BUILD_PHASES[index];
   if (!phase) return 'pending';
-  const from = eng.PROGRAM_PHASES[index - 1]?.to ?? 0;
+  const from = PROGRAM_BUILD_PHASES[index - 1]?.to ?? 0;
   if (progress >= phase.to) return 'done';
   if (progress > from) return 'active';
   return 'pending';
@@ -41,8 +41,8 @@ function CheckDot({ state }: { state: RowState }) {
  * generatorens roterende tandhjul.
  */
 export function ProgramLoading({ progress, phaseText }: { progress: number; phaseText: string }) {
-  const total = eng.PROGRAM_PHASES.length;
-  const done = eng.PROGRAM_PHASES.filter((p) => progress >= p.to).length;
+  const total = PROGRAM_BUILD_PHASES.length;
+  const done = PROGRAM_BUILD_PHASES.filter((p) => progress >= p.to).length;
 
   return (
     <div
@@ -58,7 +58,7 @@ export function ProgramLoading({ progress, phaseText }: { progress: number; phas
           <span className="ww-doc__count ww-num">{done}/{total}</span>
         </div>
         <div className="ww-doc__rows">
-          {eng.PROGRAM_PHASES.map((phase, i) => {
+          {PROGRAM_BUILD_PHASES.map((phase, i) => {
             const state = rowState(progress, i);
             return (
               <div className="ww-doc__row" key={phase.label}>

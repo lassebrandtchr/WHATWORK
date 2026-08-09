@@ -11,6 +11,8 @@ const base: PersistedState = {
     name: 'Gæst', level: 3, sex: 'f', bodyweight: 64,
     equipment: ['bodyweight', 'kettlebell'], counts: { kettlebell: 2 },
     plates: [25, 20, 15, 10, 5], bars: [20], sandbags: [10, 20, 30], onboarded: true,
+    age: null, benchmarks: [], competence: [], weakPoints: [],
+    screening: { status: 'unknown', flags: [], pain: [], answeredAt: null },
   },
   settings: { theme: 'dark', aiMix: false, sound: true, haptics: true, keepAwake: true },
   history: [],

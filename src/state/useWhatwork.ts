@@ -1,6 +1,14 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import * as eng from '../engine/index.js';
 import type { Program, TimerPlan, TimerSegment, Workout, WorkoutRequest } from '../engine/index.js';
+import * as prog from '../program/index.js';
+import { emptyScreening } from '../domain/safety.js';
+import { createSession } from '../domain/history.js';
+import type { SessionState } from '../domain/history.js';
+import { DOMAIN_VERSION, ONTOLOGY_VERSION } from '../domain/versions.js';
+import { CURRENT_HYROX_VERSION } from '../domain/ruleSets.js';
+import { weakPoint } from '../program/assistance.js';
+import type { Goal, SportId, TrainingHistorySummary } from '../domain/types.js';
 import { requestAiPlan } from '../lib/aiMix.js';
 import { fmtTime } from '../lib/format.js';
 import { useHashRouter } from '../lib/router.js';
@@ -26,24 +34,35 @@ const DEFAULT_PROFILE: UserProfile = {
   bars: eng.DEFAULT_BARS.slice(),
   sandbags: eng.DEFAULT_SANDBAGS.slice(),
   onboarded: false,
+  age: null,
+  benchmarks: [],
+  screening: emptyScreening(),
+  competence: [],
+  weakPoints: [],
 };
 
 const DEFAULT_SETTINGS: Settings = {
   theme: 'dark', aiMix: false, sound: true, haptics: true, keepAwake: true,
 };
 
-const DEFAULT_PROGRAM_DRAFT: ProgramDraft = { goal: 'allround', weeks: 4, days: 3, minutes: 45 };
+const DEFAULT_PROGRAM_DRAFT: ProgramDraft = {
+  goal: 'functional', weeks: 8, days: 3, minutes: 45,
+  baseline: 'known', eventDate: '', division: 'open_men',
+};
 
 /** Referencevægt for de profiler, brugeren ikke selv har. */
 const PEER_BODYWEIGHT = { m: 88, f: 66, x: 77 } as const;
 
-/** Samlet varighed af loading-animationen. Motoren er faktisk færdig på millisekunder —
- * det her er bevidst langsommere, så det ligner, at den tænker sig om. */
-const LOADING_MS = 7000;
-
-/** Programmet bygger flere dage ad gangen, så dets loading-skærm får sit eget, længere
- * tempo — ca. 15 sekunder, jf. produktkravet til program-generation-skærmen. */
-const PROGRAM_LOADING_MS = 15000;
+/**
+ * Loading-animationens varighed.
+ *
+ * Tidligere var den sat til 7 og 15 sekunder for at få motoren til at virke
+ * arbejdsom. Det var en kunstig ventetid uden reelt indhold, og den er skruet ned
+ * til det, der faktisk skal til for at faserne kan læses. Selve genereringen tager
+ * få millisekunder.
+ */
+const LOADING_MS = 1400;
+const PROGRAM_LOADING_MS = 2200;
 
 export const ONB_STEPS = 4;
 
@@ -178,6 +197,8 @@ export function useWhatwork() {
   const { screen, go: navigate } = router;
 
   const [ready, setReady] = useState(false);
+  /** Tidspunktet for appens start. Bruges hvor en beregning skal være stabil på tværs af renders. */
+  const [mountedAt] = useState(() => Date.now());
   const [profile, setProfile] = useState<UserProfile>(DEFAULT_PROFILE);
   const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS);
   const [onbStep, setOnbStep] = useState(0);
@@ -191,6 +212,13 @@ export function useWhatwork() {
   const [saved, setSaved] = useState(false);
   /** Sandt kun lige efter en ny workout er bygget — ikke når en gammel åbnes igen. */
   const [celebrate, setCelebrate] = useState(false);
+  /** Diffen fra seneste skalering — vises på resultatskærmen, så ændringen er konkret. */
+  const [scaleResult, setScaleResult] = useState<{
+    changes: eng.ScaleChange[];
+    atLimit: boolean;
+    preserved: string;
+    direction: 'easier' | 'harder';
+  } | null>(null);
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [favorites, setFavorites] = useState<HistoryEntry[]>([]);
   const [program, setProgram] = useState<Program | null>(null);
@@ -236,6 +264,7 @@ export function useWhatwork() {
       setHistory(savedState.history ?? []);
       setFavorites(savedState.favorites ?? []);
       setProgram(savedState.program ?? null);
+      setProgramDraft({ ...DEFAULT_PROGRAM_DRAFT, ...savedState.programDraft });
       setTimer(restoredTimer);
       setGen(freshGen(loadedProfile));
       // En afbrudt session skal kunne genoptages, hvor den slap.
@@ -260,14 +289,14 @@ export function useWhatwork() {
     if (!ready) return; // Skriv aldrig defaults hen over rigtige data før indlæsning.
     const state: PersistedState = {
       version: STATE_VERSION,
-      profile, settings, history, favorites, program, timer,
+      profile, settings, history, favorites, program, programDraft, timer,
       timerWorkout: timer ? workout : null,
       engineVersion: eng.ENGINE_VERSION,
       rulesVersion: eng.RULES_VERSION,
       exerciseDataVersion: eng.EXERCISE_DATA_VERSION,
     };
     void saveState(state);
-  }, [ready, profile, settings, history, favorites, program, timer, workout]);
+  }, [ready, profile, settings, history, favorites, program, programDraft, timer, workout]);
 
   /* ---------- tema ---------- */
 
@@ -493,6 +522,8 @@ export function useWhatwork() {
       if (animation.current !== null) window.clearTimeout(animation.current);
       setSaved(false);
       setCelebrate(false);
+      // En ny workout har ingen skalering bag sig — den gamle diff må ikke hænge ved.
+      setScaleResult(null);
       setProgress(0);
       setAiNotice(null);
       setPhaseText(eng.PHASES[0]?.text ?? '');
@@ -586,40 +617,114 @@ export function useWhatwork() {
     runGenerate(gen, { seed: eng.makeSeed() });
   }, [gen, runGenerate]);
 
-  /** Skruer kondition og styrke ned/op og bygger forfra på det samme grundlag. */
+  /**
+   * "Gør lettere" og "Gør hårdere".
+   *
+   * Skalerer den workout, brugeren har foran sig — den bygger ikke en ny. Format,
+   * bevægelser og tidsramme bevares, og de konkrete ændringer vises som en liste.
+   * Vil brugeren have noget helt andet, er det "Ny workout", der gør det.
+   */
   const nudge = useCallback(
     (direction: 'easier' | 'harder') => {
-      const draft: GenDraft = direction === 'easier'
-        ? { ...gen, condition: Math.max(1, gen.condition - 2), strength: Math.max(1, gen.strength - 2) }
-        : { ...gen, condition: Math.min(10, gen.condition + 2), strength: Math.min(10, gen.strength + 1) };
-      setGen(draft);
-      runGenerate(draft, { seed: eng.makeSeed() });
+      if (!workout) return;
+      const result = eng.scaleWorkout(workout, direction);
+      setWorkout(result.workout);
+      setScaleResult({
+        changes: result.changes,
+        atLimit: result.atLimit,
+        preserved: result.preserved,
+        direction,
+      });
+      setSaved(false);
     },
-    [gen, runGenerate],
+    [workout],
   );
 
   /* ---------- resultat, historik og favoritter ---------- */
 
+  /**
+   * Bygger en historikpost.
+   *
+   * Den planlagte workout gemmes som den er, og det faktisk udførte lægges ved siden
+   * af i `session`. Det er den adskillelse, der gør det muligt at forklare, hvorfor
+   * programmet tilpassede sig — og at finde fejl i motoren bagefter.
+   */
   const entryFor = useCallback(
     (
       w: Workout, status: HistoryStatus, result = '', rpe: HistoryEntry['rpe'] = '',
       progressPct?: number, lastExercise?: string, actualMinutes?: number,
-    ): HistoryEntry => ({
-      id: `${w.id}_${Date.now()}`,
-      title: w.title,
-      format: w.formatName,
-      minutes: actualMinutes ?? w.estimatedMinutes,
-      date: new Date().toISOString(),
-      status,
-      rpe,
-      result,
-      ...(progressPct !== undefined ? { progressPct } : {}),
-      ...(lastExercise ? { lastExercise } : {}),
-      patterns: w.blocks.flatMap((b) => b.movements.map((m) => eng.BY_ID[m.exerciseId]?.cat ?? 'ukendt')),
-      signature: w.signature,
-      workout: w,
-    }),
-    [],
+      ref: ProgramRef | null = null,
+    ): HistoryEntry => {
+      const state: SessionState = status === 'done'
+        ? 'completed'
+        : status === 'stopped' ? 'aborted'
+          : status === 'partial' ? 'aborted' : 'saved';
+
+      const session = createSession({
+        sourceMode: ref ? 'program' : 'quick-wod',
+        state,
+        provenance: {
+          generatorVersion: w.engineVersion,
+          domainVersion: DOMAIN_VERSION,
+          ontologyVersion: ONTOLOGY_VERSION,
+          exerciseLibraryVersion: w.exerciseDataVersion,
+          rulesVersion: w.rulesVersion,
+          ruleVersions: {},
+          seed: w.seed,
+        },
+        programRef: ref && program
+          ? {
+            programId: program.id,
+            programVersion: program.version ?? 1,
+            week: ref.w + 1,
+            day: ref.d + 1,
+          }
+          : null,
+        wodRef: {
+          stimulus: w.title,
+          format: w.format,
+          // Tilfældigt genererede workouts får ingen sammenligningsnøgle. To
+          // forskellige AMRAP-scores måler ikke det samme og må ikke trendes.
+          comparabilityKey: null,
+        },
+      });
+
+      const minutes = actualMinutes ?? w.estimatedMinutes;
+
+      return {
+        id: `${w.id}_${Date.now()}`,
+        title: w.title,
+        format: w.formatName,
+        minutes,
+        date: new Date().toISOString(),
+        status,
+        rpe,
+        result,
+        ...(progressPct !== undefined ? { progressPct } : {}),
+        ...(lastExercise ? { lastExercise } : {}),
+        patterns: w.blocks.flatMap((b) => b.movements.map((m) => eng.BY_ID[m.exerciseId]?.cat ?? 'ukendt')),
+        signature: w.signature,
+        workout: w,
+        session: {
+          ...session,
+          startedAt: new Date(Date.now() - minutes * 60_000).toISOString(),
+          endedAt: new Date().toISOString(),
+          actual: {
+            ...session.actual,
+            durationSeconds: minutes * 60,
+            completionPct: progressPct ?? (status === 'done' ? 100 : 0),
+            score: result,
+          },
+          feedback: {
+            ...session.feedback,
+            // Den grove tre-trins vurdering oversættes til skalaen fra 1 til 10, så
+            // statistikken kan regne på den. Præcisionen er bevidst lav.
+            sessionRpe: rpe === 'easy' ? 4 : rpe === 'ok' ? 6 : rpe === 'hard' ? 9 : null,
+          },
+        },
+      };
+    },
+    [program],
   );
 
   const saveWorkout = useCallback(() => {
@@ -698,7 +803,7 @@ export function useWhatwork() {
     setHistory((h) => [
       entryFor(
         w, completion.status, result, completion.rpe, completion.progressPct,
-        completion.lastExercise, Math.max(1, mins),
+        completion.lastExercise, Math.max(1, mins), fromProgram,
       ),
       ...h,
     ]);
@@ -719,6 +824,111 @@ export function useWhatwork() {
   /* ---------- program ---------- */
 
   /**
+   * Programmets stressbudget udledes af det, brugeren faktisk har lavet de seneste
+   * fire uger — ikke af et abstrakt ideal. Kun gennemførte pas tæller: en gemt, men
+   * ikke gennemført workout er ikke træning.
+   */
+  const historySummary = useMemo<TrainingHistorySummary>(() => {
+    // Skæringsdatoen låses ved montering. Blev den beregnet under hver render, ville
+    // budgettet kunne skifte midt i en session, uden at historikken havde ændret sig.
+    const cutoff = mountedAt - 28 * 86_400_000;
+    const recent = history.filter((h) => (
+      h.status === 'done' && new Date(h.date).getTime() >= cutoff
+    ));
+
+    const hardSetsByPattern: Record<string, number> = {};
+    let runKm = 0;
+    recent.forEach((entry) => {
+      entry.workout.blocks
+        .filter((b) => b.kind !== 'warmup')
+        .forEach((b) => b.movements.forEach((m) => {
+          const ex = eng.BY_ID[m.exerciseId];
+          if (!ex) return;
+          const sets = m.sets ?? 1;
+          hardSetsByPattern[ex.cat] = (hardSetsByPattern[ex.cat] ?? 0) + sets;
+          if (ex.unit === 'm' && ex.cat === 'cardio') {
+            runKm += (m.targets[0]?.amount ?? 0) / 1000;
+          }
+        }));
+    });
+
+    return {
+      lookbackDays: 28,
+      sessions: recent.length,
+      hardSetsByPattern,
+      runKm: Math.round(runKm * 10) / 10,
+      highIntensityMinutes: recent.reduce((s, h) => s + (h.rpe === 'hard' ? h.minutes : 0), 0),
+      completedPerWeek: Math.round((recent.length / 4) * 10) / 10,
+    };
+  }, [history, mountedAt]);
+
+  /**
+   * Samler det, programmotoren skal bruge, ét sted.
+   *
+   * Både "Byg programmet" og "Nyt pas" går gennem den her, så en enkelt dag aldrig
+   * kan komme til at blive bygget af en anden motor end resten af programmet.
+   */
+  const planInput = useCallback((seed?: number): prog.PlanInput => {
+    const equipment = profile.equipment ?? eng.DEFAULT_EQUIPMENT;
+    const sport = programDraft.goal as SportId;
+
+    const goal: Goal = {
+      sport,
+      primary: '',
+      secondary: [],
+      eventDate: programDraft.eventDate || null,
+      baselineStrategy: programDraft.baseline,
+      ruleSet: sport === 'hyrox'
+        ? {
+          organization: 'HYROX',
+          version: CURRENT_HYROX_VERSION,
+          checkedAt: '2026-08-09',
+          sourceUrl: 'https://hyrox.com/rulebook/',
+        }
+        : null,
+      ...(sport === 'hyrox' ? { division: programDraft.division } : {}),
+    };
+
+    return {
+      profile: {
+        id: 'local',
+        age: profile.age,
+        bodyMassKg: profile.bodyweight,
+        sex: profile.sex,
+        level: profile.level,
+        generalTrainingYears: null,
+        sportTrainingYears: null,
+        availability: { days: programDraft.days, minutes: programDraft.minutes },
+        screening: profile.screening,
+        competence: profile.competence,
+        care: [],
+        excludedExerciseIds: [],
+        updatedAt: new Date().toISOString(),
+      },
+      goal,
+      benchmarks: profile.benchmarks,
+      history: historySummary,
+      weakPoints: profile.weakPoints.map((id) => weakPoint(id, 0.6)),
+      availableEquipment: equipment,
+      plates: profile.plates,
+      bars: profile.bars,
+      weeks: programDraft.weeks,
+      daysPerWeek: programDraft.days,
+      minutes: programDraft.minutes,
+      ...(seed === undefined ? {} : { seed }),
+    };
+  }, [profile, programDraft, historySummary]);
+
+  const renderContext = useCallback((): prog.LegacyContext => ({
+    profile: profile.sex,
+    bodyweight: profile.bodyweight,
+    level: profile.level,
+    equipment: profile.equipment ?? eng.DEFAULT_EQUIPMENT,
+    plates: profile.plates,
+    bars: profile.bars,
+  }), [profile]);
+
+  /**
    * Bruges både til første bygning og til "Lav programmet om" — begge er samme
    * handling: byg et program fra det aktuelle udkast. Går altid gennem
    * program-loading-skærmen, samme mønster som runGenerate, men over PROGRAM_LOADING_MS.
@@ -726,28 +936,18 @@ export function useWhatwork() {
   const buildProgram = useCallback(() => {
     if (programAnimation.current !== null) window.clearTimeout(programAnimation.current);
     setProgress(0);
-    setPhaseText(eng.PROGRAM_PHASES[0]?.text ?? '');
+    setPhaseText(prog.PROGRAM_BUILD_PHASES[0]?.text ?? '');
     go('programLoading');
 
-    const pending = Promise.resolve().then(() => eng.generateProgram({
-      goal: programDraft.goal,
-      weeks: programDraft.weeks,
-      daysPerWeek: programDraft.days,
-      minutes: programDraft.minutes,
-      level: profile.level,
-      profile: profile.sex,
-      bodyweight: profile.bodyweight,
-      equipment: profile.equipment ?? eng.DEFAULT_EQUIPMENT,
-      counts: profile.counts,
-      plates: profile.plates,
-      care: [],
-    }));
+    const pending = Promise.resolve().then(
+      () => prog.toLegacyProgram(prog.planProgram(planInput()), renderContext()),
+    );
 
     let phase = 0;
     let value = 0;
 
     const step = (): void => {
-      const ph = eng.PROGRAM_PHASES[phase];
+      const ph = prog.PROGRAM_BUILD_PHASES[phase];
       if (!ph) {
         void pending.then((result) => {
           setProgram(result);
@@ -780,7 +980,7 @@ export function useWhatwork() {
     };
 
     programAnimation.current = window.setTimeout(step, 30);
-  }, [programDraft, profile, go]);
+  }, [go, planInput, renderContext]);
 
   const patchProgramDay = useCallback((ref: ProgramRef, patch: Partial<Program['weeks'][number]['days'][number]>) => {
     setProgram((p) => {
@@ -792,28 +992,35 @@ export function useWhatwork() {
     });
   }, []);
 
+  /**
+   * Bygger én programdag om.
+   *
+   * Dagen planlægges af programmotoren med en ny seed — ikke af Dagens WOD-motoren.
+   * Ellers ville et enkelt tryk kunne erstatte et planlagt styrkepas med en
+   * tilfældig workout og dermed bryde ugens obligatoriske eksponeringer.
+   */
   const regenerateDay = useCallback((ref: ProgramRef) => {
     setProgram((p) => {
       if (!p) return p;
       const next = structuredClone(p);
-      const day = next.weeks[ref.w]?.days[ref.d];
-      if (!day) return next;
-      const res = eng.generateWorkout({
-        minutes: p.minutes,
-        level: p.level,
-        equipment: p.equipment,
-        men: profile.sex === 'f' || profile.sex === 'x' ? 0 : 1,
-        women: profile.sex === 'f' ? 1 : 0,
-        neutral: profile.sex === 'x' ? 1 : 0,
-        seed: eng.makeSeed(),
-        recentSignatures,
-      }, { maxCandidates: 16 });
-      day.workout = res.ok ? res.workout : null;
-      day.error = res.ok ? null : res.error;
-      day.status = 'planned';
+      const week = next.weeks[ref.w];
+      const day = week?.days[ref.d];
+      if (!week || !day) return next;
+
+      const replanned = prog.toLegacyProgram(
+        prog.planProgram(planInput(eng.makeSeed())),
+        renderContext(),
+      );
+      const fresh = replanned.weeks[ref.w]?.days[ref.d];
+      if (!fresh) {
+        day.error = 'Dagen kunne ikke bygges om med de nuværende data.';
+        return next;
+      }
+
+      week.days[ref.d] = { ...fresh, day: day.day, status: 'planned' };
       return next;
     });
-  }, [profile.sex, recentSignatures]);
+  }, [planInput, renderContext]);
 
   const moveProgramDay = useCallback((ref: ProgramRef, delta: number) => {
     setProgram((p) => {
@@ -920,7 +1127,7 @@ export function useWhatwork() {
     participants: participantsOf(gen),
     progress, phaseText,
     workout, genError, aiNotice, saved,
-    celebrate, setCelebrate,
+    celebrate, setCelebrate, scaleResult, setScaleResult,
     runGenerate, surpriseMe, regenerate, nudge,
     saveWorkout, openWorkout, isFavorite, toggleFavorite,
     history, filteredHistory, historyFilter, setHistoryFilter, removeHistory, favorites,

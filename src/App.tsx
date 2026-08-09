@@ -213,6 +213,7 @@ export function App() {
                 isFavorite={ww.isFavorite(ww.workout)}
                 aiNotice={ww.aiNotice}
                 onBack={() => ww.go(ww.fromProgram ? 'program' : 'home')}
+                scale={ww.scaleResult}
                 onEasier={() => ww.nudge('easier')}
                 onHarder={() => ww.nudge('harder')}
                 onRegenerate={ww.regenerate}

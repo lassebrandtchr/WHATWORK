@@ -13,7 +13,7 @@ export const STORAGE_KEY = 'whatwork.v1';
 export const DB_NAME = 'whatwork';
 export const STORE = 'state';
 export const RECORD_KEY = 'root';
-export const STATE_VERSION = 2;
+export const STATE_VERSION = 3;
 
 /** Temaet ligger for sig selv i localStorage, så det kan læses synkront før første paint. */
 export const THEME_KEY = 'whatwork.theme';
@@ -120,6 +120,32 @@ export function migrate(raw: Partial<PersistedState> | null): Partial<PersistedS
     next.timer = null;
     next.timerWorkout = null;
   }
+
+  // v3 tilføjede måltal, helbredsscreening og teknisk niveau pr. øvelse på profilen.
+  // Felterne oprettes tomme frem for udfyldte: et manglende tal er en reel tilstand,
+  // og appen må ikke opfinde et udgangspunkt, brugeren aldrig har oplyst.
+  if (next.profile) {
+    const p = next.profile as unknown as Record<string, unknown>;
+    if (!Array.isArray(p.benchmarks)) p.benchmarks = [];
+    if (!Array.isArray(p.competence)) p.competence = [];
+    if (!Array.isArray(p.weakPoints)) p.weakPoints = [];
+    if (p.age === undefined) p.age = null;
+    if (!p.screening || typeof p.screening !== 'object') {
+      p.screening = { status: 'unknown', flags: [], pain: [], answeredAt: null };
+    }
+  }
+
+  // Programudkastet fik tre nye felter. Gamle udkast pegede på de tidligere måltyper,
+  // som ikke længere findes som sportsgrene — de falder tilbage til funktionel fitness.
+  if (next.programDraft) {
+    const d = next.programDraft as unknown as Record<string, unknown>;
+    if (typeof d.baseline !== 'string') d.baseline = 'known';
+    if (typeof d.eventDate !== 'string') d.eventDate = '';
+    if (typeof d.division !== 'string') d.division = 'open_men';
+    const sports = ['strength4', 'powerlifting', 'crossfit', 'hyrox', 'strongman', 'functional'];
+    if (typeof d.goal !== 'string' || !sports.includes(d.goal)) d.goal = 'functional';
+  }
+
   return next;
 }
 

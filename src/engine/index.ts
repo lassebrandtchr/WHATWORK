@@ -19,8 +19,14 @@ export { normalizeRequest, peopleFromMix } from './request.js';
 export { findBottlenecks, planPartner } from './partner.js';
 export { DNA_AXES, computeDNA, scoreMatch, signatureOf, validate } from './validate.js';
 export { MAX_CANDIDATES, budget, chooseExercises, generateWorkout, mainPool } from './smartmix.js';
+export { scaleWorkout, sameIdentity, restDescription } from './scaler.js';
+export type { ScaleChange, ScaleDirection, ScaleResult } from './scaler.js';
 export { buildTimerPlan } from './timerplan.js';
-export { PROGRAM_GOALS, PROGRAM_PHASES, generateProgram } from './program.js';
+/*
+ * Flerugers programmer eksporteres bevidst ikke herfra. Programmotoren (Motor B)
+ * ligger i `src/program` og har sin egen indgang — de to entrypoints må dele
+ * domæneservices, men aldrig kalde hinandens topniveau-generatorer.
+ */
 export { WARMUP_MAX_MINUTES, WARMUP_MIN_MINUTES, buildWarmup, patternsOfBlocks } from './warmup.js';
 
 /** Faserne, generatorskærmen viser mens Smart Mix arbejder. */

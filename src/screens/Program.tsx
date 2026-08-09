@@ -1,18 +1,41 @@
 import { useEffect, useRef, useState } from 'react';
-import * as eng from '../engine/index.js';
 import type {
   Movement, Program as ProgramData, ProgramDay, ProgramWeek, Workout,
 } from '../engine/index.js';
 import { GoalCard } from '../components/GoalCard.js';
 import { Photo } from '../components/Photo.js';
+import { Term } from '../components/Term.js';
 import {
   Chip, Counter, Dialog, Glyph, Kicker, Note, PageHeader,
 } from '../components/ui.js';
 import { plural } from '../lib/format.js';
+import { SPORT_LIST } from '../domain/sport.js';
+import { HYROX_DIVISION_LABELS, hyroxRules } from '../domain/ruleSets.js';
 import type { ProgramDraft, ProgramRef } from '../types.js';
 
-const WEEK_OPTIONS = [2, 4, 6, 8, 12];
+const WEEK_OPTIONS = [4, 6, 8, 12, 16];
 const DAY_OPTIONS = [2, 3, 4, 5, 6];
+
+/**
+ * Udgangspunktet for belastningerne.
+ *
+ * "Ved ikke" er et gyldigt svar og fører til en indkøringsuge — appen gætter aldrig
+ * på kilo, brugeren ikke har løftet.
+ */
+const BASELINE_OPTIONS: { id: ProgramDraft['baseline']; name: string; desc: string }[] = [
+  {
+    id: 'known', name: 'Jeg kender mine tal',
+    desc: 'Du har vægte, du ved du kan løfte. Programmet regner ud fra dem.',
+  },
+  {
+    id: 'assessment', name: 'Mål dem for mig',
+    desc: 'Første uge er en let indkøringsuge, hvor tallene findes. Så er de dine egne.',
+  },
+  {
+    id: 'conservative', name: 'Start forsigtigt',
+    desc: 'Programmet starter lavt og bygger op. Du kan altid justere undervejs.',
+  },
+];
 
 const DAY_STATUS: Record<ProgramDay['status'], { label: string; className: string }> = {
   planned: { label: 'Planlagt', className: 'ww-badge' },
@@ -103,18 +126,83 @@ function ProgramSetup({
   return (
     <div className="ww-program-setup">
       <div style={{ minWidth: 0 }}>
-        <h2 className="ww-kicker" style={{ marginBottom: 10 }}>Mål</h2>
+        <h2 className="ww-kicker" style={{ marginBottom: 10 }}>Hvad træner du til?</h2>
         <div className="ww-goal-list" style={{ marginBottom: 26 }}>
-          {eng.PROGRAM_GOALS.map((goal) => (
+          {SPORT_LIST.map((sport) => (
             <GoalCard
-              key={goal.id}
-              id={goal.id}
-              name={goal.name}
-              desc={goal.desc}
-              on={draft.goal === goal.id}
-              onClick={() => onDraft({ goal: goal.id })}
+              key={sport.id}
+              id={sport.id}
+              name={sport.name}
+              desc={sport.desc}
+              on={draft.goal === sport.id}
+              onClick={() => onDraft({ goal: sport.id })}
             />
           ))}
+        </div>
+
+        <div style={{ marginBottom: 26 }}>
+          <h2 className="ww-kicker" style={{ marginBottom: 10 }}>Udgangspunkt</h2>
+          <p style={{ margin: '0 0 12px', fontSize: 14.5, lineHeight: 1.6, color: 'var(--ww-body)', maxWidth: '58ch' }}>
+            For at regne dine kilo ud skal appen kende din styrke. Den behøver ikke en
+            maksimal test — et enkelt lidt tungere sæt er nok.
+          </p>
+          <div className="ww-goal-list">
+            {BASELINE_OPTIONS.map((option) => (
+              <GoalCard
+                key={option.id}
+                id={option.id}
+                name={option.name}
+                desc={option.desc}
+                on={draft.baseline === option.id}
+                onClick={() => onDraft({ baseline: option.id })}
+              />
+            ))}
+          </div>
+        </div>
+
+        {/* Sportsspecifikke spørgsmål vises kun for den valgte sport. */}
+        {draft.goal === 'hyrox' ? (
+          <div style={{ marginBottom: 26 }}>
+            <h2 className="ww-kicker" style={{ marginBottom: 10 }}>Division</h2>
+            <div className="ww-wrap" style={{ gap: 6, marginBottom: 12 }}>
+              {(hyroxRules()?.divisions ?? []).map((id) => (
+                <Chip key={id} on={draft.division === id} onClick={() => onDraft({ division: id })}>
+                  {HYROX_DIVISION_LABELS[id] ?? id}
+                </Chip>
+              ))}
+            </div>
+            <Note label="Kontrollér vægtene" tone="quiet">
+              Stationernes vægte er hentet fra et gemt øjebliksbillede af reglerne og er ikke
+              bekræftet mod den nyeste udgave. Tjek dem på hyrox.com/rulebook, før du regner
+              dem for endelige.
+            </Note>
+          </div>
+        ) : null}
+
+        {draft.goal === 'strongman' ? (
+          <div style={{ marginBottom: 26 }}>
+            <Note label="Eventlisten mangler" tone="quiet">
+              Strongman har ikke ét fast konkurrenceformat. Uden den konkrete liste over
+              events, redskaber, vægte og afstande bygger appen et generelt styrkeforløb —
+              ikke en forberedelse til en bestemt konkurrence.
+            </Note>
+          </div>
+        ) : null}
+
+        <div style={{ marginBottom: 26, maxWidth: 380 }}>
+          <h2 className="ww-kicker" style={{ marginBottom: 10 }}>Konkurrence eller race</h2>
+          <label className="ww-sr-only" htmlFor="ww-event-date">Dato for konkurrence eller race</label>
+          <input
+            id="ww-event-date"
+            type="date"
+            className="ww-input"
+            value={draft.eventDate}
+            onChange={(e) => onDraft({ eventDate: e.target.value })}
+          />
+          <p style={{ margin: '8px 0 0', fontSize: 13.5, lineHeight: 1.55, color: 'var(--ww-text-3)' }}>
+            Valgfrit. Sætter du en dato, lægges der en{' '}
+            <Term id="taper">nedtrapning</Term> ind i de sidste uger.
+          </p>
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(220px,1fr))', gap: 22, marginBottom: 22 }}>
@@ -148,9 +236,10 @@ function ProgramSetup({
 
         <div style={{ marginBottom: 22 }}>
           <Note label="Sådan bygges programmet" tone="quiet">
-            Volumen stiger let uge for uge. Er programmet på seks uger eller mere, lægges hver
-            fjerde uge som en roligere uge med lavere volumen. En gennemført dag skriver sin status
-            tilbage, så du kan se, hvor du er.
+            Programmet deles op i blokke, der bygger oven på hinanden. Hver uge indeholder den
+            træning, dit mål ikke kan undvære — og ved skiftet mellem to blokke lægges der en{' '}
+            <Term id="deload">roligere uge</Term> ind, så kroppen kan indhente. Alle vægte
+            regnes ud fra dine egne tal og vises med, hvad de bygger på.
           </Note>
         </div>
 
@@ -234,6 +323,70 @@ function ProgramPlan({
           </button>
         </div>
       </header>
+
+      {program.assessment ? (
+        <div style={{ marginBottom: 20 }}>
+          <Note label="Første uge måler dine tal" accent>
+            {program.assessment.explanation}
+            <ul style={{ margin: '10px 0 0', paddingLeft: 20 }}>
+              {program.assessment.missing.map((m) => (
+                <li key={m.label} style={{ marginBottom: 4 }}>
+                  <strong>{m.label}:</strong> {m.suggestion}
+                </li>
+              ))}
+            </ul>
+          </Note>
+        </div>
+      ) : null}
+
+      {program.notes?.length ? (
+        <div style={{ marginBottom: 20, display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {program.notes.map((note) => (
+            <Note
+              key={`${note.code}-${note.message}`}
+              label={note.severity === 'error' ? 'Skal løses' : 'Værd at vide'}
+              tone={note.severity === 'error' ? 'danger' : 'quiet'}
+            >
+              {note.message}
+              {note.fix ? <><br />{note.fix}</> : null}
+            </Note>
+          ))}
+        </div>
+      ) : null}
+
+      {program.trainingMaxes?.length ? (
+        <section aria-labelledby="ww-tm-heading" style={{ marginBottom: 20 }}>
+          <h2 id="ww-tm-heading" className="ww-kicker" style={{ marginBottom: 10 }}>
+            Vægtene regnes ud fra
+          </h2>
+          <p style={{ margin: '0 0 12px', fontSize: 14.5, lineHeight: 1.6, color: 'var(--ww-body)', maxWidth: '62ch' }}>
+            Programmet bruger et{' '}
+            <Term id="training-max">training max</Term>
+            {' '}— et bevidst lavere tal end din maksimale styrke — så vægtene også passer på en
+            dag, hvor du ikke er i topform.
+          </p>
+          <div className="ww-prog-stats">
+            {program.trainingMaxes.map((tm) => (
+              <Stat key={tm.lift} label={tm.name} value={`${String(tm.kg).replace('.', ',')} kg`} />
+            ))}
+          </div>
+        </section>
+      ) : null}
+
+      {program.explanation?.length ? (
+        <section aria-labelledby="ww-why-heading" style={{ marginBottom: 22 }}>
+          <h2 id="ww-why-heading" className="ww-kicker" style={{ marginBottom: 10 }}>
+            Sådan er programmet bygget
+          </h2>
+          <ul style={{ margin: 0, paddingLeft: 20, display: 'flex', flexDirection: 'column', gap: 6 }}>
+            {program.explanation.map((line) => (
+              <li key={line} style={{ fontSize: 14.5, lineHeight: 1.6, color: 'var(--ww-body)', maxWidth: '64ch' }}>
+                {line}
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
 
       <nav className="ww-prog-nav ww-prog-nav--sticky" aria-label="Spring til uge">
         {program.weeks.map((week) => {
@@ -364,8 +517,11 @@ function WeekSection({
         <span className="ww-week__main">
           <span className="ww-week__title-row">
             <span className="ww-week__title">Uge {week.index}</span>
+            {week.phaseName ? <span className="ww-badge">{week.phaseName}</span> : null}
             {isCurrent ? <span className="ww-badge ww-badge--accent">Nu</span> : null}
+            {week.assessment ? <span className="ww-badge ww-badge--accent">Indkøring</span> : null}
             {week.deload ? <span className="ww-badge ww-badge--warn">Roligere uge</span> : null}
+            {week.taper ? <span className="ww-badge ww-badge--warn">Nedtrapning</span> : null}
           </span>
           {open ? <p className="ww-week__rationale">{week.rationale}</p> : null}
         </span>
@@ -428,13 +584,15 @@ function DayCard({
             <span className="ww-kicker">Pas {day.day}</span>
             <span className={status.className}>{status.label}</span>
           </span>
-          <span className="ww-day__title">{workout ? workout.title : 'Kunne ikke bygges'}</span>
+          <span className="ww-day__title">
+            {day.stimulus ?? (workout ? workout.title : 'Kunne ikke bygges')}
+          </span>
           <span className="ww-day__meta">
             {workout ? (
               <>
-                <span>{workout.estimatedMinutes} min</span>
+                <span>{day.plannedMinutes ?? workout.estimatedMinutes} min</span>
                 <span aria-hidden="true">·</span>
-                <span>{workout.formatName}</span>
+                <span>inklusive pauser og skift</span>
               </>
             ) : day.error}
           </span>

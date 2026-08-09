@@ -189,7 +189,23 @@ export interface Movement {
   /** Sæt × reps på styrkedele. */
   sets?: number;
   restSec?: number;
+  /**
+   * Kun på opvarmning: hvilket RAMP-trin bevægelsen udfylder. Lint kræver, at hver
+   * belastet hovedbevægelse har mindst ét `rehearse`- og ét `ramp`-trin, der peger
+   * på den.
+   */
+  purpose?: WarmupPurpose;
+  /** Kun på opvarmning: id'erne på de hovedbevægelser, trinnet forbereder. */
+  preparesMovementIds?: string[];
+  /**
+   * Kun på opvarmning: loftet for, hvor hårdt trinnet må føles. Opvarmningen må
+   * ikke være en skjult ekstra workout.
+   */
+  fatigueCapRpe?: number;
 }
+
+/** RAMP: raise → activate/mobilize → rehearse → potentiate/ramp. */
+export type WarmupPurpose = 'raise' | 'activate' | 'rehearse' | 'ramp';
 
 export type PartnerMode =
   | 'solo' | 'you_go_i_go' | 'shared' | 'relay' | 'rotation' | 'synchro';
@@ -432,6 +448,10 @@ export interface ProgramDay {
   workout: Workout | null;
   error: string | null;
   progression: number;
+  /** Dagens formål i én sætning. Sat af programmotoren. */
+  stimulus?: string;
+  /** Beregnet paslængde inklusive pauser, opsætning og skift. */
+  plannedMinutes?: number;
 }
 
 export interface ProgramWeek {
@@ -439,6 +459,14 @@ export interface ProgramWeek {
   deload: boolean;
   rationale: string;
   days: ProgramDay[];
+  /** Blokkens navn, fx "Styrke" eller "Nedtrapning". */
+  phaseName?: string;
+  /** Sandt i de sidste uger op mod en konkurrence. */
+  taper?: boolean;
+  /** Sandt i en indkøringsuge, hvor tallene måles i stedet for at blive gættet. */
+  assessment?: boolean;
+  /** Advarsler og fejl, motoren fandt i ugen. */
+  notes?: { code: string; severity: 'error' | 'warning'; message: string; fix?: string }[];
 }
 
 export interface Program {
@@ -452,6 +480,30 @@ export interface Program {
   daysPerWeek: number;
   level: LevelId;
   equipment: string[];
+  /**
+   * Felterne herunder sættes af programmotoren i `src/program`. De er valgfri, så
+   * programmer gemt af en tidligere version stadig kan indlæses og vises.
+   */
+  /** Punktopstillet "sådan er programmet bygget". */
+  explanation?: string[];
+  /** Fejl og advarsler på hele forløbet. */
+  notes?: { code: string; severity: 'error' | 'warning'; message: string; fix?: string }[];
+  /** Sat når der mangler tal, og første uge derfor er en indkøringsuge. */
+  assessment?: { missing: { label: string; suggestion: string }[]; explanation: string } | null;
+  /** Training max pr. hovedløft, som procenterne er regnet af. */
+  trainingMaxes?: { lift: string; name: string; kg: number; coefficient: number; explanation: string }[];
+  /** Seed, motorversion og regelversioner, så et program kan genskabes præcist. */
+  provenance?: {
+    generatorVersion: string;
+    domainVersion: string;
+    ontologyVersion: string;
+    exerciseLibraryVersion: string;
+    rulesVersion: string;
+    ruleVersions: Record<string, string>;
+    seed: number;
+  };
+  /** Programobjektets version. Tælles op hver gang planen tilpasses efter en uge. */
+  version?: number;
 }
 
 export interface ProgramOptions {

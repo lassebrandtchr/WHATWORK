@@ -3,6 +3,8 @@ import { Photo } from '../components/Photo.js';
 import { RerunButton } from '../components/RerunButton.js';
 import { EmptyState, Glyph, PageHeader } from '../components/ui.js';
 import { fmtDuration, relDate } from '../lib/format.js';
+import { SESSION_STATE_LABELS } from '../domain/history.js';
+import type { SessionRecord } from '../domain/history.js';
 import type { HistoryEntry, HistoryStatus } from '../types.js';
 
 /** Kort, konkret liste over hoveddelens øvelser — ikke opvarmningen. */
@@ -40,6 +42,47 @@ const FILTERS: { id: HistoryStatus | 'all'; label: string }[] = [
   { id: 'saved', label: 'Gemt' },
   { id: 'partial', label: 'Ændret' },
 ];
+
+/**
+ * Det, der adskiller planen fra det faktisk udførte.
+ *
+ * Vises kun, når posten har en sessionspost. Ældre poster gemte kun en resultattekst,
+ * og der opfindes ikke detaljer, de aldrig har indeholdt.
+ */
+function SessionDetail({ session }: { session: SessionRecord }) {
+  const hasActual = session.actual.sets.length > 0 || session.actual.completionPct > 0;
+  return (
+    <div style={{ marginTop: 8, fontSize: 12.5, color: 'var(--ww-text-3)', lineHeight: 1.6 }}>
+      <span>{SESSION_STATE_LABELS[session.state]}</span>
+      {hasActual ? (
+        <>
+          <span aria-hidden="true"> · </span>
+          <span>{session.actual.completionPct}% af planen gennemført</span>
+        </>
+      ) : null}
+      {session.feedback.sessionRpe !== null ? (
+        <>
+          <span aria-hidden="true"> · </span>
+          <span>Anstrengelse {session.feedback.sessionRpe} ud af 10</span>
+        </>
+      ) : null}
+      {session.programRef ? (
+        <>
+          <span aria-hidden="true"> · </span>
+          <span>Program, uge {session.programRef.week}, pas {session.programRef.day}</span>
+        </>
+      ) : null}
+      {session.revisions.length ? (
+        <>
+          <span aria-hidden="true"> · </span>
+          <span>Rettet {session.revisions.length} gang{session.revisions.length > 1 ? 'e' : ''}</span>
+        </>
+      ) : null}
+      <span aria-hidden="true"> · </span>
+      <span>Motor {session.provenance.generatorVersion}</span>
+    </div>
+  );
+}
 
 export function History({
   history, entries, filter, onFilter, onOpen, onRun, onRemove, onGenerate,
@@ -146,6 +189,7 @@ export function History({
                             {exercises}
                           </div>
                         ) : null}
+                        {entry.session ? <SessionDetail session={entry.session} /> : null}
                       </div>
                       <span className={status.className}>{status.label}</span>
                     </div>

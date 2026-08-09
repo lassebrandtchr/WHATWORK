@@ -1,9 +1,14 @@
 import * as eng from '../engine/index.js';
 import { Photo } from '../components/Photo.js';
+import { Term } from '../components/Term.js';
 import {
-  EmptyState, Glyph, Meter, PageHeader,
+  EmptyState, Glyph, Meter, Note, PageHeader,
 } from '../components/ui.js';
 import { fmtDuration, isoWeek } from '../lib/format.js';
+import { sessionsFrom } from '../lib/sessions.js';
+import { CONFIDENCE_LABELS } from '../domain/types.js';
+import { summarise } from '../domain/stats.js';
+import type { Metric } from '../domain/stats.js';
 import type { HistoryEntry } from '../types.js';
 
 /** Søjlediagrammets højde i pixels. */
@@ -31,6 +36,35 @@ function streakWeeks(history: HistoryEntry[]): number {
     else if (back > 0) break;
   }
   return streak;
+}
+
+/**
+ * Én afledt måling med sin definition og sin sikkerhed.
+ *
+ * Definitionen står altid ved siden af tallet. Uden den er en procent bare et tal,
+ * og brugeren kan ikke vide, hvad der tælles med.
+ */
+function MetricRow({ metric }: { metric: Metric }) {
+  return (
+    <div>
+      <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, flexWrap: 'wrap', marginBottom: 4 }}>
+        <span style={{ fontSize: 15, fontWeight: 700, color: 'var(--ww-text)' }}>{metric.label}</span>
+        <span className="ww-num" style={{ fontSize: 20, fontWeight: 700, color: 'var(--ww-orange)' }}>
+          {metric.display}
+        </span>
+        <span className={`ww-badge${metric.band === 'low' ? ' ww-badge--warn' : ''}`}>
+          {CONFIDENCE_LABELS[metric.band]}
+        </span>
+      </div>
+      <p style={{ margin: '0 0 4px', fontSize: 14, lineHeight: 1.6, color: 'var(--ww-body)', maxWidth: '60ch' }}>
+        {metric.observation}
+      </p>
+      <p style={{ margin: 0, fontSize: 13, lineHeight: 1.6, color: 'var(--ww-text-3)', maxWidth: '60ch' }}>
+        <strong>Sådan er det målt: </strong>{metric.definition}
+        {metric.sampleSize > 0 ? ` Bygger på ${metric.sampleSize} datapunkter.` : ''}
+      </p>
+    </div>
+  );
 }
 
 export function Stats({ history, onGenerate }: { history: HistoryEntry[]; onGenerate: () => void }) {
@@ -98,8 +132,13 @@ export function Stats({ history, onGenerate }: { history: HistoryEntry[]; onGene
     { value: String(done.length), label: 'Gennemført' },
     { value: fmtDuration(totalMinutes), label: 'Samlet tid' },
     { value: `${avg} min`, label: 'Gennemsnit' },
-    { value: `${streakWeeks(history)} uger`, label: 'Streak' },
+    { value: `${streakWeeks(history)} uger`, label: 'Uger i træk' },
   ];
+
+  // Statistikken regnes forfra ud af historikken. Den er ikke et selvstændigt
+  // datalager, og ingen beregning her ændrer på det, der er gemt.
+  const summary = summarise(sessionsFrom(history));
+  const uncomparable = summary.groups.find((g) => g.key === 'uncomparable');
 
   return (
     <div style={{ paddingTop: 'calc(env(safe-area-inset-top) + 20px)', maxWidth: 860 }}>
@@ -120,6 +159,29 @@ export function Stats({ history, onGenerate }: { history: HistoryEntry[]; onGene
           </div>
         ))}
       </div>
+
+      <section aria-labelledby="ww-signals" style={{ marginBottom: 26 }}>
+        <h2 id="ww-signals" className="ww-kicker" style={{ marginBottom: 12 }}>Det vigtigste nu</h2>
+        <div className="ww-card" style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 18 }}>
+          {summary.metrics.map((m) => <MetricRow key={m.id} metric={m} />)}
+          <p style={{ margin: 0, fontSize: 12.5, color: 'var(--ww-text-3)', lineHeight: 1.6 }}>
+            Alle tal er regnet ud af din historik efter beregningsversion {summary.metricVersion}.
+            Ændrer beregningen sig, ændrer versionsnummeret sig med — så en ny formel ikke
+            forveksles med fremgang.
+          </p>
+        </div>
+      </section>
+
+      {uncomparable?.sessions.length ? (
+        <div style={{ marginBottom: 26 }}>
+          <Note label="Hvorfor der ikke vises en kurve" tone="quiet">
+            {uncomparable.note} Det handler om{' '}
+            <Term id="comparability">sammenlignelighed</Term>: to workouts kan kun stilles op
+            mod hinanden, hvis arbejdet er det samme — samme øvelser, samme vægte og samme
+            afstande. Ellers ville almindelige udsving ligne fremgang.
+          </Note>
+        </div>
+      ) : null}
 
       <Photo
         name="row-erg"

@@ -2716,3 +2716,108 @@ a {
   .ww-goal-card, .ww-goal-card__icon { transition: none; }
   .ww-goal-card__icon-drift, .ww-goal-card.is-shuffling .ww-goal-card__icon-drift { animation: none; }
 }
+
+/* ---------- Ordforklaringer ---------- */
+
+/*
+ * Fagudtryk vises med en prikket understregning og et lille spørgsmålstegn, så det
+ * er tydeligt, at der er en forklaring at hente. Forklaringen foldes ud i selve
+ * dokumentet frem for i en tooltip — en tooltip kan hverken bruges på en telefon
+ * eller læses fornuftigt op af en skærmlæser.
+ */
+.ww-term { display: inline; }
+
+.ww-term__trigger {
+  display: inline;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  color: inherit;
+  text-decoration: underline dotted var(--ww-line-3);
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.ww-term__trigger:hover { text-decoration-color: var(--ww-orange); }
+
+.ww-term__trigger:focus-visible {
+  outline: 2px solid var(--ww-orange);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+
+.ww-term__mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  margin-left: 3px;
+  border-radius: 50%;
+  background: var(--ww-orange-dim);
+  border: 1px solid var(--ww-orange-line);
+  color: var(--ww-orange);
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
+  vertical-align: 1px;
+}
+
+.ww-term__body {
+  display: block;
+  margin: 8px 0;
+  padding: 12px 14px;
+  border: 1px solid var(--ww-orange-line);
+  border-radius: var(--ww-r);
+  background: var(--ww-orange-dim);
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--ww-body);
+}
+
+.ww-term__long { display: block; }
+.ww-term__why { display: block; margin-top: 8px; }
+.ww-term__short { color: var(--ww-text-3); }
+
+/* Ordlisten på Hjælp-siden. */
+.ww-glossary { margin: 0; }
+
+.ww-glossary__item {
+  padding: 16px 0;
+  border-top: 1px solid var(--ww-line);
+}
+
+.ww-glossary__item:first-child { border-top: 0; }
+
+.ww-glossary__term {
+  margin: 0 0 6px;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--ww-text);
+}
+
+.ww-glossary__alias {
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--ww-text-3);
+}
+
+.ww-glossary__def { margin: 0; }
+
+.ww-glossary__short {
+  margin: 0 0 8px;
+  font-size: 15px;
+  color: var(--ww-text);
+}
+
+.ww-glossary__long,
+.ww-glossary__why {
+  margin: 0 0 8px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--ww-body);
+  max-width: 62ch;
+}
+
+.ww-glossary__why { margin-bottom: 0; color: var(--ww-text-3); }

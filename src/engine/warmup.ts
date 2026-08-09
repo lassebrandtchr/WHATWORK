@@ -123,7 +123,16 @@ export function buildWarmup(
   const perItem = Math.floor((min * 60) / rounds / Math.max(1, chosen.length));
   const workSec = clamp(perItem - transitionSec, 25, 50);
 
-  const movements: Movement[] = chosen.map((ex) => {
+  /** Hovedbevægelser, dette opvarmningstrin forbereder. */
+  const preparesFor = (ex: Exercise): string[] => mainBlocks
+    .flatMap((b) => b.movements)
+    .filter((m) => {
+      const target = BY_ID[m.exerciseId];
+      return Boolean(target) && (ex.primes ?? []).includes((target as Exercise).cat);
+    })
+    .map((m) => m.exerciseId);
+
+  const movements: Movement[] = chosen.map((ex, index) => {
     const [lo, hi] = ex.rep ?? [5, 12];
     const reps = ex.unit === 'sec'
       ? workSec
@@ -131,6 +140,7 @@ export function buildWarmup(
         ? Math.max(10, Math.round(workSec / ex.sec / 5) * 5)
         : clamp(Math.round(workSec / ex.sec), lo, hi);
     const m = buildMovement(ex, req, rnd, { reps, intensity: 0.6 });
+    const prepares = preparesFor(ex);
     return {
       ...m,
       display: ex.unit === 'sec'
@@ -138,11 +148,50 @@ export function buildWarmup(
         : `${unitLabel(ex.unit, reps)} ${ex.name}`,
       workSec,
       transitionSec,
+      // Første øvelse hæver pulsen; resten enten mobiliserer eller gennemspiller
+      // hoveddelens bevægelser afhængigt af, om de faktisk forbereder noget.
+      purpose: index === 0 ? 'raise' : prepares.length ? 'rehearse' : 'activate',
+      preparesMovementIds: prepares,
+      // Opvarmningen må ikke skabe lokal udmattelse. Loftet er bevidst lavt.
+      fatigueCapRpe: 4,
     };
   });
 
-  // Teknikprimer: den mest tekniske øvelse fra hoveddelen, kørt let.
-  if (technical && withPrimer) {
+  // Belastningsramp: 2-3 stigende sæt mod dagens vægt, aldrig ét spring fra tom
+  // stang til arbejdsvægten. Bygges for hver belastet, teknisk hovedbevægelse.
+  const loadedMains = mainBlocks
+    .flatMap((b) => b.movements)
+    .map((m) => ({ m, ex: BY_ID[m.exerciseId] }))
+    .filter((x): x is { m: Movement; ex: Exercise } => Boolean(x.ex) && Boolean(x.ex?.load))
+    .filter((x) => x.ex.tech >= 3)
+    .slice(0, 2);
+
+  loadedMains.forEach(({ m: mainMovement, ex }) => {
+    const steps: { pct: number; reps: number }[] = ex.tech >= 4
+      ? [{ pct: 0.4, reps: 5 }, { pct: 0.6, reps: 3 }, { pct: 0.8, reps: 2 }]
+      : [{ pct: 0.5, reps: 5 }, { pct: 0.75, reps: 3 }];
+
+    steps.forEach((step) => {
+      const rampSet = buildMovement(ex, req, rnd, { reps: step.reps, pct: step.pct });
+      const target = rampSet.targets[0]?.load?.text ?? 'let vægt';
+      movements.push({
+        ...rampSet,
+        display: `${step.reps} ${ex.name} — ${Math.round(step.pct * 100)} % af dagens vægt`,
+        cue:
+          `Stigende sæt mod dagens ${ex.name.toLowerCase()}: ${target}. `
+          + 'Sættet skal føles let — det er teknik og temperatur, ikke arbejde.',
+        workSec: Math.round(step.reps * ex.sec),
+        transitionSec,
+        purpose: 'ramp',
+        preparesMovementIds: [mainMovement.exerciseId],
+        fatigueCapRpe: 5,
+      });
+    });
+  });
+
+  // Teknikprimer beholdes kun, hvis den tekniske hovedbevægelse ikke allerede fik en ramp.
+  const rampedIds = new Set(loadedMains.map((x) => x.m.exerciseId));
+  if (technical && withPrimer && !rampedIds.has(technical.id)) {
     const primer = buildMovement(technical, req, rnd, { reps: 5, pct: 0.4 });
     movements.push({
       ...primer,
@@ -150,6 +199,9 @@ export function buildWarmup(
       cue: `Teknikprimer for hoveddelen. Kør ${technical.name} langsomt og let, så bevægelsen sidder, før det gælder.`,
       workSec: 45,
       transitionSec,
+      purpose: 'rehearse',
+      preparesMovementIds: [technical.id],
+      fatigueCapRpe: 5,
     });
   }
 
