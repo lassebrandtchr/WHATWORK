@@ -62,6 +62,12 @@ export function Program({
 }) {
   return (
     <div style={{ paddingTop: 'calc(env(safe-area-inset-top) + 20px)', maxWidth: program ? 1120 : 940 }}>
+      <div style={{ marginBottom: 22 }}>
+        <Note label="Beta version">
+          Programdelen er stadig under udvikling. Ting kan ændre sig, og der kommer flere
+          justeringer løbende.
+        </Note>
+      </div>
       {program ? (
         <ProgramPlan
           program={program}

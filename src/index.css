@@ -1851,6 +1851,10 @@ a {
   }
 }
 
+/* Enkelte primærknapper skal stå helt stille, uden puls eller lysstrejf. */
+.ww-btn--primary.ww-btn--static:not(:disabled) { animation: none; }
+.ww-btn--primary.ww-btn--static:not(:disabled)::after { animation: none; opacity: 0; }
+
 /* ---------------------------------------------------------------------------
    Fotos
 

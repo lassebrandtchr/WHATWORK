@@ -121,6 +121,9 @@ export function DesktopHeader({
               onClick={link.action}
             >
               {link.label}
+              {link.id === 'program' ? (
+                <span style={{ marginLeft: 5, fontSize: 11, fontWeight: 600, opacity: 0.65 }}>(Beta)</span>
+              ) : null}
             </button>
           ))}
         </nav>
@@ -167,13 +170,15 @@ export function DesktopHeader({
 
 /** Den faste primærhandling nederst. */
 export function BottomBar({
-  label, onClick, secondary, extra,
+  label, onClick, secondary, extra, staticButton,
 }: {
   label: string;
   onClick: () => void;
   secondary?: { label: string; onClick: () => void };
   /** Sideordnet vej videre, der vises lige under primærhandlingen. */
   extra?: ReactNode;
+  /** Slår puls og lysstrejf fra på primærknappen, så den står helt stille. */
+  staticButton?: boolean;
 }) {
   return (
     <div className="ww-bottom-bar ww-glass">
@@ -184,7 +189,11 @@ export function BottomBar({
               {secondary.label}
             </button>
           ) : null}
-          <button type="button" className="ww-btn ww-btn--primary ww-btn--lg ww-btn--block" onClick={onClick}>
+          <button
+            type="button"
+            className={`ww-btn ww-btn--primary ww-btn--lg ww-btn--block${staticButton ? ' ww-btn--static' : ''}`}
+            onClick={onClick}
+          >
             {label}
           </button>
         </div>

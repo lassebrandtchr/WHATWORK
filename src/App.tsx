@@ -332,7 +332,9 @@ export function App() {
         )}
       </main>
 
-      {showBottomBar ? <BottomBar label={bottomLabel} onClick={bottomAction} extra={bottomExtra} /> : null}
+      {showBottomBar ? (
+        <BottomBar label={bottomLabel} onClick={bottomAction} extra={bottomExtra} staticButton={onGenerator && !atSummary} />
+      ) : null}
       {!ww.isDesktop && TABBED.includes(ww.screen) ? <MobileNav screen={ww.screen} onGo={ww.go} /> : null}
       {drawer ? <Drawer screen={ww.screen} onGo={ww.go} onClose={() => setDrawer(false)} /> : null}
     </div>
