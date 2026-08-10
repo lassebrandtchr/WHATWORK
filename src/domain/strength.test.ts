@@ -136,6 +136,14 @@ describe('trainingMaxFrom', () => {
     expect(tm.explanation).toContain('training max');
   });
 
+  it('runder til en vægt, der faktisk kan sættes på stangen', () => {
+    // 173,8 × 0,9 = 156,42 — et tal, ingen kan lægge på en stang.
+    expect(trainingMaxFrom(173.8, 0.8).kg % 2.5).toBe(0);
+    [100.3, 187.7, 69.5, 115.9].forEach((e1rm) => {
+      expect(trainingMaxFrom(e1rm, 0.8).kg % 2.5).toBe(0);
+    });
+  });
+
   it('bliver mere konservativ ved lav confidence', () => {
     const tm = trainingMaxFrom(200, 0.3);
     expect(tm.coefficient).toBe(0.85);

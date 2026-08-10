@@ -82,7 +82,8 @@ describe('WHATWORK — kerneflow', () => {
     render(<App />);
 
     await user.click(await screen.findByRole('button', { name: /Generér workout/ }));
-    for (let i = 0; i < 5; i++) await user.click(screen.getByRole('button', { name: 'Videre' }));
+    // Ny bruger, solo: tid → deltagere → niveau → udstyr.
+    for (let i = 0; i < 3; i++) await user.click(screen.getByRole('button', { name: 'Videre' }));
 
     expect(screen.getByRole('heading', { name: 'Hvad har I at arbejde med?' })).toBeInTheDocument();
     // Alt undtagen sjippetov er slået til som standard.
@@ -101,7 +102,7 @@ describe('WHATWORK — kerneflow', () => {
     render(<App />);
 
     await user.click(await screen.findByRole('button', { name: /Generér workout/ }));
-    for (let i = 0; i < 5; i++) await user.click(screen.getByRole('button', { name: 'Videre' }));
+    for (let i = 0; i < 3; i++) await user.click(screen.getByRole('button', { name: 'Videre' }));
 
     const sled = screen.getByRole('button', { name: /^Slæde / });
     await user.click(sled);
@@ -154,7 +155,8 @@ describe('WHATWORK — kerneflow', () => {
     render(<App />);
 
     await user.click(await screen.findByRole('button', { name: /Generér workout/ }));
-    for (let i = 0; i < 3; i++) await user.click(screen.getByRole('button', { name: 'Videre' }));
+    // Ny bruger, solo: tid → deltagere → niveau.
+    for (let i = 0; i < 2; i++) await user.click(screen.getByRole('button', { name: 'Videre' }));
 
     expect(screen.getByRole('heading', { name: 'Niveau og retning' })).toBeInTheDocument();
     expect(screen.getByText('6 / 10')).toBeInTheDocument(); // Kondition-standard

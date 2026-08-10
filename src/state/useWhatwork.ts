@@ -8,7 +8,9 @@ import type { SessionState } from '../domain/history.js';
 import { DOMAIN_VERSION, ONTOLOGY_VERSION } from '../domain/versions.js';
 import { CURRENT_HYROX_VERSION } from '../domain/ruleSets.js';
 import { weakPoint } from '../program/assistance.js';
-import type { Goal, SportId, TrainingHistorySummary } from '../domain/types.js';
+import { LIFT_EXERCISE } from '../domain/types.js';
+import type { Goal, LiftId, SportId, TrainingHistorySummary } from '../domain/types.js';
+import { benchmarkFromSet } from '../domain/benchmarks.js';
 import { requestAiPlan } from '../lib/aiMix.js';
 import { fmtTime } from '../lib/format.js';
 import { useHashRouter } from '../lib/router.js';
@@ -20,7 +22,7 @@ import { buildExport, parseImport } from '../lib/transfer.js';
 import type { ImportPreview } from '../lib/transfer.js';
 import type {
   Completion, GenDraft, GenStep, HistoryEntry, HistoryStatus, PersistedState,
-  ProgramDraft, ProgramRef, Screen, Settings, ThemeId, TimerState, TimerView, UserProfile,
+  LoggedSet, ProgramDraft, ProgramRef, Screen, Settings, ThemeId, TimerState, TimerView, UserProfile,
 } from '../types.js';
 
 const DEFAULT_PROFILE: UserProfile = {
@@ -98,6 +100,40 @@ export function freshGen(profile: UserProfile): GenDraft {
 
 export const participantsOf = (g: GenDraft): number => g.men + g.women + g.neutral;
 
+/**
+ * Oversætter et øvelses-id til det måltal, styrken gemmes under.
+ *
+ * Back squat og squat er samme måltal; alt andet gemmes under sit eget id, så
+ * conventional og axle dødløft aldrig ender i samme kurve.
+ */
+export function subjectIdFor(exerciseId: string): string {
+  const lift = (Object.keys(LIFT_EXERCISE) as LiftId[])
+    .find((l) => LIFT_EXERCISE[l] === exerciseId);
+  return lift ?? exerciseId;
+}
+
+/**
+ * De sæt, planen indeholdt — udfyldt på forhånd, så logning bliver en bekræftelse
+ * frem for en indtastning.
+ *
+ * Kun belastede bevægelser tages med. Der er ingen værdi i at bede brugeren
+ * bekræfte, hvor mange kalorier hun tog på romaskinen, når timeren allerede ved det.
+ */
+export function plannedSets(workout: Workout): LoggedSet[] {
+  return workout.blocks
+    .filter((b) => b.kind !== 'warmup')
+    .flatMap((b) => b.movements)
+    .filter((m) => m.targets[0]?.load)
+    .map((m) => ({
+      exerciseId: m.exerciseId,
+      name: m.name,
+      loadKg: m.targets[0]?.load?.eachKg ?? null,
+      reps: m.reps,
+      rpe: null,
+      asPlanned: true,
+    }));
+}
+
 export type WeightGroupKey = 'M' | 'F' | 'X';
 
 /** Den vægt, deltager `index` i sin kønsgruppe reelt bruger — egen værdi, hvis den er
@@ -130,6 +166,30 @@ function individualPeople(g: GenDraft): eng.Person[] {
 }
 
 export const GEN_STEPS: GenStep[] = ['time', 'people', 'weight', 'level', 'direction', 'equip', 'summary'];
+
+/**
+ * De trin, generatoren faktisk viser.
+ *
+ * Reglen fra specifikationen: spørg kun om det, der kan ændre resultatet, og genbrug
+ * det, brugeren allerede har svaret på. En tilbagevendende bruger skal kunne
+ * generere med omkring tre aktive valg — tid, hvem der træner, og dagens retning.
+ *
+ * Trinnene forsvinder ikke: alt kan stadig åbnes fra opsummeringen. De er bare ikke
+ * i vejen for den, der bare vil i gang.
+ */
+export function genStepsFor(profile: UserProfile, draft: GenDraft, historyCount: number): GenStep[] {
+  const steps: GenStep[] = ['time', 'people'];
+
+  // Deltagernes vægt betyder kun noget, når der er nogen at skalere imellem.
+  if (participantsOf(draft) > 1) steps.push('weight');
+
+  // Niveau og udstyr er gemt på profilen. De spørges kun, første gang der genereres.
+  const returning = historyCount > 0 && profile.onboarded;
+  if (!returning) steps.push('level', 'equip');
+
+  steps.push('direction', 'summary');
+  return steps;
+}
 
 export const DESKTOP_QUERY = '(min-width: 1024px)';
 
@@ -227,7 +287,9 @@ export function useWhatwork() {
   const [now, setNow] = useState(() => Date.now());
   const [confirmDialog, setConfirmDialog] = useState<'exit' | 'reset' | null>(null);
   const [timerCallout, setTimerCallout] = useState<{ kind: ArrivalKind; ts: number } | null>(null);
-  const [completion, setCompletion] = useState<Completion>({ status: 'done', rpe: 'ok', note: '' });
+  const [completion, setCompletion] = useState<Completion>({
+    status: 'done', rpe: 'ok', note: '', sets: [], painAfter: null,
+  });
   const [completeFor, setCompleteFor] = useState<CompleteContext | null>(null);
   const [wipeArmed, setWipeArmed] = useState(false);
   const [fromProgram, setFromProgram] = useState<ProgramRef | null>(null);
@@ -447,7 +509,12 @@ export function useWhatwork() {
     setGen((g) => ({ ...g, ...patch }));
   }, []);
 
-  const currentStep: GenStep = GEN_STEPS[Math.min(genStep, GEN_STEPS.length - 1)] ?? 'time';
+  /* De trin, der reelt vises for netop denne bruger. */
+  const steps = useMemo(
+    () => genStepsFor(profile, gen, history.length),
+    [profile, gen, history.length],
+  );
+  const currentStep: GenStep = steps[Math.min(genStep, steps.length - 1)] ?? 'time';
 
   const openGenerator = useCallback(() => {
     // Valgene bevares, hvis brugeren lige har været i generatoren; ellers bygges et
@@ -515,11 +582,28 @@ export function useWhatwork() {
     if (programAnimation.current !== null) window.clearTimeout(programAnimation.current);
   }, []);
 
+  /**
+   * Løbenumre for de to loading-animationer.
+   *
+   * Starter brugeren en ny bygning, mens en er i gang, skal den gamle kæde af
+   * timeouts stoppe med det samme. En ryddet timeout er ikke nok — den gamle kæde
+   * kan nå at planlægge sit næste trin bagefter, og så skriver to løkker til den
+   * samme fremdriftsbjælke.
+   */
+  const generateRun = useRef(0);
+  const programRun = useRef(0);
+
   const runGenerate = useCallback(
     (draft: GenDraft = gen, extra?: Partial<WorkoutRequest>) => {
       const request = buildRequest(draft, extra);
 
       if (animation.current !== null) window.clearTimeout(animation.current);
+      // Se `generateRun` ovenfor: løbenummeret lukker en igangværende animation ned,
+      // så to genereringer ikke skriver til den samme fremdriftsbjælke.
+      const run = generateRun.current + 1;
+      generateRun.current = run;
+      const owns = (): boolean => generateRun.current === run;
+
       setSaved(false);
       setCelebrate(false);
       // En ny workout har ingen skalering bag sig — den gamle diff må ikke hænge ved.
@@ -563,10 +647,12 @@ export function useWhatwork() {
       const pending = compute();
 
       const step = (): void => {
+        if (!owns()) return;
         const ph = eng.PHASES[phase];
         if (!ph) {
           void pending.then((result) => {
-            animation.current = window.setTimeout(() => settle(result), 200);
+            if (!owns()) return;
+            animation.current = window.setTimeout(() => { if (owns()) settle(result); }, 200);
           });
           return;
         }
@@ -580,6 +666,7 @@ export function useWhatwork() {
         const phaseDurationMs = Math.max(400, Math.round((span / 100) * LOADING_MS));
         const startedAt = Date.now();
         const tick = (): void => {
+          if (!owns()) return;
           const t = Math.min(1, (Date.now() - startedAt) / phaseDurationMs);
           value = Math.round(from + span * t);
           setProgress(value);
@@ -601,9 +688,9 @@ export function useWhatwork() {
   );
 
   const genNext = useCallback(() => {
-    if (genStep >= GEN_STEPS.length - 1) runGenerate();
+    if (genStep >= steps.length - 1) runGenerate();
     else setGenStep((s) => s + 1);
-  }, [genStep, runGenerate]);
+  }, [genStep, steps.length, runGenerate]);
 
   /** Tiden er det eneste, overraskelsen ikke må gætte — resten sættes af profilen. */
   const surpriseMe = useCallback((minutes = 30) => {
@@ -653,7 +740,7 @@ export function useWhatwork() {
     (
       w: Workout, status: HistoryStatus, result = '', rpe: HistoryEntry['rpe'] = '',
       progressPct?: number, lastExercise?: string, actualMinutes?: number,
-      ref: ProgramRef | null = null,
+      ref: ProgramRef | null = null, sets: LoggedSet[] = [], painAfter: number | null = null,
     ): HistoryEntry => {
       const state: SessionState = status === 'done'
         ? 'completed'
@@ -714,12 +801,25 @@ export function useWhatwork() {
             durationSeconds: minutes * 60,
             completionPct: progressPct ?? (status === 'done' ? 100 : 0),
             score: result,
+            // De faktisk udførte sæt. Planen ligger uændret i `workout` ved siden af,
+            // så en afvigelse kan ses som netop en afvigelse.
+            sets: sets.map((s, index) => ({
+              exerciseId: s.exerciseId,
+              variantId: subjectIdFor(s.exerciseId),
+              setIndex: index,
+              loadKg: s.loadKg,
+              reps: s.reps,
+              rpe: s.rpe,
+              rir: s.rpe === null ? null : 10 - s.rpe,
+              ...(painAfter !== null && painAfter >= 4 ? { painScore: painAfter } : {}),
+            })),
           },
           feedback: {
             ...session.feedback,
             // Den grove tre-trins vurdering oversættes til skalaen fra 1 til 10, så
             // statistikken kan regne på den. Præcisionen er bevidst lav.
             sessionRpe: rpe === 'easy' ? 4 : rpe === 'ok' ? 6 : rpe === 'hard' ? 9 : null,
+            painAfter,
           },
         },
       };
@@ -780,7 +880,12 @@ export function useWhatwork() {
         ? ''
         : view?.segment.movement?.display ?? view?.segment.movements?.[0]?.display ?? view?.segment.label ?? '';
       setCompleteFor({ secs: view?.sessionElapsed ?? 0, rounds: timer?.rounds ?? 0, workout });
-      setCompletion({ status, rpe: 'ok', note: '', progressPct, lastExercise });
+      setCompletion({
+        status, rpe: 'ok', note: '', progressPct, lastExercise,
+        // Sættene udfyldes på forhånd fra planen, så "Alt gik som planlagt" er ét tryk.
+        sets: plannedSets(workout),
+        painAfter: null,
+      });
       // En afbrudt session skal kunne genoptages, hvis man kom til at afslutte ved en
       // fejl — kun en reelt fuldført session rydder timeren og gør den ugenkaldelig.
       if (status === 'done') setTimer(null);
@@ -803,7 +908,7 @@ export function useWhatwork() {
     setHistory((h) => [
       entryFor(
         w, completion.status, result, completion.rpe, completion.progressPct,
-        completion.lastExercise, Math.max(1, mins), fromProgram,
+        completion.lastExercise, Math.max(1, mins), fromProgram, completion.sets, completion.painAfter,
       ),
       ...h,
     ]);
@@ -815,6 +920,30 @@ export function useWhatwork() {
       const day = next.weeks[fromProgram.w]?.days[fromProgram.d];
       if (day) day.status = completion.status === 'done' ? 'done' : 'partial';
       setProgram(next);
+    }
+
+    /*
+     * Rigtig træning er bedre data end en test.
+     *
+     * Et gennemført sæt på et hovedløft gemmes som måltal, så styrken opdaterer sig
+     * selv over tid. Kun sæt, brugeren selv har vurderet anstrengelsen på, tæller —
+     * uden den vurdering er omregningen for usikker til at styre tunge vægte.
+     */
+    const scoredSets = completion.sets.filter((s) => (
+      s.rpe !== null && s.loadKg !== null && s.reps > 0 && s.reps <= 10
+    ));
+    if (scoredSets.length && completion.status !== 'stopped') {
+      const painFlag = (completion.painAfter ?? 0) >= 4;
+      const added = scoredSets.map((s) => benchmarkFromSet({
+        subjectId: subjectIdFor(s.exerciseId),
+        protocol: 'topSetRpe',
+        loadKg: s.loadKg as number,
+        reps: s.reps,
+        rpe: s.rpe as number,
+        painFlag,
+        note: 'Registreret under træning',
+      }));
+      setProfile((p) => ({ ...p, benchmarks: [...p.benchmarks, ...added] }));
     }
 
     setCompleteFor(null);
@@ -935,6 +1064,18 @@ export function useWhatwork() {
    */
   const buildProgram = useCallback(() => {
     if (programAnimation.current !== null) window.clearTimeout(programAnimation.current);
+    /*
+     * Hver bygning får sit eget løbenummer.
+     *
+     * At rydde den seneste timeout er ikke nok: trykker brugeren to gange, kan den
+     * gamle kæde nå at planlægge sit næste trin efter rydningen, og så kæmper to
+     * løkker om fremdriften — bjælken sætter sig fast, mens teksten kører videre.
+     * Løbenummeret lukker den gamle kæde ned, uanset hvor den er nået til.
+     */
+    const run = programRun.current + 1;
+    programRun.current = run;
+    const owns = (): boolean => programRun.current === run;
+
     setProgress(0);
     setPhaseText(prog.PROGRAM_BUILD_PHASES[0]?.text ?? '');
     go('programLoading');
@@ -947,11 +1088,13 @@ export function useWhatwork() {
     let value = 0;
 
     const step = (): void => {
+      if (!owns()) return;
       const ph = prog.PROGRAM_BUILD_PHASES[phase];
       if (!ph) {
         void pending.then((result) => {
+          if (!owns()) return;
           setProgram(result);
-          programAnimation.current = window.setTimeout(() => go('program'), 200);
+          programAnimation.current = window.setTimeout(() => { if (owns()) go('program'); }, 200);
         });
         return;
       }
@@ -964,6 +1107,7 @@ export function useWhatwork() {
       const phaseDurationMs = Math.max(400, Math.round((span / 100) * PROGRAM_LOADING_MS));
       const startedAt = Date.now();
       const tick = (): void => {
+        if (!owns()) return;
         const t = Math.min(1, (Date.now() - startedAt) / phaseDurationMs);
         value = Math.round(from + span * t);
         setProgress(value);
@@ -1123,7 +1267,7 @@ export function useWhatwork() {
     settings, setSettings, setTheme,
     onbStep, onbNext, onbBack, startOnboarding, setOnbStep,
     gen, patchGen, setGen, openGenerator, resetGenerator,
-    genStep, setGenStep, steps: GEN_STEPS, currentStep, genBack, genNext,
+    genStep, setGenStep, steps, currentStep, genBack, genNext,
     participants: participantsOf(gen),
     progress, phaseText,
     workout, genError, aiNotice, saved,

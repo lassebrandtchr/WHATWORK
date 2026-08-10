@@ -9,7 +9,7 @@ import type { WeakPointId } from './program/assistance.js';
 export type Screen =
   | 'welcome' | 'onboard' | 'home' | 'gen' | 'loading' | 'result' | 'timer'
   | 'program' | 'programLoading' | 'history' | 'stats' | 'profile' | 'favorites' | 'equipment'
-  | 'settings' | 'help' | 'transfer' | 'about' | 'complete';
+  | 'settings' | 'help' | 'transfer' | 'about' | 'complete' | 'baseline';
 
 /**
  * Generatorens trin. Deltagerantallet er ikke sit eget trin — det beregnes af
@@ -140,6 +140,23 @@ export interface TimerState {
   sessionStartedAt: number;
 }
 
+/**
+ * Ét faktisk udført sæt, som brugeren kan bekræfte eller rette.
+ *
+ * Feltet `asPlanned` er det, der gør hurtig logning mulig: er alt gået som
+ * planlagt, skal brugeren ikke skrive noget som helst.
+ */
+export interface LoggedSet {
+  exerciseId: string;
+  name: string;
+  /** null for øvelser uden ekstern belastning. */
+  loadKg: number | null;
+  reps: number;
+  /** Hvor hårdt sættet føltes, 1-10. null betyder "ikke oplyst" — ikke 0. */
+  rpe: number | null;
+  asPlanned: boolean;
+}
+
 export interface Completion {
   status: HistoryStatus;
   rpe: Rpe;
@@ -148,6 +165,10 @@ export interface Completion {
   progressPct?: number;
   /** Automatisk udregnet, når man afslutter før tid — øvelsen man var i gang med. */
   lastExercise?: string;
+  /** De faktisk udførte sæt. Udfyldes på forhånd fra planen. */
+  sets: LoggedSet[];
+  /** Smerte efter passet, 0-10. null betyder "ikke oplyst". */
+  painAfter: number | null;
 }
 
 /** Hvilken programdag den viste workout kom fra, så status kan skrives tilbage. */

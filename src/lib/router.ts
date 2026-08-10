@@ -26,6 +26,7 @@ export const ROUTES: Record<Screen, string> = {
   transfer: '/import-eksport',
   about: '/om',
   complete: '/afsluttet',
+  baseline: '/mine-tal',
 };
 
 const BY_PATH: Record<string, Screen> = Object.fromEntries(

@@ -11,7 +11,7 @@
 
 import { METRIC_VERSION } from './versions.js';
 import { confidenceBand } from './types.js';
-import type { ConfidenceBand } from './types.js';
+import type { ConfidenceBand, SportId } from './types.js';
 import { countsAsTraining, isComparable } from './history.js';
 import type { SessionRecord } from './history.js';
 import { median } from './strength.js';
@@ -371,6 +371,147 @@ export function dataQuality(sessions: SessionRecord[]): Metric {
       ? `Kun ${withDetail.length} af ${trained.length} pas har detaljer. `
         + 'Statistikken bygger derfor på et tyndt grundlag.'
       : `${withDetail.length} af ${trained.length} pas har registrerede detaljer.`,
+  });
+}
+
+/* ---------- Personlige rekorder ---------- */
+
+/**
+ * Rekordtyper holdes adskilt.
+ *
+ * En rekord i antal gentagelser kan ikke sammenlignes med en rekord i vægt, og et
+ * beregnet maksimum er ikke det samme som et løft, der faktisk er gennemført. At
+ * blande dem sammen ville gøre "personlig rekord" til et tal uden betydning.
+ */
+export type RecordKind = 'liftedMax' | 'estimatedMax' | 'repRecord' | 'unbroken' | 'benchmarkWod';
+
+export const RECORD_LABELS: Record<RecordKind, string> = {
+  liftedMax: 'Tungeste løftede vægt',
+  estimatedMax: 'Højeste beregnede maksimum',
+  repRecord: 'Flest gentagelser på en vægt',
+  unbroken: 'Flest i træk',
+  benchmarkWod: 'Bedste resultat i en standardiseret workout',
+};
+
+export const RECORD_EXPLANATIONS: Record<RecordKind, string> = {
+  liftedMax: 'Den tungeste vægt, du faktisk har løftet — ikke et beregnet bud.',
+  estimatedMax: 'Det højeste, appen har regnet sig frem til ud fra dine sæt.',
+  repRecord: 'Flest gentagelser, du har taget på en bestemt vægt.',
+  unbroken: 'Flest gentagelser i træk uden at sætte af.',
+  benchmarkWod: 'Bedste resultat i en workout, der var præcis den samme begge gange.',
+};
+
+export interface PersonalRecord {
+  kind: RecordKind;
+  subjectId: string;
+  label: string;
+  value: number;
+  unit: string;
+  display: string;
+  date: string;
+  /** Sandt når rekorden er sat i et sæt med god teknik og uden smerte. */
+  valid: boolean;
+}
+
+/**
+ * Finder personlige rekorder i historikken.
+ *
+ * Kun sæt med god teknik og uden smerte tæller. Et løft, der gik galt, er ikke en
+ * rekord, uanset hvad vægten var.
+ */
+export function personalRecords(sessions: SessionRecord[]): PersonalRecord[] {
+  const best = new Map<string, PersonalRecord>();
+
+  const consider = (record: PersonalRecord): void => {
+    const key = `${record.kind}|${record.subjectId}`;
+    const current = best.get(key);
+    if (!current || record.value > current.value) best.set(key, record);
+  };
+
+  sessions.filter((s) => countsAsTraining(s.state)).forEach((session) => {
+    const date = session.endedAt ?? session.startedAt ?? '';
+    session.actual.sets
+      .filter((set) => !set.technicalFailure && (set.painScore ?? 0) < 4)
+      .forEach((set) => {
+        const subjectId = set.variantId ?? set.exerciseId;
+        if (set.loadKg === null || set.loadKg <= 0) return;
+
+        consider({
+          kind: 'liftedMax',
+          subjectId,
+          label: subjectId,
+          value: set.loadKg,
+          unit: 'kg',
+          display: `${String(set.loadKg).replace('.', ',')} kg × ${set.reps}`,
+          date,
+          valid: true,
+        });
+
+        // Gentagelsesrekord holdes pr. vægt, så 5 reps på 100 kg ikke konkurrerer
+        // med 12 reps på 60 kg.
+        consider({
+          kind: 'repRecord',
+          subjectId: `${subjectId}@${set.loadKg}`,
+          label: `${subjectId} på ${String(set.loadKg).replace('.', ',')} kg`,
+          value: set.reps,
+          unit: 'gentagelser',
+          display: `${set.reps} gentagelser`,
+          date,
+          valid: true,
+        });
+      });
+  });
+
+  return [...best.values()].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+}
+
+/* ---------- Sportsspecifikke signaler ---------- */
+
+/**
+ * Hvilke målinger der er værd at vise for netop denne sport.
+ *
+ * Specifikationen er tydelig: vis 3-5 relevante målinger, ikke alle målinger til
+ * alle. En powerlifter har ingen glæde af løbevolumen øverst på siden.
+ */
+export function metricsForSport(sport: SportId, sessions: SessionRecord[]): Metric[] {
+  const base = [adherenceMetric(sessions), dataQuality(sessions)];
+
+  switch (sport) {
+    case 'powerlifting':
+    case 'strength4':
+      return [hardSetsMetric(sessions), ...base, effortAccuracy(sessions, 8)];
+    case 'hyrox':
+      return [runVolumeMetric(sessions), ...base];
+    case 'crossfit':
+      return [coverage(sessions).metric, hardSetsMetric(sessions), ...base];
+    case 'strongman':
+      return [hardSetsMetric(sessions), ...base];
+    case 'functional':
+    default:
+      return [coverage(sessions).metric, ...base];
+  }
+}
+
+/** Ugentlig løbe- og maskindistance. Den bærende måling for HYROX. */
+export function runVolumeMetric(sessions: SessionRecord[]): Metric {
+  const trained = sessions.filter((s) => countsAsTraining(s.state));
+  const meters = trained
+    .flatMap((s) => s.actual.conditioning)
+    .reduce((sum, c) => sum + (c.distanceM ?? 0), 0);
+
+  return metric({
+    id: 'run-volume',
+    label: 'Registreret distance',
+    value: meters > 0 ? meters / 1000 : null,
+    display: meters > 0 ? `${(Math.round(meters / 100) / 10).toString().replace('.', ',')} km` : 'Ingen data endnu',
+    definition:
+      'Den samlede distance, du har registreret på løb og maskiner i perioden. '
+      + 'Løbevolumen er det, alt andet i et HYROX-forløb hviler på.',
+    confidence: trained.length >= 6 ? 0.7 : 0.4,
+    sampleSize: trained.length,
+    observation: meters > 0
+      ? `${(Math.round(meters / 100) / 10).toString().replace('.', ',')} km registreret over ${trained.length} pas.`
+      : 'Registrér distancen på dine løbeture, så kan opbygningen følges.',
   });
 }
 

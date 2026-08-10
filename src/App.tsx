@@ -17,6 +17,7 @@ import { Home } from './screens/Home.js';
 import { Loading } from './screens/Loading.js';
 import { Onboarding } from './screens/Onboarding.js';
 import { Profile } from './screens/Profile.js';
+import { Baseline } from './screens/Baseline.js';
 import { Program } from './screens/Program.js';
 import { ProgramLoading } from './screens/ProgramLoading.js';
 import { Result, ResultError } from './screens/Result.js';
@@ -303,6 +304,14 @@ export function App() {
             onGo={ww.go}
             onRedoOnboarding={ww.startOnboarding}
             onPatch={ww.patchProfile}
+          />
+        )}
+
+        {ww.screen === 'baseline' && (
+          <Baseline
+            profile={ww.profile}
+            onPatch={ww.patchProfile}
+            onBack={() => ww.go('profile')}
           />
         )}
 

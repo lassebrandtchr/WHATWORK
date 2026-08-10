@@ -257,8 +257,12 @@ export function trainingMaxFrom(
   const effective = confidence < 0.5
     ? Math.min(coefficient, CONSERVATIVE_TM_COEFFICIENT)
     : coefficient;
+  // Rundes til 2,5 kg, fordi et training max vises for brugeren og bruges som
+  // grundtal. Et krummet tal som 156,4 kg er hverken en vægt, der kan sættes på
+  // stangen, eller et tal, der er værd at huske.
+  const kg = Math.round((e1rmKg * effective) / 2.5) * 2.5;
   return {
-    kg: round1(e1rmKg * effective),
+    kg: round1(kg),
     coefficient: effective,
     sourceE1rmKg: round1(e1rmKg),
     confidence,

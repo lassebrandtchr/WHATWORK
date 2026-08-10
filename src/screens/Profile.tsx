@@ -1,6 +1,8 @@
 import * as eng from '../engine/index.js';
-import { PageHeader } from '../components/ui.js';
+import { Note, PageHeader } from '../components/ui.js';
 import { fmtDuration, relDate } from '../lib/format.js';
+import { e1rmFor } from '../domain/benchmarks.js';
+import { LIFT_NAMES, STRENGTH4_LIFTS } from '../domain/types.js';
 import type { HistoryEntry, Screen, UserProfile } from '../types.js';
 
 const SEX_LABEL: Record<string, string> = { f: 'Kvinde', m: 'Mand', x: 'Ikke angivet' };
@@ -18,6 +20,12 @@ export function Profile({
   const completed = history.filter((h) => h.status === 'done').length;
   const last = history[0];
 
+  // De hovedløft, appen endnu ikke har et tal for. Uden dem programmeres der efter
+  // anstrengelse i stedet for kilo, og et program starter med en indkøringsuge.
+  const missingLifts = STRENGTH4_LIFTS
+    .filter((lift) => !e1rmFor(profile.benchmarks, lift))
+    .map((lift) => LIFT_NAMES[lift]);
+
   const rows = [
     { k: 'Niveau', v: eng.LEVELS.find((l) => l.id === profile.level)?.name ?? String(profile.level) },
     { k: 'Skaleringsprofil', v: SEX_LABEL[profile.sex] ?? 'Ikke angivet' },
@@ -31,6 +39,7 @@ export function Profile({
   ];
 
   const links: { id: Screen; label: string }[] = [
+    { id: 'baseline', label: 'Mine tal' },
     { id: 'equipment', label: 'Udstyr og skiver' },
     { id: 'favorites', label: 'Favoritter' },
     { id: 'stats', label: 'Statistik' },
@@ -80,6 +89,22 @@ export function Profile({
           </div>
         ))}
       </dl>
+
+      {missingLifts.length ? (
+        <div style={{ marginBottom: 24 }}>
+          <Note label="Programmet mangler dine tal" accent>
+            {missingLifts.length === 4
+              ? 'Appen kender ikke din styrke endnu, så et program vil starte med en indkøringsuge.'
+              : `Der mangler tal for ${missingLifts.join(', ').toLowerCase()}.`}
+            {' '}Registrér ét sæt pr. løft — du behøver ikke teste, hvad du maksimalt kan løfte.
+            <div style={{ marginTop: 12 }}>
+              <button type="button" className="ww-btn ww-btn--primary" onClick={() => onGo('baseline')}>
+                Registrér mine tal
+              </button>
+            </div>
+          </Note>
+        </div>
+      ) : null}
 
       <nav aria-label="Mere i WHATWORK" style={{ marginBottom: 24 }}>
         {links.map((l) => (

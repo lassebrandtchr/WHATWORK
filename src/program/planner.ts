@@ -31,6 +31,8 @@ import type {
 } from '../domain/types.js';
 import { DOMAIN_VERSION, ONTOLOGY_VERSION, PROGRAM_ENGINE_VERSION } from '../domain/versions.js';
 import { chooseAssistance, defaultAssistanceFor } from './assistance.js';
+import { sportContent } from './sportSessions.js';
+import type { SportSessionContext } from './sportSessions.js';
 import type { AssistanceContext, WeakPoint } from './assistance.js';
 import type {
   AssessmentPlan, ConditioningPrescription, ProgramDayV3, ProgramSession, ProgramV3,
@@ -535,6 +537,7 @@ export function planProgram(input: PlanInput): ProgramV3 {
           weeksOnPrevious: weeksOnAssistance,
         },
         weakPoints: input.weakPoints,
+        week: w + 1,
       });
       built.session.assistance.forEach((a) => assistanceThisWeek.push(a.exerciseId));
       weekIssues.push(...built.session.issues);
@@ -685,6 +688,8 @@ interface SessionInput {
   taper: boolean;
   assistanceContext: AssistanceContext;
   weakPoints: WeakPoint[];
+  /** Ugens nummer i forløbet, 1-baseret. Sportsindholdet bruger det til opbygning. */
+  week: number;
 }
 
 function buildSession(o: SessionInput): { session: ProgramSession } {
@@ -696,7 +701,44 @@ function buildSession(o: SessionInput): { session: ProgramSession } {
 
   const hasBar = input.availableEquipment.includes('barbell');
 
+  const sportCtx: SportSessionContext = {
+    goal: input.goal,
+    phase,
+    profile: input.profile,
+    pain: input.profile.screening.pain,
+    availableEquipment: input.availableEquipment,
+    week: o.week,
+    totalWeeks: input.weeks,
+    weeklyRunKm: input.history.runKm,
+    minutes: input.minutes,
+    reduced: o.deload || o.taper || o.isAssessment,
+    nextId: setId,
+  };
+
+  const sportConditioning: ConditioningPrescription[] = [];
+  const sportStimulus: string[] = [];
+
   dayAnchors.forEach((anchor) => {
+    /*
+     * Sportsspecifikt indhold får første ret.
+     *
+     * HYROX-stationer, CrossFit-gymnastik og strongman-events kan ikke udtrykkes som
+     * et bevægelsesmønster — de har egne standarder, vægte og formål. Kun når sporten
+     * ikke har noget særligt for anchoret, falder vi tilbage til mønstervalget.
+     */
+    const sport = sportContent(anchor.id, sportCtx);
+    if (sport.sets.length || sport.conditioning.length || sport.issues.length) {
+      issues.push(...sport.issues);
+      if (sport.sets.length || sport.conditioning.length) {
+        anchorSets.push(...sport.sets);
+        sportConditioning.push(...sport.conditioning);
+        sport.sets.forEach((s) => used.push(s.exerciseId));
+        covers.push(anchor.id);
+        if (sport.stimulus) sportStimulus.push(sport.stimulus);
+      }
+      return;
+    }
+
     if (anchor.liftId) {
       const exerciseId = LIFT_EXERCISE[anchor.liftId];
       const painBlocked = checkPain(exerciseId, input.profile.screening.pain).blocked;
@@ -771,9 +813,11 @@ function buildSession(o: SessionInput): { session: ProgramSession } {
   }));
 
   /* Conditioning efter sportens fordeling — aldrig før det prioriterede styrkearbejde. */
-  const conditioning: ConditioningPrescription[] = [];
+  // Sportens eget konditionsarbejde vinder over det generelle. Et HYROX-løb med
+  // opbygget volumen skal ikke erstattes af en tilfældig maskinintervalserie.
+  const conditioning: ConditioningPrescription[] = [...sportConditioning];
   const wantsConditioning = dayAnchors.some((a) => a.kind === 'conditioning' || a.kind === 'run');
-  if (wantsConditioning && !o.isAssessment) {
+  if (wantsConditioning && !o.isAssessment && !conditioning.length) {
     const isRun = dayAnchors.some((a) => a.kind === 'run');
     const zone = o.taper || o.deload ? 'low' : pickZone(input.goal.sport, o.rnd);
     const minutes = Math.max(8, Math.round(input.minutes * (anchorSets.length ? 0.25 : 0.6)));
@@ -789,7 +833,9 @@ function buildSession(o: SessionInput): { session: ProgramSession } {
 
   const draft = {
     id: setId(),
-    stimulus: stimulusOf(anchorSets, conditioning, o),
+    stimulus: sportStimulus.length
+      ? sportStimulus.join(' ')
+      : stimulusOf(anchorSets, conditioning, o),
     warmup, anchors: anchorSets, supplemental: [], assistance, conditioning,
     coversAnchors: [...new Set(covers)],
   };
