@@ -174,7 +174,7 @@ function buildAnchorSets(
   lift: LiftId,
   phase: PhaseTemplate,
   tm: TrainingMax | undefined,
-  ctx: { plates: number[]; hasEquipment: boolean; painBlocked: boolean },
+  ctx: { plates: number[]; hasEquipment: boolean; painBlocked: boolean; isAssessment: boolean },
 ): { sets: SetPrescription[]; issues: ConstraintIssue[] } {
   const exerciseId = LIFT_EXERCISE[lift];
   const name = LIFT_NAMES[lift];
@@ -195,6 +195,54 @@ function buildAnchorSets(
       { fix: 'Vælg en godkendt substitution, eller opdater smerteniveauet i profilen.', scope: lift },
     ));
     return { sets: [], issues };
+  }
+
+  /*
+   * Indkøringsugen har sin egen protokol.
+   *
+   * Formålet er ikke at træne, men at finde et tal. Brugeren arbejder sig op med
+   * lette sæt og slutter med ét tungt sæt på tre gentagelser, hvor der stoppes med
+   * to tilbage i tanken. Det sæt registreres, og derfra kan alt andet regnes.
+   *
+   * Der sættes bevidst ingen kilo på trinnene: appen kender jo ikke tallene endnu.
+   * Brugeren vælger selv vægten efter, hvordan det føles — det er hele øvelsen.
+   */
+  if (ctx.isAssessment) {
+    const rest = restForPurpose('strength');
+    const rampSteps: { reps: number; cue: string }[] = [
+      { reps: 5, cue: 'Start med noget, der føles let. Du skal kunne tage mange flere.' },
+      { reps: 3, cue: 'Læg lidt på. Stadig komfortabelt.' },
+      { reps: 2, cue: 'Læg på igen. Nu begynder det at føles som noget.' },
+    ];
+
+    return {
+      sets: [
+        ...rampSteps.map((step) => ({
+          id: setId(), type: 'warmup' as const, exerciseId, name,
+          sets: 1, reps: step.reps, targetRpe: null, targetRir: null,
+          percentBasis: 'none' as const, percent: null, load: null,
+          restSeconds: [90, 150] as [number, number], stopRules: [],
+          secondsPerRep: secondsPerRepFor(exerciseId),
+          rationale: `Optrapning mod dagens sæt. ${step.cue}`,
+        })),
+        {
+          id: setId(), type: 'top', exerciseId, name,
+          sets: 1, reps: 3, targetRpe: 8, targetRir: 2,
+          percentBasis: 'none', percent: null, load: null,
+          restSeconds: rest,
+          stopRules: [
+            'Stop, hvis teknikken skrider — så er vægten for tung til at måle på.',
+            'Stop ved smerte på 4 eller derover.',
+          ],
+          secondsPerRep: secondsPerRepFor(exerciseId),
+          rationale:
+            `Dagens måling: 3 gentagelser i ${name.toLowerCase()}, hvor du stopper med `
+            + 'cirka to gentagelser tilbage i tanken. Registrér vægten bagefter — så '
+            + 'regner appen dine kilo og procenter for resten af forløbet.',
+        },
+      ],
+      issues: [],
+    };
   }
 
   const [repLo, repHi] = phase.repRange;
@@ -743,7 +791,7 @@ function buildSession(o: SessionInput): { session: ProgramSession } {
       const exerciseId = LIFT_EXERCISE[anchor.liftId];
       const painBlocked = checkPain(exerciseId, input.profile.screening.pain).blocked;
       const built = buildAnchorSets(anchor.liftId, phase, trainingMaxes[anchor.liftId], {
-        plates: input.plates, hasEquipment: hasBar, painBlocked,
+        plates: input.plates, hasEquipment: hasBar, painBlocked, isAssessment: o.isAssessment,
       });
       issues.push(...built.issues);
       if (built.sets.length) {

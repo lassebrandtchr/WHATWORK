@@ -286,6 +286,8 @@ export function App() {
           <Program
             program={ww.program}
             draft={ww.programDraft}
+            profile={ww.profile}
+            onLogLift={ww.logLift}
             onDraft={(patch) => ww.setProgramDraft({ ...ww.programDraft, ...patch })}
             onBuild={ww.buildProgram}
             onDrop={ww.dropProgram}

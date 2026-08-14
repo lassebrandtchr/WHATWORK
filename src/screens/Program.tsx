@@ -3,6 +3,7 @@ import type {
   Movement, Program as ProgramData, ProgramDay, ProgramWeek, Workout,
 } from '../engine/index.js';
 import { GoalCard } from '../components/GoalCard.js';
+import { LiftEntry } from '../components/LiftEntry.js';
 import { Photo } from '../components/Photo.js';
 import { Term } from '../components/Term.js';
 import {
@@ -11,7 +12,10 @@ import {
 import { plural } from '../lib/format.js';
 import { SPORT_LIST } from '../domain/sport.js';
 import { HYROX_DIVISION_LABELS, hyroxRules } from '../domain/ruleSets.js';
-import type { ProgramDraft, ProgramRef } from '../types.js';
+import { e1rmFor } from '../domain/benchmarks.js';
+import { STRENGTH4_LIFTS } from '../domain/types.js';
+import type { LiftId } from '../domain/types.js';
+import type { ProgramDraft, ProgramRef, UserProfile } from '../types.js';
 
 const WEEK_OPTIONS = [4, 6, 8, 12, 16];
 const DAY_OPTIONS = [2, 3, 4, 5, 6];
@@ -72,10 +76,12 @@ function useInertRef<T extends HTMLElement>(inert: boolean) {
 }
 
 export function Program({
-  program, draft, onDraft, onBuild, onDrop, onOpenDay, onSkipDay, onRegenerateDay, onMoveDay,
+  program, draft, profile, onDraft, onBuild, onDrop, onOpenDay, onSkipDay,
+  onRegenerateDay, onMoveDay, onLogLift,
 }: {
   program: ProgramData | null;
   draft: ProgramDraft;
+  profile: UserProfile;
   onDraft: (patch: Partial<ProgramDraft>) => void;
   onBuild: () => void;
   onDrop: () => void;
@@ -83,6 +89,8 @@ export function Program({
   onSkipDay: (ref: ProgramRef) => void;
   onRegenerateDay: (ref: ProgramRef) => void;
   onMoveDay: (ref: ProgramRef, delta: number) => void;
+  /** Registrerer et sæt for et hovedløft, så programmet kan regne med rigtige kilo. */
+  onLogLift: (lift: LiftId, loadKg: number, reps: number, rpe: number) => void;
 }) {
   return (
     <div style={{ paddingTop: 'calc(env(safe-area-inset-top) + 20px)', maxWidth: program ? 1120 : 940 }}>
@@ -95,6 +103,7 @@ export function Program({
       {program ? (
         <ProgramPlan
           program={program}
+          profile={profile}
           onDrop={onDrop}
           onBuild={onBuild}
           onOpenDay={onOpenDay}
@@ -109,20 +118,108 @@ export function Program({
             title="Program"
             lede="Vælg mål, længde og hvor mange dage du kan. Programmet bygges lokalt, uge for uge, klar til at åbne."
           />
-          <ProgramSetup draft={draft} onDraft={onDraft} onBuild={onBuild} />
+          <ProgramSetup
+            draft={draft}
+            profile={profile}
+            onDraft={onDraft}
+            onBuild={onBuild}
+            onLogLift={onLogLift}
+          />
         </>
       )}
     </div>
   );
 }
 
+/**
+ * Indtastning af de fire hovedløft, direkte i programbyggeren.
+ *
+ * Uden det her ville "jeg kender mine tal" være et valg uden konsekvens: brugeren
+ * ville trykke Byg og få en indkøringsuge, hun lige har sagt nej til.
+ */
+function KnownNumbers({
+  profile, onLogLift,
+}: {
+  profile: UserProfile;
+  onLogLift: (lift: LiftId, loadKg: number, reps: number, rpe: number) => void;
+}) {
+  const missing = STRENGTH4_LIFTS.filter((lift) => !e1rmFor(profile.benchmarks, lift));
+
+  return (
+    <div>
+      <Note label={`Mangler ${missing.length} af 4 løft`} accent>
+        Skriv et sæt, du har lavet i hvert løft — for eksempel 100 kg gange 3. Ud fra
+        vægt, gentagelser og hvor hårdt det føltes, regner appen din maksimale styrke
+        og sætter programmets procenter derefter. Mangler et løft, styres det af
+        anstrengelse i stedet for kilo.
+      </Note>
+      <div style={{ marginTop: 6 }}>
+        {STRENGTH4_LIFTS.map((lift) => (
+          <LiftEntry
+            key={lift}
+            lift={lift}
+            benchmarks={profile.benchmarks}
+            onLog={onLogLift}
+            compact
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Hvad indkøringsugen konkret går ud på.
+ *
+ * "Første uge måler dine tal" siger ingenting, hvis man ikke ved, hvad man skal
+ * lave. Her står protokollen, så man kan gå i træningscenteret og udføre den.
+ */
+function AssessmentPreview({ baseline }: { baseline: ProgramDraft['baseline'] }) {
+  return (
+    <Note label={baseline === 'assessment' ? 'Sådan finder du tallene' : 'Sådan starter programmet'} accent>
+      {baseline === 'assessment' ? (
+        <>
+          Uge 1 er en indkøringsuge. I hvert af de fire løft arbejder du dig op i vægt
+          med lette sæt og ender med <strong>ét tungt sæt på 3 gentagelser</strong>, hvor
+          du stopper med cirka to gentagelser tilbage i tanken.
+          <ul style={{ margin: '10px 0 0', paddingLeft: 20 }}>
+            <li style={{ marginBottom: 4 }}>5 gentagelser med noget, der føles let</li>
+            <li style={{ marginBottom: 4 }}>3 gentagelser, lidt tungere</li>
+            <li style={{ marginBottom: 4 }}>2 gentagelser, tungere igen</li>
+            <li style={{ marginBottom: 4 }}>Dagens sæt: 3 gentagelser, hvor du stopper med to tilbage</li>
+          </ul>
+          <p style={{ margin: '10px 0 0' }}>
+            Du registrerer det sidste sæt, når du er færdig. Derefter regner appen dine
+            kilo og procenter for resten af forløbet.
+          </p>
+        </>
+      ) : (
+        <>
+          Programmet starter med bevidst lave vægte og bygger op derfra. Du bliver bedt
+          om at registrere, hvordan sættene føltes, og efter et par uger har appen
+          tallene fra din rigtige træning.
+        </>
+      )}
+    </Note>
+  );
+}
+
 function ProgramSetup({
-  draft, onDraft, onBuild,
+  draft, profile, onDraft, onBuild, onLogLift,
 }: {
   draft: ProgramDraft;
+  profile: UserProfile;
   onDraft: (patch: Partial<ProgramDraft>) => void;
   onBuild: () => void;
+  onLogLift: (lift: LiftId, loadKg: number, reps: number, rpe: number) => void;
 }) {
+  // Styrkesporene er de eneste, der regner i procent af et maksimum. For HYROX og
+  // funktionel fitness giver det ikke mening at kræve fire hovedløft.
+  const usesLiftNumbers = draft.goal === 'strength4' || draft.goal === 'powerlifting'
+    || draft.goal === 'strongman';
+  const needsNumbers = usesLiftNumbers
+    && STRENGTH4_LIFTS.some((lift) => !e1rmFor(profile.benchmarks, lift));
+
   return (
     <div className="ww-program-setup">
       <div style={{ minWidth: 0 }}>
@@ -158,6 +255,29 @@ function ProgramSetup({
               />
             ))}
           </div>
+
+          {/*
+            Valget skal have en konsekvens med det samme.
+            Siger man "jeg kender mine tal", skal felterne stå her — ikke på en anden
+            skærm, man selv skal finde. Siger man "mål dem for mig", skal det stå
+            præcis hvad man kommer til at lave i uge 1.
+          */}
+          {needsNumbers ? (
+            <div style={{ marginTop: 18 }}>
+              {draft.baseline === 'known' ? (
+                <KnownNumbers profile={profile} onLogLift={onLogLift} />
+              ) : (
+                <AssessmentPreview baseline={draft.baseline} />
+              )}
+            </div>
+          ) : (
+            <div style={{ marginTop: 18 }}>
+              <Note label="Dine tal er på plads" tone="good">
+                Alle fire løft har et tal. Programmet regner kilo og procenter ud fra dem —
+                og du kan altid rette dem under Mine tal.
+              </Note>
+            </div>
+          )}
         </div>
 
         {/* Sportsspecifikke spørgsmål vises kun for den valgte sport. */}
@@ -266,9 +386,10 @@ function Stat({ label, value }: { label: string; value: string }) {
 }
 
 function ProgramPlan({
-  program, onDrop, onBuild, onOpenDay, onSkipDay, onRegenerateDay, onMoveDay,
+  program, profile, onDrop, onBuild, onOpenDay, onSkipDay, onRegenerateDay, onMoveDay,
 }: {
   program: ProgramData;
+  profile: UserProfile;
   onDrop: () => void;
   onBuild: () => void;
   onOpenDay: (workout: Workout, ref: ProgramRef) => void;
@@ -276,6 +397,9 @@ function ProgramPlan({
   onRegenerateDay: (ref: ProgramRef) => void;
   onMoveDay: (ref: ProgramRef, delta: number) => void;
 }) {
+  // Sandt når alle fire løft har fået et tal, siden programmet blev bygget.
+  const numbersReady = STRENGTH4_LIFTS.every((lift) => e1rmFor(profile.benchmarks, lift));
+
   const allDays = program.weeks.flatMap((w) => w.days);
   const completed = allDays.filter((d) => d.status === 'done').length;
   const current = currentWeekIndex(program);
@@ -326,16 +450,40 @@ function ProgramPlan({
 
       {program.assessment ? (
         <div style={{ marginBottom: 20 }}>
-          <Note label="Første uge måler dine tal" accent>
-            {program.assessment.explanation}
-            <ul style={{ margin: '10px 0 0', paddingLeft: 20 }}>
-              {program.assessment.missing.map((m) => (
-                <li key={m.label} style={{ marginBottom: 4 }}>
-                  <strong>{m.label}:</strong> {m.suggestion}
-                </li>
-              ))}
-            </ul>
-          </Note>
+          {numbersReady ? (
+            /*
+             * Sløjfen lukkes her.
+             *
+             * Har brugeren registreret sine tal siden programmet blev bygget, står
+             * planen stadig med indkøringsugen. Uden det her tilbud ville hun aldrig
+             * få de rigtige kilo at se.
+             */
+            <Note label="Dine tal er kommet ind" tone="good">
+              Du har nu registreret alle fire løft. Bygger du programmet om, bliver
+              indkøringsugen erstattet af rigtige kilo og procenter, regnet ud fra
+              dine egne tal.
+              <div style={{ marginTop: 12 }}>
+                <button type="button" className="ww-btn ww-btn--primary" onClick={onBuild}>
+                  Regn programmet færdigt
+                </button>
+              </div>
+            </Note>
+          ) : (
+            <Note label="Første uge måler dine tal" accent>
+              {program.assessment.explanation}
+              <ul style={{ margin: '10px 0 0', paddingLeft: 20 }}>
+                {program.assessment.missing.map((m) => (
+                  <li key={m.label} style={{ marginBottom: 4 }}>
+                    <strong>{m.label}:</strong> {m.suggestion}
+                  </li>
+                ))}
+              </ul>
+              <p style={{ margin: '10px 0 0' }}>
+                Når du har kørt ugen og registreret sættene, kan du regne programmet
+                færdigt med dine egne kilo.
+              </p>
+            </Note>
+          )}
         </div>
       ) : null}
 

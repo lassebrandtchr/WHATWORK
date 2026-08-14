@@ -130,15 +130,37 @@ describe('acceptance: begynder uden RM', () => {
     });
   });
 
-  it('programmerer efter RPE i stedet for procent uden training max', () => {
+  it('styres af anstrengelse i stedet for procent uden training max', () => {
     const p = planProgram(plan({ benchmarks: [] }));
     const tops = allSessions(p).flatMap((s) => s.anchors.filter((a) => a.type === 'top'));
     expect(tops.length).toBeGreaterThan(0);
     tops.forEach((t) => {
+      // Ingen kilo uden grundlag, men et mål for hvor hårdt sættet skal føles.
       expect(t.load).toBeNull();
+      expect(t.percentBasis).toBe('none');
       expect(t.targetRpe).not.toBeNull();
-      expect(t.rationale).toContain('RPE');
     });
+  });
+
+  it('giver en konkret optrapning i indkøringsugen frem for et vagt "find dine tal"', () => {
+    const p = planProgram(plan({ benchmarks: [] }));
+    const week1 = p.weeks[0];
+    expect(week1?.assessment).toBe(true);
+
+    const session = week1?.days.find((d) => d.session?.anchors.some((a) => a.type === 'top'))?.session;
+    expect(session).toBeDefined();
+
+    // Optrapningen: tre lettere sæt før dagens måling.
+    const ramp = session?.anchors.filter((a) => a.type === 'warmup') ?? [];
+    expect(ramp.map((r) => r.reps)).toEqual([5, 3, 2]);
+
+    const top = session?.anchors.find((a) => a.type === 'top');
+    expect(top?.reps).toBe(3);
+    expect(top?.targetRir).toBe(2);
+    // Instruktionen skal kunne følges i træningscenteret uden at slå noget op.
+    expect(top?.rationale).toContain('3 gentagelser');
+    expect(top?.rationale).toContain('to gentagelser tilbage');
+    expect(top?.rationale).toContain('Registrér');
   });
 });
 

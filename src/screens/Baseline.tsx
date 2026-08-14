@@ -1,15 +1,14 @@
-import { useState } from 'react';
 import { Term } from '../components/Term.js';
+import { LiftEntry } from '../components/LiftEntry.js';
 import { Chip, Glyph, Note, PageHeader } from '../components/ui.js';
 import { BY_ID } from '../engine/data/exercises.js';
-import { benchmarkFromSet, e1rmFor } from '../domain/benchmarks.js';
-import { COMPETENCE_LABELS, COMPETENCE_ORDER, LIFT_NAMES, STRENGTH4_LIFTS } from '../domain/types.js';
-import type { Benchmark, CompetenceEntry, CompetenceLevel, LiftId, PainEntry } from '../domain/types.js';
+import { benchmarkFromSet } from '../domain/benchmarks.js';
+import { COMPETENCE_LABELS, COMPETENCE_ORDER, STRENGTH4_LIFTS } from '../domain/types.js';
+import type { CompetenceEntry, CompetenceLevel, LiftId, PainEntry } from '../domain/types.js';
 import { HIGH_SKILL_IDS } from '../domain/ontology.js';
 import { setCompetence } from '../domain/competence.js';
 import { SCREENING_FLAGS, assessSafety, resolveScreeningStatus } from '../domain/safety.js';
 import type { ScreeningFlagId } from '../domain/types.js';
-import { fmt } from '../domain/strength.js';
 import { WEAK_POINT_LIST } from '../program/assistance.js';
 import type { WeakPointId } from '../program/assistance.js';
 import { CARE_AREAS } from '../engine/data/equipment.js';
@@ -25,15 +24,6 @@ import type { UserProfile } from '../types.js';
  * Bemærk at der bevidst ikke bedes om en maksimal test. Brugeren indtaster et sæt,
  * hun faktisk har lavet, og hvor hårdt det føltes — resten regner appen.
  */
-
-/** Hvor hårdt sættet føltes, oversat til den skala, beregningen bruger. */
-const EFFORT_OPTIONS: { id: number; label: string; hint: string }[] = [
-  { id: 10, label: 'Kunne ikke tage flere', hint: 'Den sidste gentagelse var alt, du havde.' },
-  { id: 9, label: 'Havde 1 tilbage', hint: 'Du kunne lige have klemt én mere ud.' },
-  { id: 8, label: 'Havde 2 tilbage', hint: 'Der var to gentagelser tilbage i tanken.' },
-  { id: 7, label: 'Havde 3 tilbage', hint: 'Hårdt, men der var stadig luft.' },
-  { id: 6, label: 'Havde 4 eller flere', hint: 'Kontrolleret. Bruges som et forsigtigt udgangspunkt.' },
-];
 
 function Section({
   id, title, lede, children,
@@ -51,116 +41,11 @@ function Section({
   );
 }
 
-/** Ét hovedløft med det, brugeren sidst har registreret, og en knap til at rette det. */
-function LiftRow({
-  lift, benchmarks, onLog,
-}: {
-  lift: LiftId;
-  benchmarks: Benchmark[];
-  onLog: (lift: LiftId, loadKg: number, reps: number, rpe: number) => void;
-}) {
-  const [open, setOpen] = useState(false);
-  const [loadKg, setLoadKg] = useState('');
-  const [reps, setReps] = useState('3');
-  const [rpe, setRpe] = useState(8);
-
-  const rolling = e1rmFor(benchmarks, lift);
-  const canSave = Number(loadKg) > 0 && Number(reps) > 0;
-
-  const save = (): void => {
-    if (!canSave) return;
-    onLog(lift, Number(loadKg), Number(reps), rpe);
-    setLoadKg('');
-    setOpen(false);
-  };
-
-  return (
-    <div style={{ borderBottom: '1px solid var(--ww-line)', padding: '16px 0' }}>
-      <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
-        <div style={{ minWidth: 0 }}>
-          <div style={{ fontSize: 16, fontWeight: 700 }}>{LIFT_NAMES[lift]}</div>
-          <div style={{ fontSize: 13.5, color: 'var(--ww-text-3)', marginTop: 4 }}>
-            {rolling
-              ? `Beregnet maksimum ${fmt(rolling.currentKg)} kg · ${rolling.explanation}`
-              : 'Ingen tal endnu. Programmet bruger anstrengelse i stedet for kilo.'}
-          </div>
-        </div>
-        <button type="button" className="ww-btn" onClick={() => setOpen((o) => !o)}>
-          {rolling ? 'Registrér nyt sæt' : 'Registrér et sæt'}
-        </button>
-      </div>
-
-      {open ? (
-        <div className="ww-card" style={{ padding: 18, marginTop: 14 }}>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(140px,1fr))', gap: 14, marginBottom: 16 }}>
-            <div>
-              <label htmlFor={`ww-load-${lift}`} style={{ display: 'block', fontSize: 13, color: 'var(--ww-text-2)', marginBottom: 6 }}>
-                Hvor mange kilo?
-              </label>
-              <input
-                id={`ww-load-${lift}`}
-                className="ww-input"
-                type="number"
-                inputMode="decimal"
-                min={1}
-                step={2.5}
-                value={loadKg}
-                onChange={(e) => setLoadKg(e.target.value)}
-                placeholder="fx 100"
-              />
-            </div>
-            <div>
-              <label htmlFor={`ww-reps-${lift}`} style={{ display: 'block', fontSize: 13, color: 'var(--ww-text-2)', marginBottom: 6 }}>
-                Hvor mange gentagelser?
-              </label>
-              <input
-                id={`ww-reps-${lift}`}
-                className="ww-input"
-                type="number"
-                inputMode="numeric"
-                min={1}
-                max={10}
-                value={reps}
-                onChange={(e) => setReps(e.target.value)}
-              />
-            </div>
-          </div>
-
-          <div style={{ marginBottom: 8, fontSize: 13, color: 'var(--ww-text-2)' }}>
-            Hvor hårdt føltes sættet?
-          </div>
-          <div className="ww-wrap" style={{ gap: 6, marginBottom: 8 }}>
-            {EFFORT_OPTIONS.map((o) => (
-              <Chip key={o.id} on={rpe === o.id} onClick={() => setRpe(o.id)}>{o.label}</Chip>
-            ))}
-          </div>
-          <p style={{ margin: '0 0 16px', fontSize: 13, color: 'var(--ww-text-3)', lineHeight: 1.55 }}>
-            {EFFORT_OPTIONS.find((o) => o.id === rpe)?.hint}
-          </p>
-
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-            <button type="button" className="ww-btn ww-btn--primary" onClick={save} disabled={!canSave}>
-              Gem sættet
-            </button>
-            <button type="button" className="ww-btn" onClick={() => setOpen(false)}>Fortryd</button>
-          </div>
-
-          <p style={{ margin: '14px 0 0', fontSize: 13, color: 'var(--ww-text-3)', lineHeight: 1.6 }}>
-            Du behøver ikke teste din <Term id="1rm" />. Ud fra vægt, gentagelser og hvor hårdt
-            det føltes, regner appen et bud på din maksimale styrke — og bruger et bevidst
-            lavere tal, når den sætter dine vægte.
-          </p>
-        </div>
-      ) : null}
-    </div>
-  );
-}
-
 export function Baseline({
   profile, onPatch, onBack,
 }: {
   profile: UserProfile;
-  onPatch: (patch: Partial<UserProfile>) => void;
+  onPatch: (patch: Partial<UserProfile> | ((prev: UserProfile) => Partial<UserProfile>)) => void;
   onBack: () => void;
 }) {
   const safety = assessSafety(profile.screening);
@@ -173,41 +58,47 @@ export function Baseline({
       reps,
       rpe,
     });
-    onPatch({ benchmarks: [...profile.benchmarks, benchmark] });
+    onPatch((prev) => ({ benchmarks: [...prev.benchmarks, benchmark] }));
   };
 
   const toggleFlag = (id: ScreeningFlagId): void => {
-    const flags = profile.screening.flags.includes(id)
-      ? profile.screening.flags.filter((f) => f !== id)
-      : [...profile.screening.flags, id];
-    onPatch({
-      screening: {
-        ...profile.screening,
-        flags,
-        status: resolveScreeningStatus(flags),
-        answeredAt: new Date().toISOString(),
-      },
+    onPatch((prev) => {
+      const flags = prev.screening.flags.includes(id)
+        ? prev.screening.flags.filter((f) => f !== id)
+        : [...prev.screening.flags, id];
+      return {
+        screening: {
+          ...prev.screening,
+          flags,
+          status: resolveScreeningStatus(flags),
+          answeredAt: new Date().toISOString(),
+        },
+      };
     });
   };
 
   const setPain = (region: CareId, score: number): void => {
-    const rest = profile.screening.pain.filter((p) => p.region !== region);
-    const pain: PainEntry[] = score === 0
-      ? rest
-      : [...rest, { region, score, aggravators: [], updatedAt: new Date().toISOString() }];
-    onPatch({ screening: { ...profile.screening, pain } });
+    onPatch((prev) => {
+      const rest = prev.screening.pain.filter((p) => p.region !== region);
+      const pain: PainEntry[] = score === 0
+        ? rest
+        : [...rest, { region, score, aggravators: [], updatedAt: new Date().toISOString() }];
+      return { screening: { ...prev.screening, pain } };
+    });
   };
 
   const setSkill = (exerciseId: string, level: CompetenceLevel): void => {
-    onPatch({ competence: setCompetence(profile.competence, exerciseId, level) as CompetenceEntry[] });
+    onPatch((prev) => ({
+      competence: setCompetence(prev.competence, exerciseId, level) as CompetenceEntry[],
+    }));
   };
 
   const toggleWeakPoint = (id: WeakPointId): void => {
-    onPatch({
-      weakPoints: profile.weakPoints.includes(id)
-        ? profile.weakPoints.filter((w) => w !== id)
-        : [...profile.weakPoints, id],
-    });
+    onPatch((prev) => ({
+      weakPoints: prev.weakPoints.includes(id)
+        ? prev.weakPoints.filter((w) => w !== id)
+        : [...prev.weakPoints, id],
+    }));
   };
 
   const painFor = (region: CareId): number =>
@@ -238,7 +129,7 @@ export function Baseline({
       >
         <div>
           {STRENGTH4_LIFTS.map((lift) => (
-            <LiftRow key={lift} lift={lift} benchmarks={profile.benchmarks} onLog={logSet} />
+            <LiftEntry key={lift} lift={lift} benchmarks={profile.benchmarks} onLog={logSet} />
           ))}
         </div>
         <p style={{ margin: '16px 0 0', fontSize: 13.5, color: 'var(--ww-text-3)', lineHeight: 1.65, maxWidth: '62ch' }}>

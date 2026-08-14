@@ -165,6 +165,70 @@ function individualPeople(g: GenDraft): eng.Person[] {
   return people;
 }
 
+/**
+ * Kører en faseanimation og afslutter, når arbejdet er færdigt.
+ *
+ * Animationen drives af uret gennem ét interval frem for af en kæde af timeouts.
+ * Forskellen betyder noget: browsere strupper timere i faner, der ikke er synlige,
+ * og en kædet animation kan derfor gå helt i stå, hvis brugeren skifter væk midt i
+ * genereringen — så ville workouten aldrig dukke op, når hun kom tilbage.
+ *
+ * Er siden slet ikke synlig, springes animationen over. Der er ingen at vise den for.
+ *
+ * Returnerer en funktion, der afbryder animationen.
+ */
+export function runPhaseAnimation<T>(input: {
+  phases: { to: number; text: string }[];
+  durationMs: number;
+  work: Promise<T>;
+  onProgress: (value: number) => void;
+  onPhase: (text: string) => void;
+  onDone: (result: T) => void;
+}): () => void {
+  let cancelled = false;
+  const startedAt = Date.now();
+  const total = Math.max(1, input.durationMs);
+
+  input.onPhase(input.phases[0]?.text ?? '');
+  input.onProgress(0);
+
+  let settled = false;
+  const finish = (result: T): void => {
+    if (settled || cancelled) return;
+    settled = true;
+    input.onProgress(100);
+    input.onDone(result);
+  };
+
+  const id = window.setInterval(() => {
+    if (cancelled) return;
+    const elapsed = Date.now() - startedAt;
+    const ratio = Math.min(1, elapsed / total);
+    const value = Math.round(ratio * 100);
+    input.onProgress(value);
+
+    const phase = input.phases.find((p) => value <= p.to) ?? input.phases[input.phases.length - 1];
+    if (phase) input.onPhase(phase.text);
+
+    // Animationen må aldrig holde resultatet tilbage længere end sin egen varighed.
+    if (ratio >= 1) {
+      window.clearInterval(id);
+      void input.work.then(finish);
+    }
+  }, 80);
+
+  // Er siden skjult, er animationen uden formål — og timerne bliver alligevel strupet.
+  if (typeof document !== 'undefined' && document.hidden) {
+    window.clearInterval(id);
+    void input.work.then(finish);
+  }
+
+  return () => {
+    cancelled = true;
+    window.clearInterval(id);
+  };
+}
+
 export const GEN_STEPS: GenStep[] = ['time', 'people', 'weight', 'level', 'direction', 'equip', 'summary'];
 
 /**
@@ -501,9 +565,40 @@ export function useWhatwork() {
 
   /* ---------- generator ---------- */
 
-  const patchProfile = useCallback((patch: Partial<UserProfile>) => {
-    setProfile((p) => ({ ...p, ...patch }));
-  }, []);
+  /**
+   * Retter profilen.
+   *
+   * Patchen kan gives som en funktion af den forrige profil. Det er nødvendigt for
+   * alt, der lægger noget til en liste: beregnes patchen ud fra et øjebliksbillede,
+   * og trykker brugeren to gange hurtigt efter hinanden, læser begge opdateringer
+   * den samme gamle liste — og den første skrivning går tabt.
+   */
+  const patchProfile = useCallback(
+    (patch: Partial<UserProfile> | ((prev: UserProfile) => Partial<UserProfile>)) => {
+      setProfile((p) => ({ ...p, ...(typeof patch === 'function' ? patch(p) : patch) }));
+    },
+    [],
+  );
+
+  /**
+   * Registrerer et sæt for et hovedløft.
+   *
+   * Ét sted for hele appen, så indtastning fra programbyggeren og fra "Mine tal"
+   * ender som præcis den samme slags måltal.
+   */
+  const logLift = useCallback(
+    (lift: LiftId, loadKg: number, reps: number, rpe: number) => {
+      const benchmark = benchmarkFromSet({
+        subjectId: lift,
+        protocol: reps === 1 ? '1rm' : reps <= 5 ? 'topSetRpe' : 'amrap',
+        loadKg,
+        reps,
+        rpe,
+      });
+      setProfile((p) => ({ ...p, benchmarks: [...p.benchmarks, benchmark] }));
+    },
+    [],
+  );
 
   const patchGen = useCallback((patch: Partial<GenDraft>) => {
     setGen((g) => ({ ...g, ...patch }));
@@ -572,32 +667,27 @@ export function useWhatwork() {
     [profile.sex, profile.bars, profile.sandbags, history, recentSignatures],
   );
 
-  const animation = useRef<number | null>(null);
-  useEffect(() => () => {
-    if (animation.current !== null) window.clearTimeout(animation.current);
-  }, []);
-
-  const programAnimation = useRef<number | null>(null);
-  useEffect(() => () => {
-    if (programAnimation.current !== null) window.clearTimeout(programAnimation.current);
-  }, []);
-
   /**
    * Løbenumre for de to loading-animationer.
    *
-   * Starter brugeren en ny bygning, mens en er i gang, skal den gamle kæde af
-   * timeouts stoppe med det samme. En ryddet timeout er ikke nok — den gamle kæde
-   * kan nå at planlægge sit næste trin bagefter, og så skriver to løkker til den
-   * samme fremdriftsbjælke.
+   * Starter brugeren en ny bygning, mens en er i gang, skal den gamle stoppe med det
+   * samme — ellers skriver to løkker til den samme fremdriftsbjælke.
    */
   const generateRun = useRef(0);
   const programRun = useRef(0);
+  /** Afbryder en igangværende animation, når en ny startes, eller appen lukkes. */
+  const cancelGenerate = useRef<(() => void) | null>(null);
+  const cancelProgram = useRef<(() => void) | null>(null);
+
+  useEffect(() => () => {
+    cancelGenerate.current?.();
+    cancelProgram.current?.();
+  }, []);
 
   const runGenerate = useCallback(
     (draft: GenDraft = gen, extra?: Partial<WorkoutRequest>) => {
       const request = buildRequest(draft, extra);
 
-      if (animation.current !== null) window.clearTimeout(animation.current);
       // Se `generateRun` ovenfor: løbenummeret lukker en igangværende animation ned,
       // så to genereringer ikke skriver til den samme fremdriftsbjælke.
       const run = generateRun.current + 1;
@@ -613,12 +703,10 @@ export function useWhatwork() {
       setPhaseText(eng.PHASES[0]?.text ?? '');
       go('loading');
 
-      let phase = 0;
-      let value = 0;
       let settled = false;
 
       const settle = (result: eng.GenerateResult): void => {
-        if (settled) return;
+        if (settled || !owns()) return;
         settled = true;
         if (result.ok) {
           setWorkout(result.workout);
@@ -644,45 +732,15 @@ export function useWhatwork() {
         return eng.generateWorkout(request, { aiPlan: outcome.plan });
       };
 
-      const pending = compute();
-
-      const step = (): void => {
-        if (!owns()) return;
-        const ph = eng.PHASES[phase];
-        if (!ph) {
-          void pending.then((result) => {
-            if (!owns()) return;
-            animation.current = window.setTimeout(() => { if (owns()) settle(result); }, 200);
-          });
-          return;
-        }
-        setPhaseText(ph.text);
-        // Genereringen er lokal og tager få millisekunder — uden animation ville skærmen
-        // blinke forbi på et øjeblik. Faserne strækkes derfor ud over ca. LOADING_MS,
-        // proportionalt med hver fases andel af fremdriftsbjælken, så det ligner, at
-        // motoren reelt bruger tid på at bygge netop denne workout.
-        const from = value;
-        const span = ph.to - from;
-        const phaseDurationMs = Math.max(400, Math.round((span / 100) * LOADING_MS));
-        const startedAt = Date.now();
-        const tick = (): void => {
-          if (!owns()) return;
-          const t = Math.min(1, (Date.now() - startedAt) / phaseDurationMs);
-          value = Math.round(from + span * t);
-          setProgress(value);
-          if (t < 1) {
-            animation.current = window.setTimeout(tick, 60);
-          } else {
-            value = ph.to;
-            setProgress(value);
-            phase += 1;
-            animation.current = window.setTimeout(step, 40);
-          }
-        };
-        tick();
-      };
-
-      animation.current = window.setTimeout(step, 30);
+      cancelGenerate.current?.();
+      cancelGenerate.current = runPhaseAnimation({
+        phases: eng.PHASES,
+        durationMs: LOADING_MS,
+        work: compute(),
+        onProgress: (v) => { if (owns()) setProgress(v); },
+        onPhase: (t) => { if (owns()) setPhaseText(t); },
+        onDone: settle,
+      });
     },
     [gen, buildRequest, go, settings.aiMix, recentSignatures],
   );
@@ -1063,7 +1121,6 @@ export function useWhatwork() {
    * program-loading-skærmen, samme mønster som runGenerate, men over PROGRAM_LOADING_MS.
    */
   const buildProgram = useCallback(() => {
-    if (programAnimation.current !== null) window.clearTimeout(programAnimation.current);
     /*
      * Hver bygning får sit eget løbenummer.
      *
@@ -1084,46 +1141,19 @@ export function useWhatwork() {
       () => prog.toLegacyProgram(prog.planProgram(planInput()), renderContext()),
     );
 
-    let phase = 0;
-    let value = 0;
-
-    const step = (): void => {
-      if (!owns()) return;
-      const ph = prog.PROGRAM_BUILD_PHASES[phase];
-      if (!ph) {
-        void pending.then((result) => {
-          if (!owns()) return;
-          setProgram(result);
-          programAnimation.current = window.setTimeout(() => { if (owns()) go('program'); }, 200);
-        });
-        return;
-      }
-      setPhaseText(ph.text);
-      // Motoren er lokal og hurtig — uden animation ville skærmen blinke forbi.
-      // Faserne strækkes derfor ud over PROGRAM_LOADING_MS, samme princip som
-      // enkelt-workout-generatoren (se PHASES/LOADING_MS ovenfor).
-      const from = value;
-      const span = ph.to - from;
-      const phaseDurationMs = Math.max(400, Math.round((span / 100) * PROGRAM_LOADING_MS));
-      const startedAt = Date.now();
-      const tick = (): void => {
+    cancelProgram.current?.();
+    cancelProgram.current = runPhaseAnimation({
+      phases: prog.PROGRAM_BUILD_PHASES,
+      durationMs: PROGRAM_LOADING_MS,
+      work: pending,
+      onProgress: (v) => { if (owns()) setProgress(v); },
+      onPhase: (t) => { if (owns()) setPhaseText(t); },
+      onDone: (result) => {
         if (!owns()) return;
-        const t = Math.min(1, (Date.now() - startedAt) / phaseDurationMs);
-        value = Math.round(from + span * t);
-        setProgress(value);
-        if (t < 1) {
-          programAnimation.current = window.setTimeout(tick, 60);
-        } else {
-          value = ph.to;
-          setProgress(value);
-          phase += 1;
-          programAnimation.current = window.setTimeout(step, 40);
-        }
-      };
-      tick();
-    };
-
-    programAnimation.current = window.setTimeout(step, 30);
+        setProgram(result);
+        go('program');
+      },
+    });
   }, [go, planInput, renderContext]);
 
   const patchProgramDay = useCallback((ref: ProgramRef, patch: Partial<Program['weeks'][number]['days'][number]>) => {
@@ -1263,7 +1293,7 @@ export function useWhatwork() {
 
   return {
     ready, screen, go, isDesktop,
-    profile, patchProfile,
+    profile, patchProfile, logLift,
     settings, setSettings, setTheme,
     onbStep, onbNext, onbBack, startOnboarding, setOnbStep,
     gen, patchGen, setGen, openGenerator, resetGenerator,
