@@ -105,5 +105,21 @@ export default defineConfig(({ mode, command }) => {
         devOptions: { enabled: false },
       }),
     ],
+    build: {
+      rollupOptions: {
+        output: {
+          /**
+           * React lægges i sin egen fil.
+           *
+           * Den ændrer sig kun ved en opgradering, mens appens egen kode ændrer sig
+           * hver gang. Holdes de adskilt, behøver en bruger med appen installeret
+           * kun at hente den del, der faktisk er ny.
+           */
+          manualChunks: {
+            react: ['react', 'react-dom', 'react-dom/client'],
+          },
+        },
+      },
+    },
   };
 });
